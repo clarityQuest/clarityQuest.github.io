@@ -1,0 +1,8 @@
+# Project Metadata for Tabula Peutingeriana
+
+name: Tabula Peutingeriana
+description: Minimal web app to view the Tabula Peutingeriana with scroll and zoom, using OpenSeadragon and a high-resolution open-licensed image.
+version: 1.0.0
+authors:
+  - Your Name Here
+created: 2026-03-10

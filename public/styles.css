@@ -1,0 +1,40 @@
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #181818;
+  color: #fff;
+}
+h1 {
+  text-align: center;
+  margin: 1rem 0 0.5rem 0;
+  color: #fff;
+}
+#openseadragon1 {
+  margin: 0 auto;
+  background: #181818;
+  border: 2px solid #333;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.4);
+}
+.openseadragon-container {
+  background: #181818 !important;
+}
+.openseadragon-control {
+  background: #232323 !important;
+  border-radius: 8px !important;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  border: none !important;
+}
+.openseadragon-control button {
+  background: transparent !important;
+  border: none !important;
+  padding: 6px !important;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+.openseadragon-control svg {
+  display: block;
+  width: 24px;
+  height: 24px;
+}
