@@ -34,69 +34,66 @@ body {
   border: 1px solid #333;
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
+.viewer-shell {
+  position: relative;
+  width: 100vw;
+}
 .openseadragon-container {
   background: #181818 !important;
 }
-#openseadragon1 .openseadragon-control,
-#openseadragon1 .openseadragon-button-group {
-  background: rgba(18, 22, 30, 0.92) !important;
-  border-radius: 10px !important;
-  border: 1px solid #2f3a4d !important;
-  box-shadow: 0 12px 26px rgba(0, 0, 0, 0.35);
-  backdrop-filter: blur(2px);
-  padding: 4px !important;
+.viewer-controls {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  z-index: 40;
+  display: grid;
+  grid-auto-flow: column;
+  gap: 8px;
+  padding: 6px;
+  border-radius: 10px;
+  border: 1px solid #2f3a4d;
+  background: rgba(18, 22, 30, 0.9);
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.35);
 }
-#openseadragon1 .openseadragon-button {
-  position: relative;
-  width: 42px !important;
-  height: 34px !important;
-  border-radius: 4px !important;
-  border: 1px solid #43516a !important;
-  background: linear-gradient(180deg, #35507b 0%, #24354f 100%) !important;
+.viewer-btn {
+  width: 42px;
+  height: 34px;
+  border-radius: 4px;
+  border: 1px solid #43516a;
+  background: linear-gradient(180deg, #35507b 0%, #24354f 100%);
   box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
-  margin: 4px !important;
-  transition: transform 0.12s ease, box-shadow 0.12s ease, filter 0.12s ease;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: transform 0.12s ease, filter 0.12s ease, box-shadow 0.12s ease;
 }
-#openseadragon1 .openseadragon-button:hover {
+.viewer-btn:hover {
   transform: translateY(-1px);
   filter: brightness(1.12);
   box-shadow: 0 6px 14px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
-#openseadragon1 .openseadragon-button:active {
+.viewer-btn:active {
   transform: translateY(0);
   filter: brightness(0.95);
 }
-#openseadragon1 .openseadragon-button img {
-  display: block !important;
-  width: 18px !important;
-  height: 18px !important;
-  margin: 0 auto !important;
-  object-fit: contain;
-  opacity: 0 !important;
-}
-#openseadragon1 .openseadragon-button::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  margin: auto;
+.viewer-btn svg {
   width: 20px;
   height: 20px;
-  background-repeat: no-repeat;
-  background-size: 20px 20px;
-  background-position: center;
-  z-index: 2;
 }
-#openseadragon1 .openseadragon-button:nth-of-type(1)::before {
-  background-image: url('osd-icons/zoom-in.svg');
+.viewer-btn svg path,
+.viewer-btn svg circle {
+  stroke: #f6fbff;
+  stroke-width: 2.2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
 }
-#openseadragon1 .openseadragon-button:nth-of-type(2)::before {
-  background-image: url('osd-icons/zoom-out.svg');
+#control-home svg path:first-of-type {
+  fill: #f6fbff;
+  stroke: none;
 }
-#openseadragon1 .openseadragon-button:nth-of-type(3)::before {
-  background-image: url('osd-icons/home.svg');
-}
-#openseadragon1 .openseadragon-button:nth-of-type(4)::before {
-  background-image: url('osd-icons/fullpage.svg');
+#control-home svg rect {
+  fill: #24354f;
 }
 
 @media (max-width: 768px) {
@@ -112,7 +109,7 @@ body {
   #openseadragon1 {
     height: calc(100vh - 0.95rem);
   }
-  #openseadragon1 .openseadragon-button {
+  .viewer-btn {
     width: 46px !important;
     height: 38px !important;
   }
