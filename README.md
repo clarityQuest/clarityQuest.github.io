@@ -8,7 +8,7 @@ A minimal web app to view the Tabula Peutingeriana with scroll and zoom, using O
 
 ## Usage
 1. Open the viewer directly:
-	https://clarityQuest.github.io/index.html
+	https://clarityQuest.github.io/public/index.html
 2. Pan and zoom the map using your mouse or touch.
 
 If your GitHub Pages source is set to "Deploy from a branch", the direct file URL is:
