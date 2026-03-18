@@ -3,13 +3,16 @@ body {
   font-family: Arial, sans-serif;
   background: #181818;
   color: #fff;
+  min-height: 100dvh;
+  display: flex;
+  flex-direction: column;
 }
 .viewer-title {
   text-align: center;
-  margin: 0.08rem 0 0.02rem 0;
-  font-size: 0.64rem;
+  margin: 0.22rem 0 0.06rem 0;
+  font-size: 1.1rem;
   line-height: 1.15;
-  font-weight: 500;
+  font-weight: 600;
   letter-spacing: 0.02em;
   color: #fff;
 }
@@ -28,26 +31,28 @@ body {
 }
 #openseadragon1 {
   margin: 0 auto;
-  width: 100vw;
-  height: calc(100vh - 1.05rem);
+  width: 100%;
+  height: 100%;
   background: #181818;
   border: 1px solid #333;
   box-shadow: 0 2px 8px rgba(0,0,0,0.4);
 }
 .viewer-shell {
   position: relative;
-  width: 100vw;
+  width: 100%;
+  flex: 1;
+  min-height: 0;
 }
 .openseadragon-container {
   background: #181818 !important;
 }
 .viewer-controls {
   position: absolute;
-  top: 8px;
+  top: max(8px, calc(env(safe-area-inset-top) + 8px));
   left: 8px;
   z-index: 40;
   display: grid;
-  grid-auto-flow: column;
+  grid-auto-flow: row;
   gap: 8px;
   padding: 6px;
   border-radius: 10px;
@@ -98,16 +103,16 @@ body {
 
 @media (max-width: 768px) {
   .viewer-title {
-    font-size: 0.6rem;
-    margin-top: 0.06rem;
+    font-size: 1rem;
+    margin-top: 0.16rem;
     margin-bottom: 0.02rem;
   }
   .status {
     margin-bottom: 0.06rem;
     font-size: 0.64rem;
   }
-  #openseadragon1 {
-    height: calc(100vh - 0.95rem);
+  .viewer-controls {
+    top: max(10px, calc(env(safe-area-inset-top) + 10px));
   }
   .viewer-btn {
     width: 46px !important;
