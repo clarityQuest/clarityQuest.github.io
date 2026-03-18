@@ -10,7 +10,7 @@ body {
 .viewer-title {
   text-align: center;
   margin: 0.22rem 0 0.06rem 0;
-  font-size: 1.1rem;
+  font-size: 1.45rem;
   line-height: 1.15;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -103,7 +103,7 @@ body {
 
 @media (max-width: 768px) {
   .viewer-title {
-    font-size: 1rem;
+    font-size: 1.2rem;
     margin-top: 0.16rem;
     margin-bottom: 0.02rem;
   }
