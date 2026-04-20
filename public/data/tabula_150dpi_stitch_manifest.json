@@ -1,0 +1,330 @@
+{
+  "version": 2,
+  "image": {
+    "width": 32878,
+    "height": 2125,
+    "path": "Tabula_Peutingeriana_150dpi_Stitched.jpg"
+  },
+  "segments": [
+    {
+      "number": 2,
+      "src_index": 1,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_1.jpg",
+      "width": 3541,
+      "height": 2125,
+      "source_width": 4000,
+      "source_height": 2100,
+      "crop_left": 218,
+      "crop_right": 3779,
+      "paste_x": 0,
+      "paste_y": 10,
+      "paste_width": 3561,
+      "paste_height": 2100,
+      "x0": 0,
+      "x1": 3541,
+      "nx0": 0.0,
+      "nx1": 0.107701
+    },
+    {
+      "number": 3,
+      "src_index": 2,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_2.jpg",
+      "width": 3701,
+      "height": 2125,
+      "source_width": 4000,
+      "source_height": 2100,
+      "crop_left": 128,
+      "crop_right": 3869,
+      "paste_x": 3521,
+      "paste_y": 15,
+      "paste_width": 3741,
+      "paste_height": 2100,
+      "x0": 3541,
+      "x1": 7242,
+      "nx0": 0.107701,
+      "nx1": 0.220269
+    },
+    {
+      "number": 4,
+      "src_index": 3,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_3.jpg",
+      "width": 3811,
+      "height": 2125,
+      "source_width": 4371,
+      "source_height": 2105,
+      "crop_left": 277,
+      "crop_right": 4168,
+      "paste_x": 7222,
+      "paste_y": 10,
+      "paste_width": 3891,
+      "paste_height": 2105,
+      "x0": 7242,
+      "x1": 11053,
+      "nx0": 0.220269,
+      "nx1": 0.336182
+    },
+    {
+      "number": 5,
+      "src_index": 4,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_4.jpg",
+      "width": 3605,
+      "height": 2125,
+      "source_width": 4122,
+      "source_height": 2105,
+      "crop_left": 188,
+      "crop_right": 3893,
+      "paste_x": 10993,
+      "paste_y": 15,
+      "paste_width": 3705,
+      "paste_height": 2105,
+      "x0": 11053,
+      "x1": 14658,
+      "nx0": 0.336182,
+      "nx1": 0.44583
+    },
+    {
+      "number": 6,
+      "src_index": 5,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_5.jpg",
+      "width": 3644,
+      "height": 2125,
+      "source_width": 4122,
+      "source_height": 2105,
+      "crop_left": 201,
+      "crop_right": 3925,
+      "paste_x": 14618,
+      "paste_y": 20,
+      "paste_width": 3724,
+      "paste_height": 2105,
+      "x0": 14658,
+      "x1": 18302,
+      "nx0": 0.44583,
+      "nx1": 0.556664
+    },
+    {
+      "number": 7,
+      "src_index": 6,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_6.jpg",
+      "width": 3496,
+      "height": 2125,
+      "source_width": 4122,
+      "source_height": 2105,
+      "crop_left": 261,
+      "crop_right": 3837,
+      "paste_x": 18262,
+      "paste_y": 15,
+      "paste_width": 3576,
+      "paste_height": 2105,
+      "x0": 18302,
+      "x1": 21798,
+      "nx0": 0.556664,
+      "nx1": 0.662997
+    },
+    {
+      "number": 8,
+      "src_index": 7,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_7.jpg",
+      "width": 3681,
+      "height": 2125,
+      "source_width": 4122,
+      "source_height": 2105,
+      "crop_left": 192,
+      "crop_right": 3933,
+      "paste_x": 21758,
+      "paste_y": 10,
+      "paste_width": 3741,
+      "paste_height": 2105,
+      "x0": 21798,
+      "x1": 25479,
+      "nx0": 0.662997,
+      "nx1": 0.774956
+    },
+    {
+      "number": 9,
+      "src_index": 8,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_8.jpg",
+      "width": 3394,
+      "height": 2125,
+      "source_width": 4122,
+      "source_height": 2105,
+      "crop_left": 296,
+      "crop_right": 3730,
+      "paste_x": 25459,
+      "paste_y": 5,
+      "paste_width": 3434,
+      "paste_height": 2105,
+      "x0": 25479,
+      "x1": 28873,
+      "nx0": 0.774956,
+      "nx1": 0.878186
+    },
+    {
+      "number": 10,
+      "src_index": 9,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_9.jpg",
+      "width": 3705,
+      "height": 2125,
+      "source_width": 4000,
+      "source_height": 2100,
+      "crop_left": 137,
+      "crop_right": 3862,
+      "paste_x": 28853,
+      "paste_y": 0,
+      "paste_width": 3725,
+      "paste_height": 2100,
+      "x0": 28873,
+      "x1": 32578,
+      "nx0": 0.878186,
+      "nx1": 0.990875
+    },
+    {
+      "number": 11,
+      "src_index": 10,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_10.jpg",
+      "width": 150,
+      "height": 2125,
+      "source_width": 150,
+      "source_height": 45,
+      "crop_left": 0,
+      "crop_right": 150,
+      "paste_x": 32578,
+      "paste_y": 0,
+      "paste_width": 150,
+      "paste_height": 45,
+      "x0": 32578,
+      "x1": 32728,
+      "nx0": 0.990875,
+      "nx1": 0.995438
+    },
+    {
+      "number": 12,
+      "src_index": 11,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_11.jpg",
+      "width": 150,
+      "height": 2125,
+      "source_width": 150,
+      "source_height": 45,
+      "crop_left": 0,
+      "crop_right": 150,
+      "paste_x": 32728,
+      "paste_y": 0,
+      "paste_width": 150,
+      "paste_height": 45,
+      "x0": 32728,
+      "x1": 32878,
+      "nx0": 0.995438,
+      "nx1": 1.0
+    }
+  ],
+  "seam_optimizations": [
+    {
+      "pair": [
+        2,
+        3
+      ],
+      "overlap": 40,
+      "dy": 5,
+      "score": 2.017062,
+      "confidence": "low"
+    },
+    {
+      "pair": [
+        3,
+        4
+      ],
+      "overlap": 40,
+      "dy": -5,
+      "score": 2.02603,
+      "confidence": "low"
+    },
+    {
+      "pair": [
+        4,
+        5
+      ],
+      "overlap": 120,
+      "dy": 5,
+      "score": 2.012698,
+      "confidence": "low"
+    },
+    {
+      "pair": [
+        5,
+        6
+      ],
+      "overlap": 80,
+      "dy": 5,
+      "score": 2.002392,
+      "confidence": "low"
+    },
+    {
+      "pair": [
+        6,
+        7
+      ],
+      "overlap": 80,
+      "dy": -5,
+      "score": 2.014653,
+      "confidence": "low"
+    },
+    {
+      "pair": [
+        7,
+        8
+      ],
+      "overlap": 80,
+      "dy": -5,
+      "score": 2.02046,
+      "confidence": "low"
+    },
+    {
+      "pair": [
+        8,
+        9
+      ],
+      "overlap": 40,
+      "dy": -5,
+      "score": 2.010869,
+      "confidence": "low"
+    },
+    {
+      "pair": [
+        9,
+        10
+      ],
+      "overlap": 40,
+      "dy": -5,
+      "score": 2.036618,
+      "confidence": "low"
+    },
+    {
+      "pair": [
+        10,
+        11
+      ],
+      "overlap": 0,
+      "dy": 0,
+      "score": -1000000000.0,
+      "confidence": "low"
+    },
+    {
+      "pair": [
+        11,
+        12
+      ],
+      "overlap": 0,
+      "dy": 0,
+      "score": -1000000000.0,
+      "confidence": "low"
+    }
+  ],
+  "stitch_metadata": {
+    "algorithm": "redline_overlap_feather_v1",
+    "seam_compare_width": 96,
+    "seam_max_overlap": 190,
+    "seam_dy_range": [
+      -8,
+      8
+    ]
+  }
+}

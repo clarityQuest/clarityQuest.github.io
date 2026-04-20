@@ -1,0 +1,95 @@
+{
+  "version": 1,
+  "mode": "download-only",
+  "output_folder": "segments_150dpi",
+  "segments": [
+    {
+      "number": 2,
+      "src_index": 1,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_1.jpg",
+      "file": "tp_150dpi_01_seg2.jpg",
+      "width": 4000,
+      "height": 2100
+    },
+    {
+      "number": 3,
+      "src_index": 2,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_2.jpg",
+      "file": "tp_150dpi_02_seg3.jpg",
+      "width": 4000,
+      "height": 2100
+    },
+    {
+      "number": 4,
+      "src_index": 3,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_3.jpg",
+      "file": "tp_150dpi_03_seg4.jpg",
+      "width": 4371,
+      "height": 2105
+    },
+    {
+      "number": 5,
+      "src_index": 4,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_4.jpg",
+      "file": "tp_150dpi_04_seg5.jpg",
+      "width": 4122,
+      "height": 2105
+    },
+    {
+      "number": 6,
+      "src_index": 5,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_5.jpg",
+      "file": "tp_150dpi_05_seg6.jpg",
+      "width": 4122,
+      "height": 2105
+    },
+    {
+      "number": 7,
+      "src_index": 6,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_6.jpg",
+      "file": "tp_150dpi_06_seg7.jpg",
+      "width": 4122,
+      "height": 2105
+    },
+    {
+      "number": 8,
+      "src_index": 7,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_7.jpg",
+      "file": "tp_150dpi_07_seg8.jpg",
+      "width": 4122,
+      "height": 2105
+    },
+    {
+      "number": 9,
+      "src_index": 8,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_8.jpg",
+      "file": "tp_150dpi_08_seg9.jpg",
+      "width": 4122,
+      "height": 2105
+    },
+    {
+      "number": 10,
+      "src_index": 9,
+      "url": "https://www.tabula-peutingeriana.de/download/tp_150dpi_9.jpg",
+      "file": "tp_150dpi_09_seg10.jpg",
+      "width": 4000,
+      "height": 2100
+    },
+    {
+      "number": 11,
+      "src_index": 10,
+      "url": "https://www.tabula-peutingeriana.de/download/full/tp_weber_a.jpg",
+      "file": "tp_150dpi_10_seg11.jpg",
+      "width": 2809,
+      "height": 1431
+    },
+    {
+      "number": 12,
+      "src_index": 11,
+      "url": "https://www.tabula-peutingeriana.de/download/full/tp_weber_b.jpg",
+      "file": "tp_150dpi_11_seg12.jpg",
+      "width": 2711,
+      "height": 1431
+    }
+  ]
+}

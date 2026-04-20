@@ -1,0 +1,602 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "https://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xml:lang="de-de" xmlns="https://www.w3.org/1999/xhtml" lang="de-de">
+<head>
+
+<title>TABVLA PEVTINGERIANA - several informations about roman roads</title>
+	<meta name="keywords" content="tabula,peutingeriana,roman,ancient,map,history,location,road,source,placename,miller,scheyb,welser,talbert,itinerary,segment,section,codex,vindobonensis," />
+	<meta name="description" content="Examination of the ancient roman road map called Tabula Peutingeriana (Codex Vindobonensis 324) and other Sources that give information about the roads of the roman Empire.">
+	<meta name="date" content="2018-06-24T23:39:21+1:00+1:00" />
+	<meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
+	<meta http-equiv="expires" content="360" />
+	<meta name="robots" content="index,follow" />
+	<meta name="author" content="Weber Martin">
+	<meta name="viewport" content="width=device-width, initial-scale=1" />
+	<link rel="icon" href="/stil/favicons/favicon.ico" />
+	<link rel="apple-touch-icon-precomposed" href="/stil/favicons/favicon.png" />
+	<link rel="apple-touch-icon-precomposed" sizes="120x120" href="/stil/favicons/favicon-120.png" />
+	<link rel="apple-touch-icon-precomposed" sizes="152x152" href="/stil/favicons/favicon-152.png" />
+	<link rel="stylesheet" href="stil/bootstrap.css" type="text/css" />
+	<link rel="stylesheet" href="stil/shutter.css" type="text/css" />
+	<link href="stil/ie10-fix.css" rel="stylesheet" />
+	<!-- HTML5 shim and Respond.js for IE8 support of HTML5 elements and media queries -->
+	<!--[if lt IE 9]>
+		<script src="https://oss.maxcdn.com/html5shiv/3.7.3/html5shiv.min.js"></script>
+		<script src="https://oss.maxcdn.com/respond/1.4.2/respond.min.js"></script>
+	<![endif]-->
+	<link rel="stylesheet" href="stil/tp.css" type="text/css" />
+</head>
+<body>
+<script type="text/javascript" src="script/tp.js"></script>
+<div class="container theme-showcase" role="main">
+ <div class="row">
+<div id="content" class="col-sm-12 col-lg-12 tabula">
+<!--content _ -->
+<div class="jumbotron hell">
+	<h1>Tabvla Pevtingeriana <font size="-1">(en) - <a href="index.html?lang=de">(de)</a></font></h1>	
+	<div class="row">
+		<div class="col-md-12">
+			 <table width="445" style="font-size:8pt; font-family:Arial,Verdana; float:left;" border="0" cellspacing="0">
+			  <tr>
+				<td width="75" valign="top" align="center"><a href="tabula.html?segm=0&amp;pic=m">Segm.&nbsp;I&nbsp;(om.)</a></td>
+				<td width="70" valign="top" align="center"><a href="tabula.html?segm=1">Segm.&nbsp;II</a></td>
+				<td width="75" valign="top" align="center"><a href="tabula.html?segm=2">Segm.&nbsp;III</a></td>
+				<td width="80" valign="top" align="center"><a href="tabula.html?segm=3">Segm.&nbsp;IV</a></td>
+				<td width="75" valign="top" align="center"><a href="tabula.html?segm=4">Segm.&nbsp;V</a></td>
+				<td width="70" valign="top" align="center"><a href="tabula.html?segm=5">Segm.&nbsp;VI</a></td>
+			  </tr>
+			  <tr>
+				 <td colspan="6"><div align="center"><img usemap="#jpgov1" src="img/w_vs1.jpg" width="450" height="42" border="0" alt="Tabvla Pevtingeriana - I to VI"></div></td>
+			  </tr>
+			  <tr>
+				<td valign="top">-&nbsp;<a href="tabula.html?pic=m&amp;segm=0#a3">Britannia</a><br />-&nbsp;<a href="tabula.html?pic=m&amp;segm=0#b1">Hispania</a><br />-&nbsp;<a href="tabula.html?pic=m&amp;segm=0#c3">Mauretania</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=1#a3">Gallia</a><br />-&nbsp;<a href="tabula.html?segm=1#c3">Mauretania</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=2#a1">Germania</a><br />-&nbsp;<a href="tabula.html?segm=2#b1">Gallia</a><br />-&nbsp;<a href="tabula.html?segm=2#b3">Liguria</a><br />-&nbsp;<a href="tabula.html?segm=2#c3">Mauretania</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=3#a3">Raetia</a><br />-&nbsp;<a href="tabula.html?segm=3#b3">Italia</a><br />-&nbsp;<a href="tabula.html?segm=3#c3">Mauretania</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=4#a1">Norico</a><br />-&nbsp;<a href="tabula.html?segm=4#a5">Illyricum</a><br />-&nbsp;<a href="tabula.html?segm=4#b3">Italia</a><br />-&nbsp;<a href="tabula.html?segm=4#c3">Africa</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=5#a3">Dalmatia</a><br />-&nbsp;<a href="tabula.html?segm=5#b3">Italia</a><br />-&nbsp;<a href="tabula.html?segm=5#c3">Africa</a></td>
+			  </tr>
+			 </table>
+			 <table width="450" style="font-size:8pt; font-family:Arial,Verdana; float:left;" border="0" cellspacing="0">
+			  <tr>
+				<td width="73" valign="top" align="center"><a href="tabula.html?segm=6">Segm.&nbsp;VII</a></td>
+				<td width="78" valign="top" align="center"><a href="tabula.html?segm=7">Segm.&nbsp;VIII</a></td>
+				<td width="70" valign="top" align="center"><a href="tabula.html?segm=8">Segm.&nbsp;IX</a></td>
+				<td width="73" valign="top" align="center"><a href="tabula.html?segm=9">Segm.&nbsp;X</a></td>
+				<td width="78" valign="top" align="center"><a href="tabula.html?segm=a">Segm.&nbsp;XI</a></td>
+				<td width="78" valign="top" align="center"><a href="tabula.html?segm=b">Segm.&nbsp;XII</a></td>
+			  </tr>
+			  <tr>
+				 <td colspan="6"><div align="center"><img usemap="#jpgov2" src="img/w_vs2.jpg" width="450" height="42" border="0" alt="Tabvla Pevtingeriana - VII to XII"></div></td>
+			  </tr>
+			  <tr>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=6#a1">Dalmatia</a><br />-&nbsp;<a href="tabula.html?segm=6#a4">Macedonia</a><br />-&nbsp;<a href="tabula.html?segm=6#b1">Italia</a><br />-&nbsp;<a href="tabula.html?segm=6#c3">Africa</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=7#a1">Macedonia</a><br />-&nbsp;<a href="tabula.html?segm=7#b3">Thracia</a><br />-&nbsp;<a href="tabula.html?segm=7#c1">Africa</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=8#b2">Asia</a><br />-&nbsp;<a href="tabula.html?segm=8#c4">Aegyptus</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=9#a1">Cappadocia</a><br />-&nbsp;<a href="tabula.html?segm=9#b4">Syria</a><br />-&nbsp;<a href="tabula.html?segm=9#c2">Palestina</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=a#c1">Arabia</a><br />-&nbsp;<a href="tabula.html?segm=a#b3">Mesopotamia</a><br />-&nbsp;<a href="tabula.html?segm=a#c5">Persida</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=b#c1">Persida</a><br />-&nbsp;<a href="tabula.html?segm=b#b3">India</a></td>
+			  </tr>
+			 </table>
+			 <map name="jpgov1" id="jpgov1">
+				<area shape="RECT" coords="0,0,75,41" href="tabula.html?segm=0&amp;pic=m" alt="Tabvla Pevtingeriana - Segmentvm I (missing)
+				- Britannia
+				- Hispania
+				- Mauretania">
+				<area shape="RECT" coords="76,0,140,41" href="tabula.html?segm=1" alt="Tabvla Pevtingeriana - Segmentvm II
+				- Gallia
+				- Mauretania">
+				<area shape="RECT" coords="141,0,215,41" href="tabula.html?segm=2" alt="Tabvla Pevtingeriana - Segmentvm III
+				- Germania
+				- Gallia, Liguria
+				- Mauretania">
+				<area shape="RECT" coords="216,0,295,41" href="tabula.html?segm=3" alt="Tabvla Pevtingeriana - Segmentvm IV
+				- Raetia
+				- Italia
+				- Mauretania">
+				<area shape="RECT" coords="296,0,370,41" href="tabula.html?segm=4" alt="Tabvla Pevtingeriana - Segmentvm V
+				- Norico
+				- Illyricum
+				- Italia
+				- Africa">
+				<area shape="RECT" coords="371,0,443,41" href="tabula.html?segm=5" alt="Tabvla Pevtingeriana - Segmentvm VI
+				- Dalmatia
+				- Italia
+				- Africa">
+			 </map>
+			 <map name="jpgov2" id="jpgov2">
+				<area shape="RECT" coords="0,0,64,41" href="tabula.html?segm=6" alt="Tabvla Pevtingeriana - Segmentvm VII
+				- Dalmatia, Macedonia
+				- Italia
+				- Africa">
+				<area shape="RECT" coords="65,0,141,41" href="tabula.html?segm=7" alt="Tabvla Pevtingeriana - Segmentvm VIII
+				- Macedonia, Thracia
+				- Africa">
+				<area shape="RECT" coords="142,0,214,41" href="tabula.html?segm=8" alt="Tabvla Pevtingeriana - Segmentvm IX
+				- Asia
+				- Aegyptus">
+				<area shape="RECT" coords="215,0,293,41" href="tabula.html?segm=9" alt="Tabvla Pevtingeriana - Segmentvm X
+				- Cappadocia
+				- Syria, Palestina">
+				<area shape="RECT" coords="294,0,367,41" href="tabula.html?segm=a" alt="Tabvla Pevtingeriana - Segmentvm XI
+				- Arabia, Mesopotamia
+				- Persida">
+				<area shape="RECT" coords="368,0,450,41" href="tabula.html?segm=b" alt="Tabvla Pevtingeriana - Segmentvm XII
+				- Persida, India">
+			 </map>
+		</div>
+	</div>
+	<hr />
+	<div class="row">
+		<div class="col-sm-12 col-md-4">
+			<a href="download/tp_part_4.jpg" class="shutterset"><img src="download/tp_roma_vs.jpg" border="0" alt="SEGMENTVM V - ROMA"  class="col-md-12" />
+			<br />click for resuluton 600dpi</a><br /><br />
+			<img src="stil/tp-dld.jpg" height="20" alt="download"> Download this example as <a class="pdf" href="download/tp_part_4.pdf" target="_new">printable PDF</a>
+			or <a class="svg" href="download/tp_part_4.svg" target="_new">scaleable SVG</a>.
+		</div>
+		<div class="col-sm-12 col-md-8">
+			<p>This website wants to inform online about the famous &quot;Tabula Peutingeriana&quot; (Codex Vindobonensis 324).</p>
+			<p>Tabula Peutingeriana is a copy of an old Roadmap of ancient roman road network, called cursus publicus.</p>
+			<p>You get information about placenames and their location on the map at this page.<br />For viewing pictures of the complete segments, use the table above!</p>
+			<p>You can view all segments in the same resolution like on the left. You can enlarge each part by clicking on it.</p>
+			 For more information on <a href="http://en.wikipedia.org/wiki/Tabula_Peutingeriana">wikipedia klick here</a>!
+		</div>
+	</div>
+	<hr />
+	<div class="row">
+		<div class="col-sm-12 col-md-4">
+			<a href="list.html?alfa=a#A"><img src="img/tp_index.jpg" border="0" alt="INDEX LITTERAE" class="col-md-12" /></a>
+		</div>
+		<div class="col-sm-12 col-md-8">
+			<h3>Alphabetic Index</h3>
+				 <table class="btn-group cube">
+				  <tbody>
+					<tr>
+						<td><a href="list.html?alfa=!#">!</a> <a href="list.html?alfa=a#A">A</a> &#8213; <a href="list.html?alfa=b#B">B</a> <a href="list.html?alfa=b#C">C</a> &#8213;
+						<a href="list.html?alfa=d#D">D</a> <a href="list.html?alfa=d#E">E</a> <a href="list.html?alfa=d#F">F</a> <a href="list.html?alfa=d#G">G</a> <a href="list.html?alfa=d#H">H</a></td>
+					</tr>
+					<tr>
+						<td><a href="list.html?alfa=i#I">I</a> <a href="list.html?alfa=i#J">J</a> <a href="list.html?alfa=i#K">K</a> <a href="list.html?alfa=i#L">L</a> <a href="list.html?alfa=i#M">M</a> &#8213;
+						<a href="list.html?alfa=n#N">N</a> <a href="list.html?alfa=n#O">O</a> <a href="list.html?alfa=n#P">P</a> <a href="list.html?alfa=n#Q">Q</a> <a href="list.html?alfa=n#R">R</a></td>
+					</tr>
+					<tr>
+						<td><a href="list.html?alfa=s#S">S</a> <a href="list.html?alfa=s#T">T</a> &#8213;
+						<a href="list.html?alfa=u#U">U</a> <a href="list.html?alfa=u#V">V</a> <a href="list.html?alfa=u#W">W</a> <a href="list.html?alfa=u#X">X</a> <a href="list.html?alfa=u#Y">Y</a> <a href="list.html?alfa=u#Z">Z</a> &#8213; <a href="list.html?alfa=*" style="max-width:48px;">A-Z</a></td>
+					</tr>
+					</tbody>
+				 </table>
+			<p>Here You can find a <a href="list.html?alfa=a#A">list</a> of all locations,
+			<a href="list.html?typ=gen">peoples</a>, <a href="list.html?typ=reg">regions</a>,
+			<a href="list.html?typ=ins">islands</a>, <a href="list.html?typ=mon">mountains</a>
+			and <a href="list.html?typ=aqu">waters</a> mentioned on the tabula.</p>
+			<p>Additionally there are included modern placenames or several informations and references to other sources.</p>
+			<p>See also: <a href="index.html?cont=help&typ=lst&lang=en">ADIVTOR</a> (HELP).</p>
+			<img src="stil/tp-abc.jpg" height="20" alt="abc-index"> Click here to browse the <a href="list.html?alfa=a#A">alphabetic Index</a>.
+		</div>
+	</div>
+</div>
+<hr />
+<div class="inhalt">
+	<div class="row">
+		<div class="col-md-12"><h2>Other important sources on this site for examining roman roads:</h2></div>
+		<div class="col-sm-12 col-md-3">
+			<img src="stil/tp-ia.jpg" height="20" alt="Itin Ant" /> Itinerarium Antonini Provinciarum
+		</div>
+		<div class="col-sm-12 col-md-9">
+			<a href="sources.html?typ=iap">&quot;Itinerary of Antonine&quot;</a> (Latin)
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12 col-md-3">
+			<img src="stil/tp-rc.jpg" height="20" alt="Cos Rav" /> Cosmograhia Ravennatis
+		</div>
+		<div class="col-sm-12 col-md-9">
+			<a href="sources.html?typ=rc&amp;pars=1">&quot;Ravenna Cosmography&quot;</a></a> (Latin)<br />
+			and <a href="sources.html?typ=gg">&quot;Guido's Geografy&quot;</a> (Latin)
+		</div>
+	</div>
+	<div class="row">
+		<div class="col-sm-12 col-md-3">
+			<img src="stil/tp-other.jpg" height="20" alt="Others" />
+		</div>
+		<div class="col-sm-12 col-md-9">
+			<a href="sources.html?typ=ig">Itinerarium Gaditanum</a> &mdash; &quot;Ininerary of C&aacute;diz&quot;<br />
+			Notitia Dignitatum <a href="sources.html?typ=nd&amp;pars=1">Pars I</a> et <a href="sources.html?typ=nd&amp;pars=2">Pars II</a> 
+		</div>
+		<hr />
+		<div class="col-sm-12 col-md-3">&nbsp;</div>
+		<div class="col-sm-12 col-md-9">
+			<span class="label label-info">NEW!</span> TABULA ITINERARIA MILITARIS - edited <a href="sources.html?typ=im_dx">Index</a> of <a href="https://books.google.de/books?pg=PR37&dq=tabula+itineraria+militaris+romana+antiqua&id=5qTHBdWmG-EC" target="_new">Google Books</a><br />
+		</div>
+	</div>
+	<hr />
+	<div class="row">
+		<div class="col-md-12"><h2>Downloads:</h2></div>
+		<div class="col-sm-12 col-md-3">
+			<img src="stil/tp-dld.jpg" height="20" alt="download"> Download Fonts
+		</div>
+		<div class="col-sm-12 col-md-9">
+		  especially developed <a href="index.html?cont=dld#font">Windows-fonts (TTF)</a> as used in the tabula.
+		</div>
+		<hr />
+		<div class="col-sm-12 col-md-3">
+			<img src="stil/tp-dld.jpg" height="20" alt="download">Facsimile
+		</div>
+		<div class="col-sm-12 col-md-9">
+			<span class="label label-info">NEW!</span> The Peutinger-Map as digital copy as <a href="index.html?cont=dld#pict">JEPG</a> or <a href="index.html?cont=dld#pdf">PDF</a>
+		</div>
+		<hr />
+		<div class="col-sm-12 col-md-3">
+			<img src="stil/tp-dld.jpg" height="20" alt="download" /> Aid
+		</div>
+		<div class="col-sm-12 col-md-9">
+			<a href="download/lesehilfe.pdf"><img src="download/lesehilfe.jpg" width="400" style="float:left;"><br />Aid (PDF in german)</a> for reading.
+		</div>
+	</div>
+</div>
+<!--content _ -->
+	</div>
+ </div>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+ <div class="container">
+	<div class="navbar-header">
+		<button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+		<span class="sr-only">Navigation</span>
+		<span class="icon-bar"></span>
+		<span class="icon-bar"></span>
+		<span class="icon-bar"></span>
+		</button>
+		<a class="navbar-brand caps" href="https://www.tabula-peutingeriana.de/index.html"><span class="hidden-sm hidden-xs" title="HOME" style="position:relative; top:-12px;"><img src="stil/tp_urb.png" alt="" width="45" height="45" border="0" /> Tabula-Peutingeriana.de </span>
+		<span class="visible-sm visible-xs"><img src="stil/tp_urb.png" alt="" width="30" height="30" border="0" /> TP</span></a>
+	</div>
+	<div id="navbar" class="navbar-collapse">
+		<ul class="nav navbar-nav">
+			<li>
+			 <a href="#" class="dropdown-toggle caps" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="TABVLA PICTVRA"><img src="stil/tp-ov.png" height="20" alt="map" /><span class="caret"></span></a>
+			 <ul class="dropdown-menu">
+			  <li class="dropdown-header">TP Selectio Tabulae<br>
+			 <div class="row" style="font-size:8pt; font-family:Arial,Verdana; float:left;" border="0" cellspacing="0">
+			  <div class="col-lg-6 col-xs-12">
+			  <div class="row">
+				<div class="col-xs-3" style="padding:0px;min-height:200px;width:170px;"><a href="tabula.html?segm=0&amp;pic=m">Segm.&nbsp;I&nbsp;(om.)<br /><img src="img/tpmvs0.jpg" height="100"></a><br />
+				-&nbsp;<a href="tabula.html?pic=m&amp;segm=0#a3">Britannia</a><br />-&nbsp;<a href="tabula.html?pic=m&amp;segm=0#b1">Hispania</a><br />-&nbsp;<a href="tabula.html?pic=m&amp;segm=0#c3">Mauretania</a></div>
+				<div class="col-xs-3" style="padding:0px;min-height:200px;width:158px;"><a href="tabula.html?segm=1">Segm.&nbsp;II<br /><img src="img/tpmvs1.jpg" height="100"></a><br />
+				-&nbsp;<a href="tabula.html?segm=1#a3">Gallia</a><br />-&nbsp;<a href="tabula.html?segm=1#c3">Mauretania</a></div> 
+				<div class="col-xs-3" style="padding:0px;min-height:200px;width:170px;"><a href="tabula.html?segm=2">Segm.&nbsp;III<br /><img src="img/tpmvs2.jpg" height="100"></a><br />
+				-&nbsp;<a href="tabula.html?segm=2#a1">Germania</a><br />-&nbsp;<a href="tabula.html?segm=2#b1">Gallia</a><br />-&nbsp;<a href="tabula.html?segm=2#b3">Liguria</a><br />-&nbsp;<a href="tabula.html?segm=2#c3">Mauretania</a></div> 
+				<div class="col-xs-3" style="padding:0px;min-height:200px;width:188px;"><a href="tabula.html?segm=3">Segm.&nbsp;IV<br /><img src="img/tpmvs3.jpg" height="100"></a><br />-&nbsp;<a href="tabula.html?segm=4#a1">Norico</a><br />-&nbsp;<a href="tabula.html?segm=4#a5">Illyricum</a><br />
+				-&nbsp;<a href="tabula.html?segm=3#a3">Raetia</a><br />-&nbsp;<a href="tabula.html?segm=3#b3">Italia</a><br />-&nbsp;<a href="tabula.html?segm=3#c3">Mauretania</a></div> 
+				<div class="col-xs-3" style="padding:0px;min-height:200px;width:172px;">Segm.&nbsp;V<br /><img src="img/tpmvs4.jpg" height="100"></a><br /> 
+				-&nbsp;<a href="tabula.html?segm=4#b3">Italia</a><br />-&nbsp;<a href="tabula.html?segm=4#c3">Africa</a></div> 
+				<div class="col-xs-3" style="padding:0px;min-height:200px;width:168px;">Segm.&nbsp;VI<br /><img src="img/tpmvs5.jpg" height="100"></a><br /> 
+				-&nbsp;<a href="tabula.html?segm=5#a3">Dalmatia</a><br />-&nbsp;<a href="tabula.html?segm=5#b3">Italia</a><br />-&nbsp;<a href="tabula.html?segm=5#c3">Africa</a></div>
+			  </div>
+			 </div>
+			 <div class="row" style="font-size:8pt; font-family:Arial,Verdana; float:left;" border="0" cellspacing="0">
+			  <tr>
+				<td width="73" valign="top" align="center"><a href="tabula.html?segm=6">Segm.&nbsp;VII</a></td>
+				<td width="78" valign="top" align="center"><a href="tabula.html?segm=7">Segm.&nbsp;VIII</a></td>
+				<td width="70" valign="top" align="center"><a href="tabula.html?segm=8">Segm.&nbsp;IX</a></td>
+				<td width="73" valign="top" align="center"><a href="tabula.html?segm=9">Segm.&nbsp;X</a></td>
+				<td width="78" valign="top" align="center"><a href="tabula.html?segm=a">Segm.&nbsp;XI</a></td>
+				<td width="78" valign="top" align="center"><a href="tabula.html?segm=b">Segm.&nbsp;XII</a></td>
+			  </tr>
+			  <tr>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=6#a1">Dalmatia</a><br />-&nbsp;<a href="tabula.html?segm=6#a4">Macedonia</a><br />-&nbsp;<a href="tabula.html?segm=6#b1">Italia</a><br />-&nbsp;<a href="tabula.html?segm=6#c3">Africa</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=7#a1">Macedonia</a><br />-&nbsp;<a href="tabula.html?segm=7#b3">Thracia</a><br />-&nbsp;<a href="tabula.html?segm=7#c1">Africa</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=8#b2">Asia</a><br />-&nbsp;<a href="tabula.html?segm=8#c4">Aegyptus</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=9#a1">Cappadocia</a><br />-&nbsp;<a href="tabula.html?segm=9#b4">Syria</a><br />-&nbsp;<a href="tabula.html?segm=9#c2">Palestina</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=a#c1">Arabia</a><br />-&nbsp;<a href="tabula.html?segm=a#b3">Mesopotamia</a><br />-&nbsp;<a href="tabula.html?segm=a#c5">Persida</a></td>
+				<td valign="top">-&nbsp;<a href="tabula.html?segm=b#c1">Persida</a><br />-&nbsp;<a href="tabula.html?segm=b#b3">India</a></td>
+			  </tr>
+			 </table>
+			 <map name="jpgov1" id="jpgov1">
+				<area shape="RECT" coords="0,0,75,41" href="tabula.html?segm=0&amp;pic=m" alt="Tabvla Pevtingeriana - Segmentvm I (missing)
+				- Britannia
+				- Hispania
+				- Mauretania">
+				<area shape="RECT" coords="76,0,140,41" href="tabula.html?segm=1" alt="Tabvla Pevtingeriana - Segmentvm II
+				- Gallia
+				- Mauretania">
+				<area shape="RECT" coords="141,0,215,41" href="tabula.html?segm=2" alt="Tabvla Pevtingeriana - Segmentvm III
+				- Germania
+				- Gallia, Liguria
+				- Mauretania">
+				<area shape="RECT" coords="216,0,295,41" href="tabula.html?segm=3" alt="Tabvla Pevtingeriana - Segmentvm IV
+				- Raetia
+				- Italia
+				- Mauretania">
+				<area shape="RECT" coords="296,0,370,41" href="tabula.html?segm=4" alt="Tabvla Pevtingeriana - Segmentvm V
+				- Norico
+				- Illyricum
+				- Italia
+				- Africa">
+				<area shape="RECT" coords="371,0,443,41" href="tabula.html?segm=5" alt="Tabvla Pevtingeriana - Segmentvm VI
+				- Dalmatia
+				- Italia
+				- Africa">
+			 </map>
+			 <map name="jpgov2" id="jpgov2">
+				<area shape="RECT" coords="0,0,64,41" href="tabula.html?segm=6" alt="Tabvla Pevtingeriana - Segmentvm VII
+				- Dalmatia, Macedonia
+				- Italia
+				- Africa">
+				<area shape="RECT" coords="65,0,141,41" href="tabula.html?segm=7" alt="Tabvla Pevtingeriana - Segmentvm VIII
+				- Macedonia, Thracia
+				- Africa">
+				<area shape="RECT" coords="142,0,214,41" href="tabula.html?segm=8" alt="Tabvla Pevtingeriana - Segmentvm IX
+				- Asia
+				- Aegyptus">
+				<area shape="RECT" coords="215,0,293,41" href="tabula.html?segm=9" alt="Tabvla Pevtingeriana - Segmentvm X
+				- Cappadocia
+				- Syria, Palestina">
+				<area shape="RECT" coords="294,0,367,41" href="tabula.html?segm=a" alt="Tabvla Pevtingeriana - Segmentvm XI
+				- Arabia, Mesopotamia
+				- Persida">
+				<area shape="RECT" coords="368,0,450,41" href="tabula.html?segm=b" alt="Tabvla Pevtingeriana - Segmentvm XII
+				- Persida, India">
+			 </map>
+			  </li>
+			 </ul>
+			</li>
+
+			<li>
+			  <a href="#" class="dropdown-toggle caps" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="INDEX LITTERAE"><img src="stil/tp-abc.gif" height="20" alt="text" /><span class="caret"></span></a>
+			  <ul class="dropdown-menu">
+				<li class="dropdown-header">TP Index Litterum<br>
+				 <table class="btn-group cube">
+				  <tbody>
+					<tr>
+						<td><a href="list.html?alfa=!#">!</a> <a href="list.html?alfa=a#A">A</a> &#8213; <a href="list.html?alfa=b#B">B</a> <a href="list.html?alfa=b#C">C</a> &#8213;
+						<a href="list.html?alfa=d#D">D</a> <a href="list.html?alfa=d#E">E</a> <a href="list.html?alfa=d#F">F</a> <a href="list.html?alfa=d#G">G</a> <a href="list.html?alfa=d#H">H</a></td>
+					</tr>
+					<tr>
+						<td><a href="list.html?alfa=i#I">I</a> <a href="list.html?alfa=i#J">J</a> <a href="list.html?alfa=i#K">K</a> <a href="list.html?alfa=i#L">L</a> <a href="list.html?alfa=i#M">M</a> &#8213;
+						<a href="list.html?alfa=n#N">N</a> <a href="list.html?alfa=n#O">O</a> <a href="list.html?alfa=n#P">P</a> <a href="list.html?alfa=n#Q">Q</a> <a href="list.html?alfa=n#R">R</a></td>
+					</tr>
+					<tr>
+						<td><a href="list.html?alfa=s#S">S</a> <a href="list.html?alfa=s#T">T</a> &#8213;
+						<a href="list.html?alfa=u#U">U</a> <a href="list.html?alfa=u#V">V</a> <a href="list.html?alfa=u#W">W</a> <a href="list.html?alfa=u#X">X</a> <a href="list.html?alfa=u#Y">Y</a> <a href="list.html?alfa=u#Z">Z</a> &#8213; <a href="list.html?alfa=*" style="max-width:48px;">A-Z</a></td>
+					</tr>
+					</tbody>
+				 </table>
+				</li>
+				<li>
+				<div class="btn-group col-md-12">letters<br />
+					<a href="list.html?typ=cap">capital letters</a>
+					<a href="list.html?typ=lig">ligatures</a>
+					<a href="list.html?typ=abb">abbreviations</a>
+					</div>
+				</li>
+				<li role="separator" class="divider\"></li>
+				<li>
+					<div class="btn-group col-md-12">selection<br />
+					<a href="list.html?typ=aqu">waters</a>
+					<a href="list.html?typ=flu">rivers</a>
+					<a href="list.html?typ=lac">lakes</a>
+					<a href="list.html?typ=ins">islands</a>
+					<a href="list.html?typ=por">ports</a>
+					<a href="list.html?typ=mon">mountains</a>
+					<a href="list.html?typ=not">note</a>
+					<a href="list.html?typ=gen">peoples</a>
+					<a href="list.html?typ=reg">regions</a>
+					<a href="list.html?civi=xxx">modern states</a>
+					<a href="index.html?cont=prov">roman provinces</a>
+					</div>
+				
+				<li>
+					<div class="btn-group col-md-12">TP Index Segmentum<br />
+					<a href="list.html?segm=0">I</a>
+					<a href="list.html?segm=1">II</a>
+					<a href="list.html?segm=2">III</a>
+					<a href="list.html?segm=3">IV</a>
+					<a href="list.html?segm=4">V</a>
+					<a href="list.html?segm=5">VI</a>
+					<a href="list.html?segm=6">VII</a>
+					<a href="list.html?segm=7">VIII</a>
+					<a href="list.html?segm=8">IX</a>
+					<a href="list.html?segm=9">X</a>
+					<a href="list.html?segm=a">XI</a>
+					<a href="list.html?segm=b">XII</a>
+					<a href="list.html?sect=1xx">section</a>
+
+					</div>
+				</li>
+				<li><a href="list.html?page=conc&amp;typ=xx">Concordances of references</a></li>
+				<li><a href="sources.html?typ=im_dx">Index Itinerarium Militaris (F.C. Scheyb 1809)</a></li>			  </ul>
+			</li>
+			<li class="dropdown">
+			  <a href="#" class="dropdown-toggle caps" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false">Fontes <span class="caret"></span></a>
+			  <ul class="dropdown-menu">
+				<li class="dropdown-header">ancient sources</li>
+				<li><a href="sources.html?typ=ia">Itinerarium Antonini</a></li>
+				<li><a href="sources.html?typ=ib">Itinerarium Burdigalense</a></li>
+				<li><a href="sources.html?typ=ig">Itinerarium Gaditanum</a></li>
+				<li><a href="sources.html?typ=rc">Ravennatis Cosmographia</a></li>
+				<li><a href="sources.html?typ=gg">Guidonis Geographia</a></li>
+				<li><a href="sources.html?typ=nd">Notitia Dignitatum</a></li>
+				<li><a href="sources.html?typ=pl">Naturalis Historia (C. Plinius II Lib. III-VI</a></li>
+				<li><a href="sources.html?typ=hcg">Hieroclis Synekdemos</a></li>
+				<li><a href="sources.html?typ=icmp">Isidori Characeni - Mansiones Parthicae</a></li>
+				<li role="separator" class="divider"></li>
+				<li class="dropdown-header">scientific sources</li>
+				<li><a href="sources.html?typ=de_tp_la">De Tabula Peutingeriana (I.G. Lottero 1732)</a></li>
+				<li><a href="sources.html?typ=im_dx">Index Itinerarium Militaris (F.C. Scheyb 1809)</a></li>
+				<li><a href="sources.html?typ=isis">Isis (Leichtlen 1825)</a></li>
+				<li><a href="sources.html?typ=e_paulus">Erkl&auml;rung der Peutinger Tafel (E. Paulus 1866)</a></li>
+				<li><a href="sources.html?typ=k_miller">Die Weltkarte des Castorius (K. Miller 1887)</a></li>
+			  </ul>
+			</li>
+			<li class="dropdown">
+			<a href="#"  class="dropdown-toggle caps" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="Nexus Interni"><img src="stil/tp-nin.gif" height="20" alt="links" /><span class="caret"></span></a>
+			  <ul class="dropdown-menu">
+				<li class="dropdown-header">download</li>
+				<li><a href="index.html?cont=dld#font" title="windows-fonts">Windows-Fonts</a></li>
+				<li><a href="index.html?cont=dld#pict" title="images">pictures</a></li>
+				<li><a href="index.html?cont=dld#pdf" title="facsimile">facsimile</a></li>
+				<li role="separator" class="divider"></li>
+				<li class="dropdown-header">notes</li>
+				<li><a href="index.html?cont=help&amp;typ=exp&amp;lang=en;" title="shortcuts">? shortcuts</a><li>
+				<li><a href="index.html?cont=help&amp;typ=lst&amp;lang=en;" title="help">? help</a><li>
+			  </ul>
+			</li>
+			<li class="dropdown">
+			<a href="#" class="dropdown-toggle caps" data-toggle="dropdown" role="button" aria-haspopup="true" aria-expanded="false" title="Nexus Externi"><img src="stil/tp-nex.gif" height="20" alt="links" /><span class="caret"></span></a>
+			  <ul class="dropdown-menu">
+				<li><a href="http://data.onb.ac.at/rec/AC13945113" target="_new" title="Österreichische Nationalbibliothek">ONB Codex324</a></li>
+				<li><a href="http://www.atlantides.org/tprev/prm/prm.html" target="_new">Atlantides.org</a></li>
+				<li><a href="https://dare.ht.lu.se/index.php" target="_new">Digital Atlas of the Roman Empire</a></li>
+				<li><a href="http://www.euratlas.net/cartogra/peutinger/" target="_new">Euratlas.net</a></li>
+				<li role="separator" class="divider"></li>
+				<li class="dropdown-header">Partner-Sites</li>
+				<li><a href="http://omnesviae.org" target="_new" title="Routeplanner of René Voorburg">Omnesviae</a></li>
+				<li role="separator" class="divider"></li>
+				<li class="dropdown-header">References</li>
+				<li><a href="index.html?cont=references#museum" title="References">Museums</a></li>
+				<li><a href="index.html?cont=references#video" title="References">Videos</a></li>
+			  </ul>
+			</li>
+		 </ul>
+	</div><!--/.navbar-collapse -->
+ </div>
+</nav>
+
+</div>
+<footer class="footer">
+	<div class="container">
+	  <div class="row">
+		<div class="col-lg-1 col-sm-2 hidden-xs">
+		</div>
+		<div class="col-lg-3 col-sm-5 hidden-xs"><a href="https://twitter.com/peutingeriana" class="twitter-follow-button" data-show-count="true">Follow @peutingeriana</a><script async src="//platform.twitter.com/widgets.js" charset="utf-8"></script></div>
+		<div class="col-lg-3 col-sm-5 hidden-xs"><span id="fb-root"></span><span class="fb-like" data-href="https://www.tabula-peutingeriana.de/index.html" data-send="true" data-width="200" data-show-faces="false"></span></div>
+		<div class="col-lg-2 col-sm-6 hidden-xs"><div style="font-size:8pt;"></div></div>
+		<div class="col-lg-3 col-sm-6"><a href="index.html?cont=imp">Impressum</a> | <a href="index.html?cont=con">Contact</a></div>
+	  </div>
+	</div>
+</footer>
+<script src="script/jquery.min.js"></script>
+<script src="script/bootstrap.js"></script>
+<!-- IE10 viewport hack for Surface/desktop Windows 8 bug -->
+<script src="script/ie10-fix.js"></script>
+<script src="script/shutter.js"></script>
+<script>
+$(document).ready(function () {
+	$('#loc_info').on('show.bs.modal', function(e) {
+		var test = $('#loc_info').modal({
+		  keyboard: false, //Modal kann mittels Esc-Taste nicht geschlossen werden
+		  show: false //Damit Modal nicht gleich zu Beginn geladen wird
+		});
+		var id = $(e.relatedTarget).data('id');
+		//window.alert(id);
+		//load_loc(id);
+		$.get('script/loc_info.php?id='+id,function(data) {
+		  $('#loc_info .modal-body').html(data)
+		  $('#loc_info .modal-header .modal-title').html('Talbert Database: Detail Location #'+id);
+		});	    
+	});
+	$("a.fn").on('click', show_elem );
+	$("span.fn").on('click', hide_elem );
+});
+
+lang_hide("fr");
+lang_hide("it");
+lang_hide("en");
+lang_hide("la");
+
+//var a_lang = ["de","en","fr","it"];
+//a_lang.forEach(lang_hide);
+
+function lang_show(lang) {
+$("div[class='inhalt multilang'] div:lang("+lang+")").removeClass("aus");
+}
+
+function lang_hide(lang) {
+$("div[class='inhalt multilang'] div:lang("+lang+")").addClass("aus");
+}
+
+
+function show_elem (event) {
+	var elem = $( this );
+	el_obj = document.getElementById(elem.attr("href").substr(1));
+	el_obj.style.visibility = "visible";
+	el_obj.style.height = "100%";
+	el_obj.style.padding ="5px 20px 5px 20px";
+	return false;
+}
+
+function hide_elem (event) {
+	var elem = $( this );
+	el_obj = document.getElementById(elem.attr("id"));
+	el_obj.style.visibility = "hidden";
+	el_obj.style.height = "0";
+	el_obj.style.padding ="0px";
+	return false;
+}
+
+function loc_info(myparam) {
+	$('#loc_info').modal('show');
+	load_loc(myparam);
+}
+
+function show_info(elementclass) {
+	if ( $(elementclass).is(":visible") ) {
+		$(elementclass).slideUp('slow');
+		$(elementclass).parent().removeClass('active');
+	}
+	else {
+		$(elementclass).slideDown('slow');
+		$(elementclass).parent().addClass('active');
+	}
+}
+
+function load_loc (param) {
+	//window.alert(param);
+	$.get('script/loc_info.php?id='+param,function(data) {
+		  $('#loc_info .modal-body').html(data)
+		  $('#loc_info .modal-header .modal-title').html('Talbert Database: Details of Location #'+param);
+	});
+}
+
+var Pfad = "http://dare.ht.lu.se/api/geojson.php?id=";
+// "dare.ht.lu.se/places/" + id;
+var target_div ="orte";
+
+//load_dare(dare["23489"]);
+function load_dare (param) {
+	var post_request;
+	$.getJSON( Pfad+param, function( json ) {
+		post_request = "lat_lon=" + json.features[0].geometry.coordinates[1].substr(0,9) + "," + json.features[0].geometry.coordinates[0].substr(0,9);
+		$.each( json.features[0].properties, function( key, value ) {
+			post_request += "&" + key + "=" + value;
+		});
+		$.ajax({
+			type:'POST',
+			url:'http://tabula-peutingeriana.de/script/show_dare.php',
+			data:post_request,
+			success:function(html){
+				//window.alert(post_request);
+				$('#'+target_div).append("<p>" + html +"</p>");
+				//$('#'+target_div).slideDown('slow');
+			}
+		});
+	});
+}
+
+</script>
+<div class="modal fade" id="loc_info" role="dialog">
+	<div class="modal-dialog modal-lg">
+		<div class="modal-content">
+			<div class="modal-header">
+				<button type="button" class="close" data-dismiss="modal">&times;</button>
+				<h4 class="modal-title"></h4>
+			</div>
+			<div class="modal-body">
+			  <img src="stil/loading.gif" /> wait until data loaded ...
+			</div>
+			<div class="modal-footer">
+				<button type="button" data-dismiss="modal">Close</button>
+			</div>
+		</div>
+	</div>
+</div>
+</body>
+</html>

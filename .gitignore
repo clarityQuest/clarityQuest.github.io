@@ -1,3 +1,25 @@
 upload-for-github.zip
 .DS_Store
 Thumbs.db
+
+# IDE / tooling
+.vscode/
+.claude/
+
+# Personal notes
+todo.txt
+
+# Large source images not needed at runtime
+public/segments_150dpi/
+public/Tabula_Peutingeriana_150dpi_Stitched.jpg
+
+# Reference / working data not needed at runtime
+archive/
+Ulm Database/
+
+# Script working files
+scripts/__pycache__/
+scripts/tp_150dpi_3.jpg
+scripts/omnesviae_sample.json
+scripts/tabula_places_full.json
+scripts/geocoding_cache.json

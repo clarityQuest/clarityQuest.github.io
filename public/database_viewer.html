@@ -1,0 +1,1047 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Review Database Viewer</title>
+  <style>
+    :root {
+      --bg: #f4f1e8;
+      --paper: #fffdf8;
+      --ink: #1e1b16;
+      --muted: #6b6358;
+      --line: #d8cfbe;
+      --city: #8f2d1f;
+      --marking: #1f4f7a;
+      --ok: #215a35;
+      --warn: #8a5a12;
+      --alert: #8b1e2d;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html, body {
+      height: 100%;
+      overflow: hidden;
+      font-family: Georgia, "Times New Roman", serif;
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 10%, #efe5cf 0, transparent 35%),
+        radial-gradient(circle at 85% 25%, #e6dcc5 0, transparent 32%),
+        linear-gradient(180deg, #f8f3e8 0%, var(--bg) 65%, #ece4d5 100%);
+    }
+
+    .wrap {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      padding: 10px 12px 0;
+      min-width: 0;
+    }
+
+    .top-header {
+      flex-shrink: 0;
+      display: flex;
+      align-items: baseline;
+      gap: 16px;
+      padding-bottom: 8px;
+    }
+
+    h1 {
+      font-size: clamp(1.1rem, 2vw, 1.6rem);
+      letter-spacing: 0.02em;
+      white-space: nowrap;
+    }
+
+    .meta {
+      color: var(--muted);
+      font-size: 0.82rem;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .panel {
+      flex: 1;
+      min-height: 0;
+      display: flex;
+      flex-direction: column;
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 12px 12px 0 0;
+      box-shadow: 0 3px 14px rgba(30, 27, 22, 0.08);
+      overflow: hidden;
+    }
+
+    .controls {
+      flex-shrink: 0;
+      display: grid;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr;
+      gap: 8px;
+      padding: 8px 10px;
+      border-bottom: 1px solid var(--line);
+      background: #f7f0e0;
+    }
+
+    input[type="text"], input[type="search"], select {
+      width: 100%;
+      padding: 7px 9px;
+      border: 1px solid #cbbda6;
+      border-radius: 7px;
+      background: #fffefa;
+      color: var(--ink);
+      font: inherit;
+      font-size: 0.88rem;
+    }
+
+    .stats {
+      flex-shrink: 0;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      padding: 7px 10px;
+      border-bottom: 1px solid var(--line);
+      background: #fff8ec;
+      color: #433c31;
+      font-size: 0.85rem;
+    }
+
+    .chip {
+      border: 1px solid #d6c7af;
+      border-radius: 999px;
+      padding: 2px 9px;
+      background: #fffdf7;
+    }
+
+    .table-wrap {
+      flex: 1;
+      overflow: auto;
+      min-height: 0;
+    }
+
+    /* Column chooser pinned at bottom */
+    .column-controls {
+      flex-shrink: 0;
+      border-top: 1px solid var(--line);
+      background: #fcf6e9;
+      padding: 7px 10px 8px;
+      max-height: 160px;
+      overflow-y: auto;
+    }
+
+    .column-title {
+      margin: 0 0 6px;
+      font-size: 0.85rem;
+      color: #4d4439;
+    }
+
+    .column-table {
+      width: 100%;
+      min-width: 0;
+      border-collapse: separate;
+      border-spacing: 5px 4px;
+      font-size: 0.82rem;
+    }
+
+    .column-table td {
+      border: 1px solid #d8cfbe;
+      border-radius: 7px;
+      background: #fffdf8;
+      padding: 4px 7px;
+      vertical-align: middle;
+      width: 25%;
+    }
+
+    .column-option {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      color: #3f372d;
+    }
+
+    .column-option input[type="checkbox"] {
+      width: auto;
+      flex-shrink: 0;
+    }
+
+    .col-desc {
+      font-size: 0.72rem;
+      color: var(--muted);
+      margin-top: 1px;
+      line-height: 1.3;
+    }
+
+    /* Main data table */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.88rem;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      z-index: 3;
+      background: #efe6d3;
+      text-align: left;
+      padding: 8px 8px 6px;
+      border-bottom: 1px solid var(--line);
+      white-space: nowrap;
+      cursor: default;
+    }
+
+    thead th .th-label {
+      display: block;
+      font-weight: 600;
+    }
+
+    /* Column filter row */
+    thead tr.filter-row th {
+      position: sticky;
+      top: 33px; /* height of header row */
+      z-index: 2;
+      padding: 3px 4px;
+      background: #f5edda;
+      border-bottom: 2px solid var(--line);
+    }
+
+    thead tr.filter-row th input {
+      width: 100%;
+      padding: 3px 6px;
+      font-size: 0.78rem;
+      border: 1px solid #cbbda6;
+      border-radius: 4px;
+      background: #fffefa;
+      color: var(--ink);
+      font-family: inherit;
+      min-width: 40px;
+    }
+
+    thead tr.filter-row th input:focus {
+      outline: none;
+      border-color: var(--marking);
+      background: #fff;
+    }
+
+    .filter-active {
+      background: rgba(31, 79, 122, 0.08) !important;
+      border-color: var(--marking) !important;
+    }
+
+    tbody td {
+      padding: 6px 8px;
+      border-bottom: 1px dashed #dfd4c2;
+      vertical-align: top;
+    }
+
+    tbody tr:nth-child(odd) { background: #fffcf4; }
+    tbody tr:hover { background: #f5ebd4; }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid currentColor;
+      font-size: 0.76rem;
+      white-space: nowrap;
+    }
+
+    .badge.city { color: var(--city); }
+    .badge.marking { color: var(--marking); }
+    .badge.match { color: var(--ok); }
+    .badge.linked { color: var(--marking); }
+    .badge.differs { color: var(--alert); }
+    .badge.only { color: var(--warn); }
+    .badge.review { color: var(--alert); font-weight: bold; }
+    .badge.geocoded { color: var(--ok); font-size: 0.72rem; }
+
+    .tabula-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      padding: 0;
+      border: 0;
+      background: transparent;
+      color: var(--marking);
+      text-decoration: none;
+      border-bottom: 1px solid rgba(31, 79, 122, 0.35);
+      cursor: pointer;
+      font: inherit;
+    }
+    .tabula-link:hover { border-bottom-color: currentColor; }
+
+    .osm-link {
+      color: var(--marking);
+      text-decoration: none;
+      border-bottom: 1px dotted rgba(31, 79, 122, 0.55);
+      white-space: nowrap;
+    }
+    .osm-link:hover { border-bottom-color: currentColor; }
+
+    /* Hover / OSM previews */
+    .hover-preview {
+      position: fixed;
+      display: none;
+      width: min(340px, calc(100vw - 24px));
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 14px 36px rgba(0,0,0,0.2);
+      overflow: hidden;
+      z-index: 60;
+      pointer-events: auto;
+    }
+    .hover-preview.open { display: block; }
+
+    .hover-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 9px 11px;
+      border-bottom: 1px solid var(--line);
+      background: #f7f0e0;
+    }
+    .hover-title { margin: 0; font-size: 0.93rem; }
+    .hover-open { color: var(--marking); text-decoration: none; font-size: 0.86rem; }
+    .hover-body { padding: 9px 11px 11px; }
+
+    .hover-main {
+      width: 100%; aspect-ratio: 16/9;
+      border: 1px solid #d9cfbe; border-radius: 9px;
+      background-color: #eee5d6; background-repeat: no-repeat;
+      background-position: center; background-size: cover;
+    }
+    .hover-caption { margin-top: 6px; color: var(--muted); font-size: 0.84rem; }
+    .hover-mini-wrap { position: relative; width: 150px; margin-top: 8px; }
+    .hover-mini {
+      width: 100%; aspect-ratio: 16/5.5;
+      border: 1px solid #d9cfbe; border-radius: 7px;
+      background-color: #eee5d6; background-repeat: no-repeat;
+      background-position: center; background-size: cover;
+    }
+    .hover-marker {
+      position: absolute; width: 20%; height: 33.333%;
+      border: 2px solid var(--alert); background: rgba(139,30,45,0.12);
+      border-radius: 3px; box-shadow: 0 0 0 1px rgba(255,255,255,0.65);
+      pointer-events: none;
+    }
+
+    .osm-preview {
+      position: fixed; display: none;
+      width: min(340px, calc(100vw - 24px));
+      background: var(--paper); border: 1px solid var(--line);
+      border-radius: 10px; box-shadow: 0 10px 24px rgba(0,0,0,0.2);
+      z-index: 61; pointer-events: auto; padding: 9px 11px 11px;
+    }
+    .osm-preview.open { display: block; }
+    .osm-preview-title { margin: 0 0 5px; font-size: 0.88rem; color: var(--ink); }
+    .osm-preview-coords { margin: 0 0 6px; color: var(--muted); font-size: 0.82rem; }
+    .osm-preview-link { color: var(--marking); text-decoration: none; font-size: 0.86rem; }
+    .osm-map {
+      width: 100%; aspect-ratio: 16/10;
+      border: 1px solid #d9cfbe; border-radius: 7px;
+      overflow: hidden; background: #efe8d8; margin: 6px 0 8px;
+    }
+    .osm-map iframe { border: 0; width: 100%; height: 100%; display: block; }
+
+    /* Row tinting by match */
+    tr.match-modern_match { background: #f3fbf2; }
+    tr.match-modern_differs { background: #fff2f0; }
+    tr.match-linked_by_id { background: #f3f7fc; }
+
+    @media (max-width: 860px) {
+      .controls { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+<div class="wrap">
+  <div class="top-header">
+    <h1>OmnesViae + Tabula Review Viewer</h1>
+    <div class="meta" id="meta">Loading data…</div>
+  </div>
+
+  <section class="panel">
+    <div class="controls">
+      <input id="q" type="search" placeholder="Search Latin, modern, ID, type…" />
+      <select id="source">
+        <option value="all">All sources</option>
+        <option value="omnesviae">OmnesViae</option>
+        <option value="tabula">Tabula markings</option>
+      </select>
+      <select id="type">
+        <option value="all">All types</option>
+      </select>
+      <select id="match">
+        <option value="all">All match states</option>
+        <option value="modern_match">Modern names match</option>
+        <option value="modern_differs">Modern names differ</option>
+        <option value="linked_by_id">Linked by ID only</option>
+        <option value="omnesviae_only">OmnesViae only</option>
+        <option value="tabula_only">Tabula only</option>
+      </select>
+      <select id="review">
+        <option value="all">All geocode states</option>
+        <option value="remaining_refinement">Remaining CSV</option>
+        <option value="needs_refinement">Needs review</option>
+        <option value="accepted">Geocoded</option>
+        <option value="no_candidate">No result</option>
+        <option value="error">Error</option>
+        <option value="none">No geocoding</option>
+      </select>
+    </div>
+
+    <div class="stats" id="stats"></div>
+
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr id="head-row"></tr>
+          <tr id="filter-row" class="filter-row"></tr>
+        </thead>
+        <tbody id="rows"></tbody>
+      </table>
+    </div>
+
+    <div class="column-controls">
+      <h2 class="column-title">Visible columns (saved per browser) — hover a column header for description</h2>
+      <table class="column-table">
+        <tbody id="column-rows"></tbody>
+      </table>
+    </div>
+  </section>
+</div>
+
+<!-- Hover previews -->
+<div class="hover-preview" id="hover-preview" aria-hidden="true">
+  <div class="hover-head">
+    <h2 class="hover-title" id="hover-title">Tabula location</h2>
+    <a id="hover-open" class="hover-open" href="#" target="_blank" rel="noopener">Open</a>
+  </div>
+  <div class="hover-body">
+    <div id="hover-main" class="hover-main"></div>
+    <div id="hover-caption" class="hover-caption"></div>
+    <div class="hover-mini-wrap">
+      <div id="hover-mini" class="hover-mini"></div>
+      <div id="hover-marker" class="hover-marker"></div>
+    </div>
+  </div>
+</div>
+
+<div class="osm-preview" id="osm-preview" aria-hidden="true">
+  <h3 class="osm-preview-title">Coordinates</h3>
+  <p class="osm-preview-coords" id="osm-preview-coords"></p>
+  <div class="osm-map"><iframe id="osm-preview-map" title="OpenStreetMap preview" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe></div>
+  <a id="osm-preview-link" class="osm-preview-link" href="#" target="_blank" rel="noopener">View on OpenStreetMap</a>
+</div>
+
+<script>
+  let allRecords = [];
+  let allColumns = [];
+  let visibleColumns = [];
+  let columnFilters = {};   // { colKey: filterString }
+  let hoverHideTimer = null;
+  let osmHideTimer = null;
+
+  const DEFAULT_TYPE_FILTER = null;
+  const VISIBLE_COLUMNS_STORAGE_KEY = 'tp_database_viewer_visible_columns_v1';
+  const COLUMNS_PER_ROW = 4;
+
+  const DEFAULT_VISIBLE_COLUMNS = [
+    '__rownum', 'latin', 'modern_preferred', 'type', 'country',
+    'tabula_location', '__geocoded_lat_lng', '__review', '__ov_coords',
+    'source', 'match_status', 'data_id',
+  ];
+
+  const SPECIAL_COLUMN_LABELS = {
+    '__rownum':          '#',
+    '__geocoded_lat_lng':'Geocoded Lat/Lng',
+    '__review':          'Review',
+    '__ov_coords':       'OV Coords',
+    'modern_preferred':  'Modern (preferred)',
+    'match_status':      'Match',
+    'data_id':           'Data ID',
+    'tabula_location':   'Tabula location',
+    'miller_px':         'Miller px',
+    'miller_py':         'Miller py',
+    'miller_rect_x1':    'Miller rect x1',
+    'miller_rect_y1':    'Miller rect y1',
+    'miller_rect_x2':    'Miller rect x2',
+    'miller_rect_y2':    'Miller rect y2',
+    'miller_rect_w':     'Miller rect w',
+    'miller_rect_h':     'Miller rect h',
+    'miller_rect_user_set': 'Miller calibrated',
+  };
+
+  // Descriptions shown as tooltips on column headers and in column chooser
+  const COLUMN_DESCRIPTIONS = {
+    '__rownum':           'Row number in the current filtered result set.',
+    '__geocoded_lat_lng': 'Best available coordinates: geocoded result if accepted, otherwise OmnesViae lat/lng. Shown in index info panel.',
+    '__review':           'Geocoding review status badge (✓ accepted, ✗ needs review, no result, error).',
+    '__ov_coords':        'Original OmnesViae coordinates (lat/lng from the OmnesViae database).',
+    'data_id':            'Numeric ID shared across calibrate.html, index.html and the database. Unique per place.',
+    'record_id':          'Internal string identifier used to match records across sources.',
+    'latin':              'Latin place name as it appears on the Tabula Peutingeriana.',
+    'latin_std':          'Standardised/normalised form of the Latin name.',
+    'modern_preferred':   'Best known modern equivalent. Shown in index tooltips and calibrate panel.',
+    'modern_tabula':      'Modern name from tabula-peutingeriana.de source.',
+    'modern_omnesviae':   'Modern name from OmnesViae database.',
+    'type':               'Place type (major_city, city, port, road_station, river, lake…). Controls which places appear in calibrate filters and index markers.',
+    'source':             'Data source: "omnesviae" = imported from OmnesViae, "tabula" = Tabula-only marking.',
+    'match_status':       'How OmnesViae and Tabula records were linked (modern_match / modern_differs / linked_by_id / tabula_only / omnesviae_only).',
+    'lat':                'Latitude — OmnesViae value for omnesviae records; geocoded value for tabula records.',
+    'lng':                'Longitude — see lat.',
+    'px':                 'Pixel x-centre on the Readable SegIV image (4371 px wide). Used by index.html new-map markers.',
+    'py':                 'Pixel y-centre on the Readable SegIV image. Used by index.html new-map markers.',
+    'miller_px':          'Pixel x-centre on the Miller 1887 full image (46380 px wide). Written by calibrate.html, read by index.html old-map overlay.',
+    'miller_py':          'Pixel y-centre on the Miller 1887 full image. Written by calibrate.html, read by index.html old-map overlay.',
+    'miller_rect_x1':     'Left edge of the calibrated bounding box on the Miller image. Written by calibrate.html → saved to DB → read by index.html old-map overlay.',
+    'miller_rect_y1':     'Top edge of the calibrated bounding box on the Miller image.',
+    'miller_rect_x2':     'Right edge of the calibrated bounding box on the Miller image.',
+    'miller_rect_y2':     'Bottom edge of the calibrated bounding box on the Miller image.',
+    'miller_rect_w':      'Width of the calibrated bounding box in Miller image pixels.',
+    'miller_rect_h':      'Height of the calibrated bounding box in Miller image pixels.',
+    'miller_rect_user_set':'True when the bounding box was set manually in calibrate.html (not auto-estimated).',
+    'tabula_segment':     'Segment number on the Tabula scroll (2–12). Used to estimate position in calibrate.html.',
+    'tabula_row':         'Row within the segment (a = top, b = middle, c = bottom). Used in calibrate position estimate.',
+    'tabula_col':         'Column within the segment on the Tabula. Used in calibrate position estimate.',
+    'tabula_location':    'Human-readable Tabula grid reference, e.g. "Seg 4 b3". Links to tabula-peutingeriana.de.',
+    'province':           'Roman province name.',
+    'region':             'Geographic region.',
+    'country':            'Modern country.',
+    'symbol':             'Tabula Peutingeriana symbol code for this place.',
+    'geocoding_status':   'Geocoding pipeline result: accepted / needs_refinement / no_candidate / error.',
+    'geocoding_lat':      'Latitude returned by the geocoding pipeline (overrides lat/lng if geocoding_status = accepted).',
+    'geocoding_lng':      'Longitude returned by the geocoding pipeline.',
+    'geocoding_provider': 'Geocoding service used (e.g. Nominatim).',
+  };
+
+  const refs = {
+    meta:          document.getElementById('meta'),
+    stats:         document.getElementById('stats'),
+    headRow:       document.getElementById('head-row'),
+    filterRow:     document.getElementById('filter-row'),
+    rows:          document.getElementById('rows'),
+    columnRows:    document.getElementById('column-rows'),
+    q:             document.getElementById('q'),
+    source:        document.getElementById('source'),
+    type:          document.getElementById('type'),
+    match:         document.getElementById('match'),
+    review:        document.getElementById('review'),
+    hoverPreview:  document.getElementById('hover-preview'),
+    hoverTitle:    document.getElementById('hover-title'),
+    hoverOpen:     document.getElementById('hover-open'),
+    hoverMain:     document.getElementById('hover-main'),
+    hoverMini:     document.getElementById('hover-mini'),
+    hoverMarker:   document.getElementById('hover-marker'),
+    hoverCaption:  document.getElementById('hover-caption'),
+    osmPreview:    document.getElementById('osm-preview'),
+    osmPreviewCoords: document.getElementById('osm-preview-coords'),
+    osmPreviewLink:   document.getElementById('osm-preview-link'),
+    osmPreviewMap:    document.getElementById('osm-preview-map'),
+  };
+
+  /* ── CSV helper ── */
+  function parseCsvLine(line) {
+    const out = [];
+    let cur = '', inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') {
+        if (inQuotes && line[i+1] === '"') { cur += '"'; i++; }
+        else inQuotes = !inQuotes;
+        continue;
+      }
+      if (ch === ',' && !inQuotes) { out.push(cur); cur = ''; continue; }
+      cur += ch;
+    }
+    out.push(cur);
+    return out;
+  }
+
+  async function loadRemainingRefinementIds() {
+    try {
+      const res = await fetch('data/river_lake_remaining_refinement.csv', { cache: 'no-store' });
+      if (!res.ok) return new Set();
+      const text = await res.text();
+      const lines = text.split(/\r?\n/).filter(Boolean);
+      if (lines.length < 2) return new Set();
+      const header = parseCsvLine(lines[0]);
+      const idIndex = header.indexOf('record_id');
+      if (idIndex < 0) return new Set();
+      const ids = new Set();
+      for (let i = 1; i < lines.length; i++) {
+        const id = (parseCsvLine(lines[i])[idIndex] || '').trim();
+        if (id) ids.add(id);
+      }
+      return ids;
+    } catch { return new Set(); }
+  }
+
+  /* ── Formatters ── */
+  function escapeHtml(v) {
+    return String(v ?? '').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function titleCase(value) {
+    return String(value||'').split('_').filter(Boolean)
+      .map(p => p.charAt(0).toUpperCase()+p.slice(1)).join(' ');
+  }
+
+  function matchLabel(v) {
+    const MAP = { modern_match:'modern match', modern_differs:'modern differs',
+                  linked_by_id:'linked by ID', tabula_only:'tabula only', omnesviae_only:'omnesviae only' };
+    return MAP[v] || v || '';
+  }
+
+  function matchBadgeClass(v) {
+    if (v === 'modern_match') return 'match';
+    if (v === 'linked_by_id') return 'linked';
+    if (v === 'modern_differs') return 'differs';
+    return 'only';
+  }
+
+  function hasValidCoords(lat, lng) {
+    return Number.isFinite(lat) && Number.isFinite(lng) && lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
+  }
+
+  function osmHref(lat, lng) { return `https://www.openstreetmap.org/?lat=${lat}&lon=${lng}&zoom=15`; }
+
+  function osmEmbedHref(lat, lng) {
+    const dLat = 0.04, dLng = 0.06;
+    return `https://www.openstreetmap.org/export/embed.html?bbox=${lng-dLng}%2C${lat-dLat}%2C${lng+dLng}%2C${lat+dLat}&layer=mapnik&marker=${lat}%2C${lng}`;
+  }
+
+  function fmtCoords(lat, lng) {
+    if (lat == null || lng == null) return ' - ';
+    const la = Number(lat), lo = Number(lng);
+    if (!hasValidCoords(la, lo)) return ' - ';
+    const txt = `${la.toFixed(4)}, ${lo.toFixed(4)}`;
+    const payload = encodeURIComponent(JSON.stringify({ lat: la, lng: lo }));
+    return `<a class="osm-link" href="${escapeHtml(osmHref(la,lo))}" target="_blank" rel="noopener" data-osm-preview="${escapeHtml(payload)}">${escapeHtml(txt)}</a>`;
+  }
+
+  function fmtLatLng(r) {
+    if (hasValidCoords(Number(r.geocoding_lat), Number(r.geocoding_lng)))
+      return fmtCoords(r.geocoding_lat, r.geocoding_lng);
+    return fmtCoords(r.lat, r.lng);
+  }
+
+  function fmtOvLatLng(r) {
+    if (r.source !== 'omnesviae') return ' - ';
+    return fmtCoords(r.lat, r.lng);
+  }
+
+  /* ── Tabula URL helpers ── */
+  function tabulaHref(r) {
+    const seg = Number(r.tabula_segment), row = String(r.tabula_row||'').trim().toLowerCase(), col = Number(r.tabula_col);
+    if (!Number.isFinite(seg)||seg<1||!/^[abc]$/.test(row)||!Number.isFinite(col)||col<1) return '';
+    return `https://www.tabula-peutingeriana.de/tp/tabula.html?segm=${Math.max(seg-1,0).toString(16)}#${row}${Math.trunc(col)}`;
+  }
+
+  function tabulaThumbUrl(r) {
+    const seg = Number(r.tabula_segment);
+    return Number.isFinite(seg)&&seg>=1 ? `https://www.tabula-peutingeriana.de/img/tpmvs${Math.max(seg-1,0).toString(16)}.jpg` : '';
+  }
+
+  function tabulaCellUrl(r) {
+    const seg = Number(r.tabula_segment), row = String(r.tabula_row||'').trim().toLowerCase(), col = Number(r.tabula_col);
+    if (!Number.isFinite(seg)||seg<1||!/^[abc]$/.test(row)||!Number.isFinite(col)||col<1) return '';
+    return `https://www.tabula-peutingeriana.de/img/w_${(seg-1).toString(16)}${row}${Math.trunc(col)}.jpg`;
+  }
+
+  function rowIndex(row) { return row==='a'?0:row==='b'?1:row==='c'?2:0; }
+
+  /* ── Preview positioning ── */
+  function previewPosition(triggerRect, previewEl) {
+    const gap = 12, w = previewEl.offsetWidth||340, h = previewEl.offsetHeight||320;
+    let left = triggerRect.right + gap, top = triggerRect.top;
+    if (left+w > window.innerWidth-12) left = Math.max(12, triggerRect.left-w-gap);
+    if (top+h > window.innerHeight-12) top = Math.max(12, window.innerHeight-h-12);
+    return { left, top };
+  }
+
+  function clearHoverHideTimer() { if (hoverHideTimer) { clearTimeout(hoverHideTimer); hoverHideTimer=null; } }
+  function clearOsmHideTimer()   { if (osmHideTimer)   { clearTimeout(osmHideTimer);   osmHideTimer=null; } }
+
+  function scheduleHoverHide() {
+    clearHoverHideTimer();
+    hoverHideTimer = window.setTimeout(() => {
+      refs.hoverPreview.classList.remove('open');
+      refs.hoverPreview.setAttribute('aria-hidden','true');
+    }, 120);
+  }
+
+  function scheduleOsmHide() {
+    clearOsmHideTimer();
+    osmHideTimer = window.setTimeout(() => {
+      refs.osmPreview.classList.remove('open');
+      refs.osmPreview.setAttribute('aria-hidden','true');
+    }, 120);
+  }
+
+  function showHoverPreview(trigger, record) {
+    const href = tabulaHref(record), thumbUrl = tabulaThumbUrl(record), cellUrl = tabulaCellUrl(record);
+    if (!href||!thumbUrl||!cellUrl) return;
+    const col = Number(record.tabula_col), row = String(record.tabula_row||'').toLowerCase();
+    clearHoverHideTimer();
+    refs.hoverTitle.textContent = `Tabula location: ${record.tabula_location||''}`;
+    refs.hoverOpen.href = href;
+    refs.hoverMain.style.backgroundImage = `url('${cellUrl}')`;
+    refs.hoverMini.style.backgroundImage = `url('${thumbUrl}')`;
+    refs.hoverCaption.textContent = `${record.type?titleCase(record.type)+' · ':''}${record.country||''}`.replace(/ · $/,'');
+    refs.hoverMarker.style.left = `${((Math.max(col,1)-1)/5)*100}%`;
+    refs.hoverMarker.style.top  = `${(rowIndex(row)/3)*100}%`;
+    refs.hoverPreview.classList.add('open');
+    refs.hoverPreview.setAttribute('aria-hidden','false');
+    const pos = previewPosition(trigger.getBoundingClientRect(), refs.hoverPreview);
+    refs.hoverPreview.style.left = `${pos.left}px`;
+    refs.hoverPreview.style.top  = `${pos.top}px`;
+  }
+
+  function showOsmPreview(trigger, payload) {
+    const lat = Number(payload.lat), lng = Number(payload.lng);
+    if (!hasValidCoords(lat,lng)) return;
+    clearOsmHideTimer();
+    refs.osmPreviewCoords.textContent = `${lat.toFixed(4)}, ${lng.toFixed(4)}`;
+    refs.osmPreviewLink.href = osmHref(lat,lng);
+    refs.osmPreviewMap.src   = osmEmbedHref(lat,lng);
+    refs.osmPreview.classList.add('open');
+    refs.osmPreview.setAttribute('aria-hidden','false');
+    const pos = previewPosition(trigger.getBoundingClientRect(), refs.osmPreview);
+    refs.osmPreview.style.left = `${pos.left}px`;
+    refs.osmPreview.style.top  = `${pos.top}px`;
+  }
+
+  /* ── Column helpers ── */
+  function getColumnLabel(key) {
+    return SPECIAL_COLUMN_LABELS[key] || titleCase(key);
+  }
+
+  function getColumnDesc(key) {
+    return COLUMN_DESCRIPTIONS[key] || '';
+  }
+
+  function loadVisibleColumns() {
+    try {
+      const raw = localStorage.getItem(VISIBLE_COLUMNS_STORAGE_KEY);
+      if (!raw) return null;
+      const parsed = JSON.parse(raw);
+      if (!Array.isArray(parsed)) return null;
+      return parsed.filter(k => allColumns.includes(k));
+    } catch { return null; }
+  }
+
+  function saveVisibleColumns() {
+    localStorage.setItem(VISIBLE_COLUMNS_STORAGE_KEY, JSON.stringify(visibleColumns));
+  }
+
+  function populateTypeOptions(records) {
+    const values = [...new Set(records.map(r=>r.type).filter(Boolean))].sort();
+    refs.type.innerHTML = ['<option value="all">All types</option>']
+      .concat(values.map(v=>`<option value="${escapeHtml(v)}">${escapeHtml(titleCase(v))}</option>`)).join('');
+  }
+
+  function initColumns(records) {
+    const recCols = [...new Set(records.flatMap(r=>Object.keys(r)))].sort();
+    const orderedDefaults = DEFAULT_VISIBLE_COLUMNS.filter(k => k==='__rownum'||k.startsWith('__')||recCols.includes(k));
+    const remainder = recCols.filter(k => !orderedDefaults.includes(k));
+    allColumns = orderedDefaults.concat(remainder);
+
+    const stored = loadVisibleColumns();
+    visibleColumns = (stored&&stored.length) ? stored : orderedDefaults.slice();
+    if (!(stored&&stored.length)) saveVisibleColumns();
+
+    renderHeadRow();
+    renderFilterRow();
+    renderColumnChooser();
+  }
+
+  function renderHeadRow() {
+    refs.headRow.innerHTML = visibleColumns.map(col => {
+      const desc = getColumnDesc(col);
+      const titleAttr = desc ? ` title="${escapeHtml(desc)}"` : '';
+      return `<th${titleAttr}><span class="th-label">${escapeHtml(getColumnLabel(col))}</span></th>`;
+    }).join('');
+    // Dynamically update sticky top for filter row
+    requestAnimationFrame(updateFilterRowTop);
+  }
+
+  function updateFilterRowTop() {
+    const th = refs.headRow.querySelector('th');
+    if (!th) return;
+    const h = th.offsetHeight;
+    refs.filterRow.querySelectorAll('th').forEach(cell => {
+      cell.style.top = h + 'px';
+    });
+  }
+
+  function renderFilterRow() {
+    refs.filterRow.innerHTML = visibleColumns.map(col => {
+      if (col === '__rownum') return '<th></th>';
+      const v = escapeHtml(columnFilters[col] || '');
+      const hasFilter = !!(columnFilters[col] || '').trim();
+      return `<th><input type="search" class="col-filter${hasFilter?' filter-active':''}" data-col="${escapeHtml(col)}" value="${v}" placeholder="…" /></th>`;
+    }).join('');
+    requestAnimationFrame(updateFilterRowTop);
+  }
+
+  function renderColumnChooser() {
+    const cells = allColumns.map(col => {
+      const checked = visibleColumns.includes(col) ? 'checked' : '';
+      const desc = getColumnDesc(col);
+      const descHtml = desc ? `<div class="col-desc">${escapeHtml(desc)}</div>` : '';
+      return `<td><label class="column-option"><input type="checkbox" data-col-key="${escapeHtml(col)}" ${checked} /><div><span>${escapeHtml(getColumnLabel(col))}</span>${descHtml}</div></label></td>`;
+    });
+
+    const rows = [];
+    for (let i = 0; i < cells.length; i += COLUMNS_PER_ROW) {
+      const chunk = cells.slice(i, i+COLUMNS_PER_ROW);
+      while (chunk.length < COLUMNS_PER_ROW) chunk.push('<td></td>');
+      rows.push(`<tr>${chunk.join('')}</tr>`);
+    }
+    refs.columnRows.innerHTML = rows.join('');
+  }
+
+  function applyVisibleColumnsChange(colKey, enabled) {
+    if (!allColumns.includes(colKey)) return;
+    if (enabled) {
+      if (!visibleColumns.includes(colKey))
+        visibleColumns = allColumns.filter(k => visibleColumns.includes(k) || k === colKey);
+    } else {
+      visibleColumns = visibleColumns.filter(k => k !== colKey);
+    }
+    if (!visibleColumns.length) visibleColumns = [allColumns[0]];
+    saveVisibleColumns();
+    renderHeadRow();
+    renderFilterRow();
+    renderColumnChooser();
+    applyFilters();
+  }
+
+  /* ── Stats ── */
+  function buildStats(list) {
+    const total = list.length;
+    const ov = list.filter(r=>r.source==='omnesviae').length;
+    const tp = list.filter(r=>r.source==='tabula').length;
+    const matched = list.filter(r=>r.match_status==='modern_match').length;
+    const differs = list.filter(r=>r.match_status==='modern_differs').length;
+    const remaining = list.filter(r=>r.remaining_refinement).length;
+    const needsReview = list.filter(r=>r.geocoding_status==='needs_refinement').length;
+    const geocoded = list.filter(r=>r.geocoding_status==='accepted').length;
+    const millerCalib = list.filter(r=>r.miller_rect_x1!=null).length;
+    refs.stats.innerHTML = [
+      `<span class="chip">Visible: ${total}</span>`,
+      `<span class="chip">OmnesViae: ${ov}</span>`,
+      `<span class="chip">Tabula: ${tp}</span>`,
+      `<span class="chip">Modern match: ${matched}</span>`,
+      differs ? `<span class="chip">Differs: ${differs}</span>` : '',
+      millerCalib ? `<span class="chip" style="color:var(--ok)">Miller calibrated: ${millerCalib}</span>` : '',
+      remaining ? `<span class="chip" style="color:var(--alert)">Remaining CSV: ${remaining}</span>` : '',
+      needsReview ? `<span class="chip" style="color:var(--alert)">Needs review: ${needsReview}</span>` : '',
+      geocoded ? `<span class="chip" style="color:var(--ok)">Geocoded: ${geocoded}</span>` : '',
+    ].join('');
+  }
+
+  /* ── Cell rendering ── */
+  function renderCell(r, columnKey, rowNumber, sourceBadgeClass, matchClass, locationCell) {
+    if (columnKey === '__rownum') return String(rowNumber);
+    if (columnKey === '__geocoded_lat_lng') return fmtLatLng(r);
+    if (columnKey === '__review') {
+      if (r.geocoding_status==='needs_refinement') return '<span class="badge review" title="Needs manual review">✗</span>';
+      if (r.geocoding_status==='accepted') return `<span class="badge geocoded" title="Geocoded via ${escapeHtml(r.geocoding_provider||'')}">✓ ${escapeHtml(r.geocoding_provider||'')}</span>`;
+      if (r.geocoding_status==='no_candidate') return '<span class="badge only" title="No geocoding result">no result</span>';
+      if (r.geocoding_status==='error') return '<span class="badge differs" title="Geocoding error">error</span>';
+      return '';
+    }
+    if (columnKey === '__ov_coords') return fmtOvLatLng(r);
+    if (columnKey === 'tabula_location') return locationCell;
+    if (columnKey === 'source') return `<span class="badge ${sourceBadgeClass}">${escapeHtml(r.source)}</span>`;
+    if (columnKey === 'match_status') return `<span class="badge ${matchClass}">${escapeHtml(matchLabel(r.match_status))}</span>`;
+    if (columnKey === 'type') return escapeHtml(titleCase(r.type||''));
+    const value = r[columnKey];
+    if (value == null) return '';
+    if (Array.isArray(value)) return escapeHtml(value.join(' | '));
+    if (typeof value === 'object') return escapeHtml(JSON.stringify(value));
+    return escapeHtml(value);
+  }
+
+  function renderRows(list) {
+    refs.rows.innerHTML = list.map((r, i) => {
+      const sourceBadgeClass = r.source==='omnesviae' ? 'city' : 'marking';
+      const matchClass = matchBadgeClass(r.match_status);
+      const rowClass = `match-${r.match_status||''}`;
+      const locationHref = tabulaHref(r);
+      const locationCell = locationHref
+        ? `<a class="tabula-link" href="${escapeHtml(locationHref)}" target="_blank" rel="noopener"
+             data-tabula-preview="${escapeHtml(encodeURIComponent(JSON.stringify({
+               tabula_segment: r.tabula_segment, tabula_row: r.tabula_row,
+               tabula_col: r.tabula_col, tabula_location: r.tabula_location,
+               type: r.type, country: r.country,
+             })))}">${escapeHtml(r.tabula_location||'')}</a>`
+        : escapeHtml(r.tabula_location||'');
+      return `<tr class="${rowClass}">${visibleColumns.map(col => `<td>${renderCell(r,col,i+1,sourceBadgeClass,matchClass,locationCell)}</td>`).join('')}</tr>`;
+    }).join('');
+  }
+
+  /* ── Per-column filter value extraction ── */
+  function getColFilterValue(r, col) {
+    if (col === '__rownum') return '';
+    if (col === '__geocoded_lat_lng') {
+      const la = r.geocoding_lat ?? r.lat, lo = r.geocoding_lng ?? r.lng;
+      return `${la??''} ${lo??''}`;
+    }
+    if (col === '__review') return r.geocoding_status ?? '';
+    if (col === '__ov_coords') return r.source==='omnesviae' ? `${r.lat??''} ${r.lng??''}` : '';
+    if (col === 'tabula_location') return r.tabula_location ?? '';
+    if (col === 'source') return r.source ?? '';
+    if (col === 'match_status') return r.match_status ?? '';
+    if (col === 'type') return r.type ?? '';
+    return String(r[col] ?? '');
+  }
+
+  /* ── Filters ── */
+  function applyFilters() {
+    const q      = refs.q.value.trim().toLowerCase();
+    const source = refs.source.value;
+    const type   = refs.type.value;
+    const match  = refs.match.value;
+    const review = refs.review.value;
+
+    // Build active column filters (only those with non-empty values)
+    const activeColFilters = Object.entries(columnFilters)
+      .filter(([col, v]) => col !== '__rownum' && v.trim());
+
+    const filtered = allRecords.filter(r => {
+      if (source !== 'all' && r.source !== source) return false;
+      if (type   !== 'all' && r.type   !== type)   return false;
+      if (match  !== 'all' && r.match_status !== match) return false;
+      if (review !== 'all') {
+        if (review === 'remaining_refinement') { if (!r.remaining_refinement) return false; }
+        else if (review === 'none')            { if (r.geocoding_status)      return false; }
+        else                                   { if (r.geocoding_status !== review) return false; }
+      }
+
+      // Global text search
+      if (q) {
+        const hay = [r.latin,r.modern_preferred,r.modern_tabula,r.modern_omnesviae,
+                     r.type,r.country,r.tabula_location,r.match_status,
+                     String(r.data_id??''),r.source].join(' ').toLowerCase();
+        if (!hay.includes(q)) return false;
+      }
+
+      // Per-column filters
+      for (const [col, val] of activeColFilters) {
+        const cellText = getColFilterValue(r, col).toLowerCase();
+        if (!cellText.includes(val.trim().toLowerCase())) return false;
+      }
+
+      return true;
+    });
+
+    buildStats(filtered);
+    renderRows(filtered);
+  }
+
+  /* ── Load data ── */
+  async function loadData() {
+    try {
+      const [res, remainingIds] = await Promise.all([
+        fetch('data/review_places_db.json', { cache: 'no-store' }),
+        loadRemainingRefinementIds(),
+      ]);
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
+      const data = await res.json();
+      allRecords = (data.records||[]).map(r => ({ ...r, remaining_refinement: remainingIds.has(r.record_id) }));
+
+      initColumns(allRecords);
+      populateTypeOptions(allRecords);
+
+      refs.type.value = 'all';
+
+      const meta = data.meta||{}, ov = meta.overview||{};
+      refs.meta.textContent = `${meta.description||''} | OV: ${ov.omnesviae_place_count??'?'} | Tabula: ${ov.tabula_place_count??'?'} | Total: ${ov.records_total??allRecords.length} | Matches: ${ov.records_modern_match??'?'}`;
+
+      applyFilters();
+    } catch (err) {
+      refs.meta.textContent = `Failed to load review_places_db.json (${err.message}). Run: python scripts/build_review_db.py --refresh-tabula`;
+    }
+  }
+
+  /* ── Event listeners ── */
+  [refs.q, refs.source, refs.type, refs.match, refs.review].forEach(el => {
+    el.addEventListener('input',  applyFilters);
+    el.addEventListener('change', applyFilters);
+  });
+
+  // Column toggle checkboxes
+  refs.columnRows.addEventListener('change', event => {
+    const input = event.target.closest('input[data-col-key]');
+    if (!input) return;
+    applyVisibleColumnsChange(input.dataset.colKey, input.checked);
+  });
+
+  // Per-column filter inputs (delegated)
+  refs.filterRow.addEventListener('input', event => {
+    const input = event.target.closest('input.col-filter');
+    if (!input) return;
+    const col = input.dataset.col;
+    columnFilters[col] = input.value;
+    input.classList.toggle('filter-active', !!input.value.trim());
+    applyFilters();
+  });
+
+  // Tabula cell hover
+  refs.rows.addEventListener('mouseover', event => {
+    const t = event.target.closest('[data-tabula-preview]');
+    if (!t) return;
+    try { const r = JSON.parse(decodeURIComponent(t.dataset.tabulaPreview)); if (r) showHoverPreview(t, r); } catch {}
+  });
+  refs.rows.addEventListener('mouseout', event => {
+    const t = event.target.closest('[data-tabula-preview]');
+    if (!t) return;
+    if (!refs.hoverPreview.contains(event.relatedTarget)) scheduleHoverHide();
+  });
+  refs.rows.addEventListener('focusin', event => {
+    const t = event.target.closest('[data-tabula-preview]');
+    if (!t) return;
+    try { const r = JSON.parse(decodeURIComponent(t.dataset.tabulaPreview)); if (r) showHoverPreview(t, r); } catch {}
+  });
+  refs.rows.addEventListener('focusout', event => {
+    const t = event.target.closest('[data-tabula-preview]');
+    if (!t||refs.hoverPreview.contains(event.relatedTarget)) return;
+    scheduleHoverHide();
+  });
+
+  // OSM coords hover
+  refs.rows.addEventListener('mouseover', event => {
+    const t = event.target.closest('[data-osm-preview]');
+    if (!t) return;
+    try { const p = JSON.parse(decodeURIComponent(t.dataset.osmPreview)); if (p) showOsmPreview(t, p); } catch {}
+  });
+  refs.rows.addEventListener('mouseout', event => {
+    const t = event.target.closest('[data-osm-preview]');
+    if (!t) return;
+    if (!refs.osmPreview.contains(event.relatedTarget)) scheduleOsmHide();
+  });
+  refs.rows.addEventListener('focusin', event => {
+    const t = event.target.closest('[data-osm-preview]');
+    if (!t) return;
+    try { const p = JSON.parse(decodeURIComponent(t.dataset.osmPreview)); if (p) showOsmPreview(t, p); } catch {}
+  });
+  refs.rows.addEventListener('focusout', event => {
+    const t = event.target.closest('[data-osm-preview]');
+    if (!t||refs.osmPreview.contains(event.relatedTarget)) return;
+    scheduleOsmHide();
+  });
+
+  refs.hoverPreview.addEventListener('mouseenter', clearHoverHideTimer);
+  refs.hoverPreview.addEventListener('mouseleave', scheduleHoverHide);
+  refs.osmPreview.addEventListener('mouseenter', clearOsmHideTimer);
+  refs.osmPreview.addEventListener('mouseleave', scheduleOsmHide);
+
+  loadData();
+</script>
+</body>
+</html>

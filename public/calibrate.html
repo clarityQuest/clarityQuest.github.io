@@ -1,0 +1,1630 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Tabula — Position Calibrator (Miller)</title>
+  <style>
+    :root {
+      --bg: #0f1117;
+      --panel: rgba(20,20,30,0.97);
+      --border: rgba(255,255,255,0.15);
+      --text: #e4e4e7;
+      --muted: #a1a1aa;
+      --accent: #3b82f6;
+      --green: #22c55e;
+      --yellow: #eab308;
+      --red: #ef4444;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body, html { width: 100%; height: 100%; background: var(--bg); color: var(--text);
+      font-family: "Segoe UI", system-ui, sans-serif; overflow: hidden; }
+
+    #app { display: flex; flex-direction: column; height: 100%; }
+
+    /* ── Progress bar ── */
+    #progress-bar {
+      display: flex; align-items: center; gap: 12px;
+      padding: 8px 16px; background: var(--panel);
+      border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 20;
+    }
+    #progress-label { font-size: 13px; color: var(--muted); white-space: nowrap; }
+    #progress-track { flex: 1; height: 6px; background: rgba(255,255,255,0.1); border-radius: 3px; }
+    #progress-fill { height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s; }
+    #btn-download {
+      padding: 6px 14px; border-radius: 6px; border: 1px solid var(--green);
+      background: transparent; color: var(--green); font-size: 13px; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
+    }
+    #btn-download:hover { background: rgba(34,197,94,0.1); }
+    #btn-save-index {
+      padding: 6px 14px; border-radius: 6px; border: 1px solid var(--accent);
+      background: transparent; color: var(--accent); font-size: 13px; font-weight: 600;
+      cursor: pointer; white-space: nowrap;
+    }
+    #btn-save-index:hover { background: rgba(59,130,246,0.12); }
+#server-save-status {
+      font-size: 12px; white-space: nowrap; min-width: 120px;
+      transition: color 0.3s;
+    }
+
+    /* ── Filter bar ── */
+    #filter-bar {
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+      padding: 7px 16px; background: rgba(15,15,25,0.97);
+      border-bottom: 1px solid var(--border); flex-shrink: 0; z-index: 19;
+    }
+    .filter-group { display: flex; align-items: center; gap: 5px; }
+    .filter-label { font-size: 10px; color: var(--muted); text-transform: uppercase;
+      letter-spacing: .06em; white-space: nowrap; margin-right: 4px; }
+    .filter-btn {
+      padding: 4px 10px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.15);
+      background: rgba(255,255,255,0.04); color: var(--muted);
+      font-size: 12px; font-weight: 500; cursor: pointer; white-space: nowrap;
+      transition: all 0.12s;
+    }
+    .filter-btn:hover { background: rgba(255,255,255,0.09); color: var(--text); }
+    .filter-btn.active {
+      border-color: var(--accent); background: rgba(59,130,246,0.18);
+      color: #93c5fd; font-weight: 700;
+    }
+    /* Type colour accents for active state */
+    .filter-btn[data-type="major_city"].active  { border-color: #8B0000; background: rgba(139,0,0,0.22); color: #fca5a5; }
+    .filter-btn[data-type="city"].active         { border-color: #f97316; background: rgba(249,115,22,0.22); color: #fed7aa; }
+    .filter-btn[data-type="port"].active         { border-color: #1D4ED8; background: rgba(29,78,216,0.22); color: #93c5fd; }
+    .filter-btn[data-type="road_station"].active { border-color: #92400E; background: rgba(146,64,14,0.22); color: #fcd34d; }
+    .filter-btn[data-type="mountain"].active     { border-color: #78716c; background: rgba(120,113,108,0.22); color: #d6d3d1; }
+    .filter-btn[data-type="spa"].active          { border-color: #0891b2; background: rgba(8,145,178,0.22); color: #67e8f9; }
+    .filter-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
+    #btn-show-all-markings {
+      padding: 4px 11px; border-radius: 5px; border: 1px solid var(--green);
+      background: rgba(34,197,94,0.08); color: var(--green);
+      font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+      transition: all 0.12s; margin-left: auto;
+    }
+    #btn-show-all-markings:hover { background: rgba(34,197,94,0.16); }
+    #btn-show-all-markings.off {
+      border-color: rgba(255,255,255,0.2); background: transparent;
+      color: var(--muted);
+    }
+    #btn-hide-done {
+      padding: 4px 11px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2);
+      background: transparent; color: var(--muted);
+      font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+      transition: all 0.12s;
+    }
+    #btn-hide-done:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+    #btn-hide-done.active {
+      border-color: #f59e0b; background: rgba(245,158,11,0.12); color: #fcd34d;
+    }
+
+    /* ── Main area ── */
+    #main { display: flex; flex: 1; min-height: 0; overflow: hidden; }
+
+    /* ── Left panel ── */
+    #panel {
+      width: 520px; flex-shrink: 0;
+      background: var(--panel); border-right: 1px solid var(--border);
+      display: flex; flex-direction: column; padding: 12px 14px; gap: 8px;
+      z-index: 10; overflow-y: auto;
+    }
+    #city-num { font-size: 12px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; }
+    #city-name { font-size: 20px; font-weight: 700; line-height: 1.2; }
+    #city-modern { font-size: 13px; color: var(--muted); }
+
+    /* Meta info grid */
+    .meta-block { background: rgba(255,255,255,0.04); border-radius: 6px; padding: 7px 10px;
+      display: flex; flex-direction: column; gap: 4px; }
+    .meta-row { display: flex; align-items: baseline; gap: 8px; font-size: 13px; }
+    .meta-key { color: var(--muted); text-transform: uppercase; letter-spacing: .05em;
+      font-size: 10px; white-space: nowrap; flex-shrink: 0; min-width: 64px; }
+    .meta-val { color: var(--text); line-height: 1.4; }
+    .meta-val a { color: var(--accent); text-decoration: none; }
+    .meta-val a:hover { text-decoration: underline; }
+
+    /* Tabula cell preview */
+    #tabula-preview { display: none; flex-direction: column; gap: 5px; }
+    #tabula-preview.visible { display: flex; }
+    #tabula-cell-img {
+      width: 100%; aspect-ratio: 16/9;
+      border-radius: 10px; border: 1px solid rgba(255,255,255,0.18);
+      background: #1a1a2a center/cover no-repeat;
+      box-shadow: inset 0 0 0 1px rgba(255,255,255,0.08);
+    }
+    #tabula-mini-wrap { position: relative; width: 160px; }
+    #tabula-mini-img {
+      width: 100%; aspect-ratio: 16/5.5;
+      border-radius: 8px; border: 1px solid rgba(255,255,255,0.15);
+      background: #1a1a2a center/cover no-repeat;
+    }
+    #tabula-mini-marker {
+      position: absolute; width: 20%; height: 33.333%;
+      border: 2px solid #ef4444; background: rgba(239,68,68,0.18);
+      border-radius: 2px; box-shadow: 0 0 0 1px rgba(255,255,255,0.45);
+      pointer-events: none; top: 0; left: 0;
+    }
+    #tabula-preview-label {
+      font-size: 11px; color: var(--muted); text-align: center;
+      text-transform: uppercase; letter-spacing: .05em; margin-top: -2px;
+    }
+
+    .coord-block { background: rgba(255,255,255,0.05); border-radius: 6px; padding: 6px 10px; }
+    .coord-label { font-size: 9px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 3px; }
+    .coord-val { font-size: 10px; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #cur-val { color: var(--yellow); }
+    #new-val { color: var(--green); }
+    #coord-delta { font-size: 9px; color: var(--muted); margin-top: 2px; }
+
+    /* Mark mode toggle */
+    #btn-mark-mode {
+      padding: 10px 12px; border-radius: 6px; border: 2px solid var(--accent);
+      background: transparent; color: var(--accent);
+      font-size: 13px; font-weight: 700; cursor: pointer; text-align: center;
+      transition: all 0.15s;
+    }
+    #btn-mark-mode.active {
+      background: var(--accent); color: #fff;
+    }
+    #btn-mark-mode .hint { font-size: 10px; font-weight: 400; display: block; margin-top: 2px; opacity: 0.8; }
+
+    #hint-box {
+      font-size: 11px; color: var(--muted); line-height: 1.5;
+      border-left: 3px solid var(--accent); padding-left: 8px;
+    }
+
+    .spacer { flex: 1; }
+
+    #btn-group { display: flex; flex-direction: column; gap: 7px; }
+    .nav-btn {
+      padding: 9px 12px; border-radius: 6px; border: 1px solid var(--border);
+      background: rgba(255,255,255,0.04); color: var(--text);
+      font-size: 13px; font-weight: 600; cursor: pointer; text-align: center;
+      transition: background 0.15s;
+    }
+    .nav-btn:hover:not(:disabled) { background: rgba(255,255,255,0.1); }
+    .nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+    #btn-accept { border-color: var(--green); color: var(--green); }
+    #btn-accept:hover:not(:disabled) { background: rgba(34,197,94,0.12); }
+
+    /* Status badge */
+    #status-badge {
+      font-size: 11px; padding: 3px 8px; border-radius: 4px;
+      text-align: center; font-weight: 600;
+    }
+    .badge-pending { background: rgba(161,161,170,0.15); color: var(--muted); }
+    .badge-set { background: rgba(34,197,94,0.15); color: var(--green); }
+    .badge-skipped { background: rgba(234,179,8,0.15); color: var(--yellow); }
+
+    /* Type badge inside panel */
+    #place-type-badge {
+      font-size: 10px; padding: 2px 7px; border-radius: 3px;
+      font-weight: 600; display: inline-block;
+    }
+
+    /* ── City list sidebar ── */
+    #city-list {
+      width: 160px; flex-shrink: 0; background: rgba(13,13,20,0.95);
+      border-right: 1px solid var(--border); overflow-y: auto; z-index: 10;
+    }
+    .city-item {
+      padding: 7px 10px; font-size: 11px; cursor: pointer;
+      border-bottom: 1px solid rgba(255,255,255,0.04);
+      display: flex; align-items: center; gap: 6px;
+    }
+    .city-item:hover { background: rgba(255,255,255,0.05); }
+    .city-item.active { background: rgba(59,130,246,0.15); }
+    .city-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+    .dot-pending { background: var(--muted); }
+    .dot-set { background: var(--green); }
+    .dot-skipped { background: var(--yellow); }
+
+    /* ── Viewer area ── */
+    #viewer-wrap { flex: 1; min-width: 0; position: relative; overflow: hidden; }
+    #osd { position: absolute; inset: 0; z-index: 1; }
+
+    /* Overlay canvas — pointer-events: none always; we use OSD events */
+    #marker-canvas {
+      position: absolute; inset: 0; z-index: 2; pointer-events: none;
+    }
+
+    /* Crosshair cursor overlay (shown only in mark mode) */
+    #osd.mark-mode { cursor: crosshair !important; }
+
+    /* Empty filter result message */
+    #empty-msg {
+      display: none; position: absolute; inset: 0; z-index: 5;
+      align-items: center; justify-content: center;
+      font-size: 15px; color: var(--muted); pointer-events: none;
+    }
+    #empty-msg.visible { display: flex; }
+  </style>
+</head>
+<body>
+<div id="app">
+
+  <div id="progress-bar">
+    <span id="progress-label">0 / 0 done</span>
+    <div id="progress-track"><div id="progress-fill" style="width:0%"></div></div>
+    <span id="server-save-status"></span>
+    <button id="btn-save-index">💾 Save to DB</button>
+    <button id="btn-download">⬇ Download JSON</button>
+  </div>
+
+  <!-- Filter bar -->
+  <div id="filter-bar">
+    <span class="filter-label">Category</span>
+    <div class="filter-group" id="type-buttons">
+      <button class="filter-btn active" data-type="">All</button>
+      <button class="filter-btn" data-type="major_city">Major City</button>
+      <button class="filter-btn" data-type="city">City</button>
+      <button class="filter-btn" data-type="port">Port</button>
+      <button class="filter-btn" data-type="road_station">Road Station</button>
+      <button class="filter-btn" data-type="region">Region</button>
+      <button class="filter-btn" data-type="river">River</button>
+      <button class="filter-btn" data-type="island">Island</button>
+      <button class="filter-btn" data-type="roman_province">Roman Province</button>
+      <button class="filter-btn" data-type="modern_state">Modern State</button>
+      <button class="filter-btn" data-type="lake">Lake</button>
+      <button class="filter-btn" data-type="water">Water</button>
+      <button class="filter-btn" data-type="spa">Spa</button>
+      <button class="filter-btn" data-type="mountain">Mountain</button>
+      <button class="filter-btn" data-type="people">People</button>
+    </div>
+    <div class="filter-divider"></div>
+    <span class="filter-label">Segment</span>
+    <div class="filter-group" id="seg-buttons">
+      <button class="filter-btn active" data-seg="">All</button>
+      <button class="filter-btn" data-seg="2">II</button>
+      <button class="filter-btn" data-seg="3">III</button>
+      <button class="filter-btn" data-seg="4">IV</button>
+      <button class="filter-btn" data-seg="5">V</button>
+      <button class="filter-btn" data-seg="6">VI</button>
+      <button class="filter-btn" data-seg="7">VII</button>
+      <button class="filter-btn" data-seg="8">VIII</button>
+      <button class="filter-btn" data-seg="9">IX</button>
+      <button class="filter-btn" data-seg="10">X</button>
+      <button class="filter-btn" data-seg="11">XI</button>
+      <button class="filter-btn" data-seg="12">XII</button>
+    </div>
+    <div class="filter-divider"></div>
+    <span class="filter-label">Sort</span>
+    <div class="filter-group" id="sort-buttons">
+      <button class="filter-btn" data-sort="location">Tabula</button>
+      <button class="filter-btn active" data-sort="alpha">A–Z</button>
+    </div>
+    <div class="filter-divider"></div>
+    <input id="place-search" type="text" placeholder="Search…" autocomplete="off"
+      style="background:rgba(255,255,255,0.05);color:var(--text);border:1px solid rgba(255,255,255,0.15);
+             border-radius:5px;padding:4px 10px;font-size:12px;width:160px;outline:none;" />
+    <div class="filter-divider"></div>
+    <button id="btn-hide-done" title="Hide places already calibrated from the list">Hide done</button>
+    <button id="btn-show-all-markings" title="Show/hide all accepted calibration markings on map">All markings ON</button>
+  </div>
+
+  <div id="main">
+
+    <!-- Left panel -->
+    <div id="panel">
+      <div id="city-num">Place 1 of —</div>
+      <div id="city-name">Loading…</div>
+      <div id="city-modern"></div>
+      <div style="display:flex;align-items:center;gap:8px;"><span id="place-type-badge"></span><span id="place-data-id" style="font-size:11px;color:var(--muted);font-family:monospace;"></span></div>
+
+      <!-- Metadata: modern name, location, country etc. -->
+      <div class="meta-block" id="place-meta">
+        <div class="meta-row"><span class="meta-key">Modern</span><span class="meta-val" id="meta-modern"></span></div>
+        <div class="meta-row"><span class="meta-key">Location</span><span class="meta-val" id="meta-location"></span></div>
+        <div class="meta-row"><span class="meta-key">Country</span><span class="meta-val" id="meta-country"></span></div>
+        <div class="meta-row" id="meta-ulm-row"><span class="meta-key">Ulm DB</span><span class="meta-val"><button id="btn-ulm-search" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0;text-decoration:underline;">Search ↗</button></span></div>
+      </div>
+
+      <!-- Tabula cell preview (uses tabula-peutingeriana.de images) -->
+      <div id="tabula-preview">
+        <div id="tabula-cell-img"></div>
+        <div id="tabula-mini-wrap">
+          <div id="tabula-mini-img"></div>
+          <div id="tabula-mini-marker"></div>
+        </div>
+        <div id="tabula-preview-label">Tabula location on segment</div>
+      </div>
+
+      <div class="coord-block">
+        <div class="coord-label">Stored marker (yellow rectangle)</div>
+        <div class="coord-val" id="cur-val">—</div>
+      </div>
+      <div class="coord-block">
+        <div class="coord-label">New marker (green rectangle)</div>
+        <div class="coord-val" id="new-val">not set</div>
+        <div id="coord-delta"></div>
+      </div>
+
+      <div id="status-badge" class="badge-pending">Pending</div>
+
+      <button id="btn-mark-mode">
+        📍 Mark rectangle center
+        <span class="hint">pan/zoom first, then click</span>
+      </button>
+
+      <div id="hint-box">
+        1. Pan &amp; zoom to find the location<br>
+        2. Enable pin mode, then click or drag a rectangle<br>
+        3. Accept or adjust
+      </div>
+
+      <div class="spacer"></div>
+
+      <div id="btn-group">
+        <button class="nav-btn" id="btn-back">← Back</button>
+        <button class="nav-btn" id="btn-skip">→ Skip</button>
+        <button class="nav-btn" id="btn-accept" disabled>✓ Accept &amp; Next</button>
+      </div>
+    </div>
+
+    <!-- City list -->
+    <div id="city-list"></div>
+
+    <!-- Viewer -->
+    <div id="viewer-wrap">
+      <div id="osd"></div>
+      <canvas id="marker-canvas"></canvas>
+      <div id="empty-msg">No places match the selected filters.</div>
+    </div>
+
+  </div>
+</div>
+
+<script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
+<script>
+"use strict";
+
+// Miller 1887 facsimile full image
+const IMG_W = 46380;
+const IMG_H = 2953;
+// Segments are numbered 2–12 in the data (11 total)
+const SEGMENT_FIRST = 2;
+const SEGMENT_COUNT = 11;
+
+const TYPE_COLORS = {
+  major_city:     "#8B0000",
+  city:           "#f97316",
+  port:           "#1D4ED8",
+  road_station:   "#92400E",
+  river:          "#0e7490",
+  lake:           "#0369a1",
+  island:         "#15803d",
+  region:         "#7c3aed",
+  roman_province: "#a16207",
+  modern_state:   "#475569",
+  water:          "#164e63",
+  spa:            "#0891b2",
+  mountain:       "#78716c",
+  people:         "#9d174d",
+};
+
+const TYPE_LABELS = {
+  major_city:     "Major City",
+  city:           "City",
+  port:           "Port",
+  road_station:   "Road Station",
+  river:          "River",
+  lake:           "Lake",
+  island:         "Island",
+  region:         "Region",
+  roman_province: "Roman Province",
+  modern_state:   "Modern State",
+  water:          "Water",
+  spa:            "Spa",
+  mountain:       "Mountain",
+  people:         "People",
+};
+
+const DRAFT_STORAGE_KEY = "tp_calibrate_miller_v1";
+
+let allPlaces  = [];   // all loaded places (unfiltered)
+let cities     = [];   // current working list (after filters)
+let reviewDb   = { records: [] };
+let idx        = 0;
+let results    = {};
+let activeType = null;    // null = All
+let activeSegment = null; // null = All
+let sortMode = "alpha";   // "alpha" | "location"
+let searchQuery = "";     // free-text filter
+let hideDone = false;     // hide calibrated places from sidebar list
+
+let newPx   = null;
+let newPy   = null;
+let newX1   = null;
+let newY1   = null;
+let newX2   = null;
+let newY2   = null;
+let markMode = false;
+let viewer  = null;
+let dragStartImg = null;
+let dragRect = null;
+let selectionRect = null;
+const MARKER_RECT_W = 26;
+const MARKER_RECT_H = 20;
+let showAllMarkings = true;
+const ulmIdCache  = {}; // modern name → ulm id (number) or null
+const ulmImgCache = {}; // modern name → actual inset image URL or null
+
+function markerDefaultSize(type) {
+  if (type === "major_city") return { w: 12, h: 12 };
+  if (type === "city") return { w: 9, h: 9 };
+  if (type === "port") return { w: 8, h: 8 };
+  return { w: 6, h: 6 };
+}
+
+function rectFromCenter(cx, cy, w, h) {
+  const hw = w / 2;
+  const hh = h / 2;
+  const x1 = Math.max(0, cx - hw);
+  const y1 = Math.max(0, cy - hh);
+  const x2 = Math.min(IMG_W, cx + hw);
+  const y2 = Math.min(IMG_H, cy + hh);
+  return { x1, y1, x2, y2 };
+}
+
+function ensureRectFields(place) {
+  const d = markerDefaultSize(place.type);
+  const w = Number.isFinite(place.rect_w) && place.rect_w > 0 ? place.rect_w : d.w;
+  const h = Number.isFinite(place.rect_h) && place.rect_h > 0 ? place.rect_h : d.h;
+
+  let x1 = place.rect_x1;
+  let y1 = place.rect_y1;
+  let x2 = place.rect_x2;
+  let y2 = place.rect_y2;
+  if (!(Number.isFinite(x1) && Number.isFinite(y1) && Number.isFinite(x2) && Number.isFinite(y2))) {
+    const r = rectFromCenter(Number(place.px), Number(place.py), w, h);
+    x1 = r.x1; y1 = r.y1; x2 = r.x2; y2 = r.y2;
+  }
+
+  place.rect_x1 = round1(Math.min(x1, x2));
+  place.rect_y1 = round1(Math.min(y1, y2));
+  place.rect_x2 = round1(Math.max(x1, x2));
+  place.rect_y2 = round1(Math.max(y1, y2));
+  place.rect_w = round1(Math.max(1, place.rect_x2 - place.rect_x1));
+  place.rect_h = round1(Math.max(1, place.rect_y2 - place.rect_y1));
+}
+
+function placeRect(place) {
+  ensureRectFields(place);
+  return {
+    x1: place.rect_x1,
+    y1: place.rect_y1,
+    x2: place.rect_x2,
+    y2: place.rect_y2,
+  };
+}
+
+function storedPlacement(city) {
+  const r = results[city.data_id];
+  if (
+    r &&
+    Number.isFinite(r.rect_x1) && Number.isFinite(r.rect_y1) &&
+    Number.isFinite(r.rect_x2) && Number.isFinite(r.rect_y2)
+  ) {
+    const nr = normalizeRect({ x1: r.rect_x1, y1: r.rect_y1, x2: r.rect_x2, y2: r.rect_y2 });
+    return {
+      px: round1((nr.minX + nr.maxX) / 2),
+      py: round1((nr.minY + nr.maxY) / 2),
+      rect_x1: round1(nr.minX),
+      rect_y1: round1(nr.minY),
+      rect_x2: round1(nr.maxX),
+      rect_y2: round1(nr.maxY),
+      fromResult: true,
+    };
+  }
+
+  // Estimate position from segment + row when no rect is available
+  const est = estimateMillerPos(city);
+  const d = markerDefaultSize(city.type);
+  const rc = rectFromCenter(est.px, est.py, d.w, d.h);
+  return {
+    px: round1(est.px),
+    py: round1(est.py),
+    rect_x1: round1(rc.x1),
+    rect_y1: round1(rc.y1),
+    rect_x2: round1(rc.x2),
+    rect_y2: round1(rc.y2),
+    fromResult: false,
+  };
+}
+
+// Estimate a place's position on the Miller map using segment + row metadata.
+// Segments are numbered 2–12 (11 total); rows are 'a' (top), 'b' (middle), 'c' (bottom).
+function estimateMillerPos(place) {
+  const seg = Number(place.tabula_segment);
+  const segIdx = Number.isFinite(seg) ? Math.max(0, seg - SEGMENT_FIRST) : Math.floor(SEGMENT_COUNT / 2);
+  const px = (segIdx + 0.5) * (IMG_W / SEGMENT_COUNT);
+  const rowMap = { a: IMG_H / 6, b: IMG_H / 2, c: 5 * IMG_H / 6 };
+  const py = rowMap[place.tabula_row] ?? IMG_H / 2;
+  return { px, py };
+}
+
+function loadDraftResults() {
+  try {
+    const raw = localStorage.getItem(DRAFT_STORAGE_KEY);
+    if (!raw) return {};
+    const parsed = JSON.parse(raw);
+    if (!parsed || typeof parsed !== "object") return {};
+    return parsed;
+  } catch (e) {
+    console.warn("Could not read calibration draft from storage:", e);
+    return {};
+  }
+}
+
+function saveDraftResults() {
+  try {
+    localStorage.setItem(DRAFT_STORAGE_KEY, JSON.stringify(results));
+  } catch (e) {
+    console.warn("Could not persist calibration draft:", e);
+  }
+}
+
+function toRuntimeRecord(row, fallbackId) {
+  return {
+    ...row,
+    id: row.id ?? row.record_id ?? fallbackId,
+    latin_std: row.latin_std || row.latin || "",
+    modern: row.modern_preferred || row.modern_tabula || row.modern_omnesviae || row.modern || "",
+    province: row.province || row.region || "",
+    grid_col: row.grid_col ?? row.tabula_col,
+    grid_row: row.grid_row ?? row.tabula_row,
+    px: Number.isFinite(Number(row.px)) ? Number(row.px) : null,
+    py: Number.isFinite(Number(row.py)) ? Number(row.py) : null,
+    data_id: Number.isFinite(Number(row.data_id)) ? Number(row.data_id) : row.data_id,
+  };
+}
+
+const canvas = document.getElementById("marker-canvas");
+const ctx    = canvas.getContext("2d");
+
+/* ── Ulm image lookup ── */
+async function loadUlmImage(modernName, latinName, targetDataId) {
+  const cacheKey = modernName || latinName;
+  if (!cacheKey) return;
+  let ulmId = ulmIdCache[cacheKey];
+  if (ulmId === undefined) {
+    try {
+      const res  = await fetch("/api/ulm-search", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ name: modernName, latin: latinName }),
+      });
+      const data = await res.json();
+      const m = data.url && data.url.match(/id=(\d+)/);
+      ulmId = m ? Number(m[1]) : null;
+      ulmImgCache[cacheKey] = data.img || null;
+    } catch (e) {
+      ulmId = null;
+      ulmImgCache[cacheKey] = null;
+    }
+    ulmIdCache[cacheKey] = ulmId;
+  }
+  // Only apply if user hasn't moved to a different place
+  if (!cities.length || cities[idx]?.data_id !== targetDataId) return;
+  if (!ulmId) return;
+  const imgUrl = ulmImgCache[cacheKey] || `https://tp-online.ku.de/insetimages/TPPlace${ulmId}insetneu.png`;
+  const img = new Image();
+  img.onload = () => {
+    if (!cities.length || cities[idx]?.data_id !== targetDataId) return;
+    document.getElementById("tabula-cell-img").style.backgroundImage = `url('${imgUrl}')`;
+    document.getElementById("tabula-preview-label").textContent = "Ulm DB inset · Tabula segment";
+    document.getElementById("tabula-preview").classList.add("visible");
+  };
+  img.src = imgUrl;
+}
+
+/* ── Server auto-save ── */
+let serverSaveTimer = null;
+
+async function saveToServer() {
+  const cal = buildSetCalibrations();
+  const reviewRecords = Array.isArray(reviewDb.records) ? reviewDb.records : [];
+  const applied = applyCalibrationsToArray(reviewRecords, cal);
+  const payload = { ...reviewDb, records: applied.out };
+  setServerSaveStatus("saving");
+  try {
+    const res = await fetch("/api/save-calibration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(payload, null, 2),
+    });
+    const result = await res.json();
+    if (!res.ok || !result.ok) throw new Error(result.error || `HTTP ${res.status}`);
+    setServerSaveStatus("ok", result.records);
+  } catch (e) {
+    setServerSaveStatus("error", 0, e.message);
+  }
+}
+
+function setServerSaveStatus(state, records, errMsg) {
+  const el = document.getElementById("server-save-status");
+  if (!el) return;
+  clearTimeout(serverSaveTimer);
+  if (state === "saving") {
+    el.textContent = "⏳ Saving…";
+    el.style.color = "#eab308";
+  } else if (state === "ok") {
+    el.textContent = `✓ Saved`;
+    el.style.color = "#22c55e";
+    serverSaveTimer = setTimeout(() => { el.textContent = ""; }, 4000);
+  } else if (state === "error") {
+    el.textContent = `⚠ ${errMsg || "Save failed"}`;
+    el.style.color = "#ef4444";
+  }
+}
+
+/* ── Bootstrap ── */
+async function init() {
+  if (typeof OpenSeadragon === "undefined") {
+    showError("OpenSeadragon library failed to load. Check internet connection.");
+    return;
+  }
+  let data;
+  try {
+    const res = await fetch("data/review_places_db.json");
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const loaded = await res.json();
+    reviewDb = (loaded && typeof loaded === "object") ? loaded : { records: [] };
+    const records = Array.isArray(reviewDb.records) ? reviewDb.records : [];
+    data = records
+      .filter((p) => p && typeof p === "object" && p.type)
+      .map((p, i) => toRuntimeRecord(p, `r-${i}`));
+  } catch (err) {
+    const protocolHint = window.location.protocol === "file:"
+      ? " Open this page via a local web server (not file://)."
+      : "";
+    showError(`Could not load data/review_places_db.json: ${err.message}.${protocolHint}`);
+    return;
+  }
+
+  allPlaces = Array.isArray(data) ? data : [];
+
+  if (allPlaces.length === 0) {
+    showError("No places found in data/review_places_db.json.");
+    return;
+  }
+
+  // Merge previously saved browser draft.
+  results = {};
+  const draft = loadDraftResults();
+  for (const [did, r] of Object.entries(draft)) {
+    if (!r || typeof r !== "object") continue;
+    if (!(Number.isFinite(r.rect_x1) && Number.isFinite(r.rect_y1) &&
+          Number.isFinite(r.rect_x2) && Number.isFinite(r.rect_y2))) continue;
+    const nr = normalizeRect({ x1: Number(r.rect_x1), y1: Number(r.rect_y1),
+                                x2: Number(r.rect_x2), y2: Number(r.rect_y2) });
+    results[did] = {
+      px: round1((nr.minX + nr.maxX) / 2),
+      py: round1((nr.minY + nr.maxY) / 2),
+      rect_x1: round1(nr.minX), rect_y1: round1(nr.minY),
+      rect_x2: round1(nr.maxX), rect_y2: round1(nr.maxY),
+      rect_w: round1(Math.max(1, nr.maxX - nr.minX)),
+      rect_h: round1(Math.max(1, nr.maxY - nr.minY)),
+      rect_user_set: !!r.rect_user_set,
+      status: r.status === "skipped" ? "skipped" : "set",
+    };
+  }
+
+  // Pre-populate results from DB's miller_rect_* fields (draft takes precedence)
+  for (const place of allPlaces) {
+    const did = place.data_id;
+    if (did == null || results[did] != null) continue;
+    const x1 = Number(place.miller_rect_x1);
+    const y1 = Number(place.miller_rect_y1);
+    const x2 = Number(place.miller_rect_x2);
+    const y2 = Number(place.miller_rect_y2);
+    if (!(Number.isFinite(x1) && Number.isFinite(y1) && Number.isFinite(x2) && Number.isFinite(y2))) continue;
+    const nr = normalizeRect({ x1, y1, x2, y2 });
+    results[did] = {
+      px: round1((nr.minX + nr.maxX) / 2),
+      py: round1((nr.minY + nr.maxY) / 2),
+      rect_x1: round1(nr.minX), rect_y1: round1(nr.minY),
+      rect_x2: round1(nr.maxX), rect_y2: round1(nr.maxY),
+      rect_w: round1(Math.max(1, nr.maxX - nr.minX)),
+      rect_h: round1(Math.max(1, nr.maxY - nr.minY)),
+      rect_user_set: true,
+      status: "set",
+    };
+  }
+
+  applyFilters();
+  initViewer();
+}
+
+/* ── Filtering ── */
+function applyFilters() {
+  const q = searchQuery.toLowerCase();
+  cities = allPlaces.filter((p) =>
+    (!activeType    || p.type === activeType) &&
+    (!activeSegment || p.tabula_segment === activeSegment) &&
+    !!(p.modern || (p.lat != null && p.lng != null)) &&
+    (!q || (p.latin_std || p.latin || "").toLowerCase().includes(q) ||
+           (p.modern || "").toLowerCase().includes(q))
+  );
+  if (sortMode === "alpha") {
+    cities.sort((a, b) => (a.latin_std || a.latin || "").localeCompare(b.latin_std || b.latin || ""));
+  } else {
+    // Tabula location: segment → row (a < b < c) → col
+    const rowOrder = { a: 0, b: 1, c: 2 };
+    cities.sort((a, b) => {
+      const sa = Number(a.tabula_segment) || 0, sb = Number(b.tabula_segment) || 0;
+      if (sa !== sb) return sa - sb;
+      const ra = rowOrder[a.tabula_row] ?? 1, rb = rowOrder[b.tabula_row] ?? 1;
+      if (ra !== rb) return ra - rb;
+      return (Number(a.tabula_col) || 0) - (Number(b.tabula_col) || 0);
+    });
+  }
+
+  idx = 0;
+  buildCityList();
+
+  const emptyMsg = document.getElementById("empty-msg");
+  if (cities.length === 0) {
+    emptyMsg.classList.add("visible");
+    clearPanel();
+  } else {
+    emptyMsg.classList.remove("visible");
+    if (viewer && viewer.viewport) loadCity(0);
+    else updatePanel();
+  }
+  updateProgress();
+}
+
+function clearPanel() {
+  document.getElementById("city-num").textContent   = "No results";
+  document.getElementById("city-name").textContent  = "—";
+  document.getElementById("city-modern").textContent = "";
+  document.getElementById("place-type-badge").textContent = "";
+  document.getElementById("place-type-badge").style.cssText = "";
+  document.getElementById("meta-modern").textContent = "—";
+  document.getElementById("meta-location").textContent = "—";
+  document.getElementById("meta-country").textContent = "—";
+  document.getElementById("meta-ulm-row").style.display = "";
+  document.getElementById("tabula-preview").classList.remove("visible");
+  document.getElementById("cur-val").textContent = "—";
+  document.getElementById("new-val").textContent = "—";
+  document.getElementById("coord-delta").textContent = "";
+  document.getElementById("status-badge").className = "badge-pending";
+  document.getElementById("status-badge").textContent = "";
+  document.getElementById("btn-accept").disabled = true;
+  document.getElementById("btn-back").disabled = true;
+}
+
+function updateProgress() {
+  const total = cities.length;
+  const done = cities.filter((c) => !!results[c.data_id]).length;
+  document.getElementById("progress-label").textContent = `${done} / ${total} done`;
+  document.getElementById("progress-fill").style.width = total > 0
+    ? `${(done / total) * 100}%` : "0%";
+}
+
+/* ── City list sidebar ── */
+function buildCityList() {
+  const el = document.getElementById("city-list");
+  el.innerHTML = "";
+  cities.forEach((city, i) => {
+    if (hideDone && dotClass(city.data_id) === "dot-set") return;
+    const item = document.createElement("div");
+    item.className = "city-item" + (i === idx ? " active" : "");
+    item.dataset.idx = i;
+
+    const dot = document.createElement("span");
+    dot.className = "city-dot " + dotClass(city.data_id);
+    const name = document.createElement("span");
+    name.textContent = city.latin_std || city.latin;
+
+    item.appendChild(dot);
+    item.appendChild(name);
+    item.addEventListener("click", () => jumpTo(i));
+    el.appendChild(item);
+  });
+}
+
+function dotClass(did) {
+  const r = results[did];
+  if (!r) return "dot-pending";
+  return r.status === "set" ? "dot-set" : "dot-skipped";
+}
+
+function updateCityList() {
+  document.querySelectorAll(".city-item").forEach((item, i) => {
+    item.className = "city-item" + (i === idx ? " active" : "");
+    item.querySelector(".city-dot").className = "city-dot " + dotClass(cities[i].data_id);
+  });
+  const active = document.querySelector(".city-item.active");
+  if (active) active.scrollIntoView({ block: "nearest" });
+}
+
+/* ── OpenSeadragon ── */
+function initViewer() {
+  try {
+    viewer = OpenSeadragon({
+      id:                    "osd",
+      prefixUrl:             "https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/images/",
+      tileSources:           "Tabula_Peutingeriana_-_Miller.dzi",
+      showNavigationControl: true,
+      showNavigator:         true,
+      navigatorPosition:     "BOTTOM_RIGHT",
+      navigatorAutoFade:     false,
+      defaultZoomLevel:      0,
+      minZoomLevel:          0,
+      maxZoomLevel:          80,
+      visibilityRatio:       0.3,
+      constrainDuringPan:    true,
+      backgroundColor:       "#0f1117",
+    });
+  } catch(err) {
+    showError("OpenSeadragon failed to start: " + err.message);
+    return;
+  }
+
+  let opened = false;
+  const openWatchdog = window.setTimeout(() => {
+    if (!opened) {
+      showError("Image did not finish loading. Verify Tabula_Peutingeriana_-_Miller_files path and run from a local server.");
+    }
+  }, 10000);
+
+  viewer.addHandler("open", () => {
+    opened = true;
+    window.clearTimeout(openWatchdog);
+    requestAnimationFrame(() => {
+      sizeCanvas();
+      setupInteraction();
+      if (cities.length) loadCity(0);
+    });
+  });
+
+  viewer.addHandler("open-failed", (e) => {
+    window.clearTimeout(openWatchdog);
+    showError("DZI failed to open: " + JSON.stringify(e));
+  });
+
+  viewer.addHandler("animation",        redraw);
+  viewer.addHandler("animation-finish", redraw);
+  viewer.addHandler("resize", () => { sizeCanvas(); redraw(); });
+  window.addEventListener("resize",    () => { sizeCanvas(); redraw(); });
+}
+
+function showError(msg) {
+  const el = document.getElementById("city-name");
+  if (el) { el.textContent = "ERROR"; el.style.color = "#ef4444"; }
+  const sub = document.getElementById("city-modern");
+  if (sub) { sub.textContent = msg; sub.style.color = "#ef4444"; }
+  console.error(msg);
+}
+
+function sizeCanvas() {
+  const wrap = document.getElementById("viewer-wrap");
+  const w = wrap.clientWidth;
+  const h = wrap.clientHeight;
+  if (!w || !h) return;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width  = Math.round(w * dpr);
+  canvas.height = Math.round(h * dpr);
+  canvas.style.width  = w + "px";
+  canvas.style.height = h + "px";
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+function isValidImagePoint(px, py) {
+  return Number.isFinite(px) && Number.isFinite(py) && px >= 0 && px <= IMG_W && py >= 0 && py <= IMG_H;
+}
+
+function clampImagePoint(pt) {
+  return {
+    x: Math.max(0, Math.min(IMG_W, pt.x)),
+    y: Math.max(0, Math.min(IMG_H, pt.y)),
+  };
+}
+
+function pixelToImage(position) {
+  const vp = viewer.viewport;
+  const vpPt = vp.pointFromPixel(position, true);
+  const imgPt = vp.viewportToImageCoordinates(vpPt);
+  return clampImagePoint(imgPt);
+}
+
+function round1(v) {
+  return Math.round(v * 10) / 10;
+}
+
+function normalizeRect(r) {
+  const minX = Math.min(r.x1, r.x2);
+  const maxX = Math.max(r.x1, r.x2);
+  const minY = Math.min(r.y1, r.y2);
+  const maxY = Math.max(r.y1, r.y2);
+  return { minX, minY, maxX, maxY, w: maxX - minX, h: maxY - minY };
+}
+
+function applyRectSelection(r) {
+  const nr = normalizeRect(r);
+  newX1 = round1(nr.minX);
+  newY1 = round1(nr.minY);
+  newX2 = round1(nr.maxX);
+  newY2 = round1(nr.maxY);
+  newPx = round1((nr.minX + nr.maxX) / 2);
+  newPy = round1((nr.minY + nr.maxY) / 2);
+  selectionRect = nr.w >= 1 || nr.h >= 1 ? nr : null;
+}
+
+/* ── Interaction via OSD only ── */
+function setupInteraction() {
+  viewer.addHandler("canvas-press", (e) => {
+    if (!markMode) return;
+    const imgPt = pixelToImage(e.position);
+    dragStartImg = imgPt;
+    dragRect = { x1: imgPt.x, y1: imgPt.y, x2: imgPt.x, y2: imgPt.y };
+    e.preventDefaultAction = true;
+    redraw();
+  });
+
+  viewer.addHandler("canvas-drag", (e) => {
+    if (!markMode || !dragStartImg || !dragRect) return;
+    const imgPt = pixelToImage(e.position);
+    dragRect.x2 = imgPt.x;
+    dragRect.y2 = imgPt.y;
+    e.preventDefaultAction = true;
+    redraw();
+  });
+
+  viewer.addHandler("canvas-release", (e) => {
+    if (!markMode || !dragStartImg || !dragRect) return;
+    const imgPt = pixelToImage(e.position);
+    dragRect.x2 = imgPt.x;
+    dragRect.y2 = imgPt.y;
+    applyRectSelection(dragRect);
+    dragStartImg = null;
+    dragRect = null;
+    e.preventDefaultAction = true;
+    updatePanel();
+    redraw();
+  });
+
+  viewer.addHandler("canvas-click", (e) => {
+    if (!markMode) return;
+    if (!e.quick) return;
+    e.preventDefaultAction = true;
+
+    const imgPt = pixelToImage(e.position);
+    newPx = round1(imgPt.x);
+    newPy = round1(imgPt.y);
+    const city = cities[idx];
+    const d = markerDefaultSize(city.type);
+    const r = rectFromCenter(newPx, newPy, d.w, d.h);
+    newX1 = round1(r.x1);
+    newY1 = round1(r.y1);
+    newX2 = round1(r.x2);
+    newY2 = round1(r.y2);
+    selectionRect = null;
+
+    updatePanel();
+    redraw();
+  });
+}
+
+/* ── Load place ── */
+function loadCity(i, zoomIn = false, noPan = false) {
+  if (!cities.length) return;
+  idx = i;
+  const city = cities[idx];
+  dragStartImg = null;
+  dragRect = null;
+  selectionRect = null;
+
+  const existing = results[city.data_id];
+  if (existing && Number.isFinite(existing.rect_x1)) {
+    newPx = existing.px;
+    newPy = existing.py;
+    newX1 = round1(existing.rect_x1);
+    newY1 = round1(existing.rect_y1);
+    newX2 = round1(existing.rect_x2);
+    newY2 = round1(existing.rect_y2);
+    selectionRect = normalizeRect({ x1: newX1, y1: newY1, x2: newX2, y2: newY2 });
+  } else {
+    // No stored result — use estimated position
+    const est = estimateMillerPos(city);
+    newPx = round1(est.px);
+    newPy = round1(est.py);
+    const d = markerDefaultSize(city.type);
+    const r = rectFromCenter(newPx, newPy, d.w, d.h);
+    newX1 = round1(r.x1);
+    newY1 = round1(r.y1);
+    newX2 = round1(r.x2);
+    newY2 = round1(r.y2);
+    selectionRect = null;
+  }
+
+  setMarkMode(false);
+  updatePanel();
+  updateCityList();
+  if (!noPan) panToCity(city, existing, zoomIn);
+  else redraw();
+}
+
+function panToCity(city, existing, zoomIn = false) {
+  if (!viewer || !viewer.viewport) return;
+  const vp = viewer.viewport;
+  const hasSaved = existing && Number.isFinite(existing.px) && Number.isFinite(existing.py);
+  let usePx, usePy;
+  if (hasSaved) {
+    usePx = existing.px;
+    usePy = existing.py;
+  } else {
+    const est = estimateMillerPos(city);
+    usePx = est.px;
+    usePy = est.py;
+  }
+  const vpPoint = vp.imageToViewportCoordinates(new OpenSeadragon.Point(usePx, usePy));
+  // Zoom ~10 shows roughly one segment width for the Miller map.
+  // If triggered by explicit user navigation (zoomIn=true), zoom 50% closer.
+  const currentZoom = vp.getZoom();
+  const baseZoom = currentZoom > 1 ? currentZoom : 10;
+  const targetZoom = zoomIn ? baseZoom * 1.5 : (currentZoom > 1 ? currentZoom : 10);
+  vp.zoomTo(targetZoom, null, false);
+  vp.panTo(vpPoint, false);
+  redraw();
+}
+
+/* ── Mark mode toggle ── */
+function setMarkMode(on) {
+  markMode = on;
+  const btn = document.getElementById("btn-mark-mode");
+  const osdEl = document.getElementById("osd");
+  btn.classList.toggle("active", on);
+  osdEl.classList.toggle("mark-mode", on);
+}
+
+document.getElementById("btn-mark-mode").addEventListener("click", () => {
+  setMarkMode(!markMode);
+});
+
+/* ── Tabula URL helpers (matching database_viewer.html logic) ── */
+function tabulaCellUrl(place) {
+  const segment = Number(place.tabula_segment);
+  const row = String(place.tabula_row || "").trim().toLowerCase();
+  const col = Number(place.tabula_col);
+  if (!Number.isFinite(segment) || segment < 1 || !/^[abc]$/.test(row) || !Number.isFinite(col) || col < 1) return "";
+  return `https://www.tabula-peutingeriana.de/img/w_${(segment - 1).toString(16)}${row}${Math.trunc(col)}.jpg`;
+}
+
+function tabulaThumbUrl(place) {
+  const segment = Number(place.tabula_segment);
+  if (!Number.isFinite(segment) || segment < 1) return "";
+  return `https://www.tabula-peutingeriana.de/img/tpmvs${Math.max(segment - 1, 0).toString(16)}.jpg`;
+}
+
+function tabulaHref(place) {
+  const segment = Number(place.tabula_segment);
+  const row = String(place.tabula_row || "").trim().toLowerCase();
+  const col = Number(place.tabula_col);
+  if (!Number.isFinite(segment) || !/^[abc]$/.test(row) || !Number.isFinite(col)) return "";
+  const segmValue = String(segment).padStart(2, "0");
+  return `https://www.tabula-peutingeriana.de/tp/tabula.html?segm=${segmValue}#${row}${Math.trunc(col)}`;
+}
+
+function rowIndex(row) {
+  if (row === "a") return 0;
+  if (row === "b") return 1;
+  if (row === "c") return 2;
+  return 0;
+}
+
+/* ── Panel update ── */
+function updatePanel() {
+  if (!cities.length) return;
+  const city = cities[idx];
+  const did  = city.data_id;
+  const stored = storedPlacement(city);
+
+  document.getElementById("city-num").textContent  = `Place ${idx + 1} of ${cities.length}`;
+  document.getElementById("city-name").textContent = city.latin_std || city.latin;
+
+  // Short subtitle (truncated modern name under the title)
+  const rawModern = (city.modern || "")
+    .replace(/IA\d+[^:]*:|RCIV?\d+ |div\. (?:lat|gr)\.|PL:|PT:/g, " ")
+    .replace(/\s+/g, " ").trim();
+  document.getElementById("city-modern").textContent = rawModern ? rawModern.slice(0, 55) : "";
+
+  // Type badge
+  const badge = document.getElementById("place-type-badge");
+  const typeLabel = TYPE_LABELS[city.type] || city.type || "";
+  const typeColor = TYPE_COLORS[city.type] || "#555";
+  badge.textContent = typeLabel;
+  badge.style.cssText = `background:${typeColor}33; color:${typeColor}; border:1px solid ${typeColor}55;`;
+  document.getElementById("place-data-id").textContent = city.data_id != null ? `#${city.data_id}` : "";
+
+  // Metadata block
+  document.getElementById("meta-modern").textContent =
+    rawModern || "—";
+
+  const seg   = city.tabula_segment;
+  const row   = String(city.tabula_row || "").toLowerCase();
+  const col   = city.tabula_col;
+  const locStr = city.tabula_location || (seg ? `Seg ${seg} ${row}${col ?? ""}` : "—");
+  const href  = tabulaHref(city);
+  document.getElementById("meta-location").innerHTML = href
+    ? `<a href="${href}" target="_blank" rel="noopener">${locStr}</a>`
+    : locStr || "—";
+
+  document.getElementById("meta-country").textContent = city.country || "—";
+
+  // Ulm DB search form
+  const ulmRow = document.getElementById("meta-ulm-row");
+  document.getElementById("btn-ulm-search").dataset.modern = rawModern || "";
+  document.getElementById("btn-ulm-search").dataset.latin  = city.latin_std || city.latin || "";
+  ulmRow.style.display = "";
+
+  // Tabula cell preview
+  const cellUrl  = tabulaCellUrl(city);
+  const thumbUrl = tabulaThumbUrl(city);
+  const preview  = document.getElementById("tabula-preview");
+  document.getElementById("tabula-preview-label").textContent = "Tabula location on segment";
+  if (cellUrl && thumbUrl) {
+    document.getElementById("tabula-cell-img").style.backgroundImage = `url('${cellUrl}')`;
+    document.getElementById("tabula-mini-img").style.backgroundImage = `url('${thumbUrl}')`;
+    const markerLeft = `${((Math.max(Number(col) || 1, 1) - 1) / 5) * 100}%`;
+    const markerTop  = `${(rowIndex(row) / 3) * 100}%`;
+    const marker = document.getElementById("tabula-mini-marker");
+    marker.style.left = markerLeft;
+    marker.style.top  = markerTop;
+    preview.classList.add("visible");
+  } else {
+    document.getElementById("tabula-cell-img").style.backgroundImage = "";
+    preview.classList.remove("visible");
+  }
+  // Async: swap in Ulm inset image once resolved (overwrites tabula cell image)
+  loadUlmImage(rawModern, city.latin_std || city.latin || "", city.data_id);
+
+  document.getElementById("cur-val").textContent = `TL (${stored.rect_x1.toFixed(1)}, ${stored.rect_y1.toFixed(1)})  BR (${stored.rect_x2.toFixed(1)}, ${stored.rect_y2.toFixed(1)})`;
+
+  if (newPx !== null) {
+    document.getElementById("new-val").textContent = `TL (${newX1.toFixed(1)}, ${newY1.toFixed(1)})  BR (${newX2.toFixed(1)}, ${newY2.toFixed(1)})`;
+    const dx = (newPx - stored.px).toFixed(1);
+    const dy = (newPy - stored.py).toFixed(1);
+    document.getElementById("coord-delta").textContent =
+      `Δ ${dx >= 0 ? "+" : ""}${dx}, ${dy >= 0 ? "+" : ""}${dy}`;
+  } else {
+    document.getElementById("new-val").textContent = "not set — enable pin mode, then click or drag";
+    document.getElementById("coord-delta").textContent = "";
+  }
+
+  const statusBadge = document.getElementById("status-badge");
+  const r = results[did];
+  if (r) {
+    statusBadge.className = r.status === "set" ? "badge-set" : "badge-skipped";
+    statusBadge.textContent = r.status === "set" ? "✓ Set" : "→ Skipped";
+  } else {
+    statusBadge.className = "badge-pending";
+    statusBadge.textContent = "Pending";
+  }
+
+  document.getElementById("btn-accept").disabled = newPx === null;
+  document.getElementById("btn-back").disabled   = idx === 0;
+
+  updateProgress();
+}
+
+/* ── Canvas drawing ── */
+function redraw() {
+  if (!viewer || !viewer.viewport || !cities.length) return;
+  ctx.clearRect(0, 0, canvas.clientWidth || canvas.width, canvas.clientHeight || canvas.height);
+
+  const vp = viewer.viewport;
+  const bounds = vp.getBounds(true);
+
+  // Draw all accepted markings (dimmed) when toggle is on
+  if (showAllMarkings) {
+    for (const place of allPlaces) {
+      const r = results[place.data_id];
+      if (!r || r.status !== "set") continue;
+      if (place.data_id === cities[idx]?.data_id) continue; // current city drawn below
+      // Viewport cull — skip rects outside current view
+      const vx1 = r.rect_x1 / IMG_W, vx2 = r.rect_x2 / IMG_W;
+      const vy1 = r.rect_y1 / IMG_W, vy2 = r.rect_y2 / IMG_W;
+      if (vx2 < bounds.x || vx1 > bounds.x + bounds.width) continue;
+      if (vy2 < bounds.y || vy1 > bounds.y + bounds.height) continue;
+
+      const color = TYPE_COLORS[place.type] || "#92400E";
+      drawAllMarkingRect({ x1: r.rect_x1, y1: r.rect_y1, x2: r.rect_x2, y2: r.rect_y2 }, color);
+    }
+  }
+
+  const city = cities[idx];
+  const stored = storedPlacement(city);
+
+  // Yellow rectangle = stored position
+  drawMarkerRect({ x1: stored.rect_x1, y1: stored.rect_y1, x2: stored.rect_x2, y2: stored.rect_y2 }, "#eab308", true);
+
+  // Green rectangle = new placement
+  if (newPx !== null) {
+    drawMarkerRect({ x1: newX1, y1: newY1, x2: newX2, y2: newY2 }, "#22c55e", true);
+  }
+
+  if (selectionRect) {
+    drawSelectionRect(selectionRect, "#22c55e", false);
+  }
+  if (dragRect) {
+    drawSelectionRect(normalizeRect(dragRect), "#22c55e", true);
+  }
+}
+
+function drawAllMarkingRect(rect, color) {
+  const nr = normalizeRect(rect);
+  const p1 = toCanvas(nr.minX, nr.minY);
+  const p2 = toCanvas(nr.maxX, nr.maxY);
+  const x = Math.min(p1.x, p2.x);
+  const y = Math.min(p1.y, p2.y);
+  const w = Math.max(1, Math.abs(p2.x - p1.x));
+  const h = Math.max(1, Math.abs(p2.y - p1.y));
+
+  ctx.save();
+  ctx.globalAlpha = 0.13;
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+  ctx.globalAlpha = 0.55;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.strokeRect(x, y, w, h);
+  ctx.restore();
+}
+
+function toCanvas(px, py) {
+  return viewer.viewport.imageToViewerElementCoordinates(new OpenSeadragon.Point(px, py));
+}
+
+function drawSelectionRect(r, color, dashed) {
+  const p1 = toCanvas(r.minX, r.minY);
+  const p2 = toCanvas(r.maxX, r.maxY);
+  const x = Math.min(p1.x, p2.x);
+  const y = Math.min(p1.y, p2.y);
+  const w = Math.abs(p2.x - p1.x);
+  const h = Math.abs(p2.y - p1.y);
+
+  ctx.save();
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 2;
+  ctx.setLineDash(dashed ? [8, 6] : []);
+  ctx.strokeRect(x, y, w, h);
+  ctx.globalAlpha = dashed ? 0.1 : 0.08;
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, w, h);
+  ctx.restore();
+}
+
+function drawMarkerRect(rect, color, filled) {
+  const nr = normalizeRect(rect);
+  const p1 = toCanvas(nr.minX, nr.minY);
+  const p2 = toCanvas(nr.maxX, nr.maxY);
+  const x = Math.min(p1.x, p2.x);
+  const y = Math.min(p1.y, p2.y);
+  const w = Math.abs(p2.x - p1.x);
+  const h = Math.abs(p2.y - p1.y);
+  const cx = (p1.x + p2.x) / 2;
+  const cy = (p1.y + p2.y) / 2;
+
+  ctx.save();
+  if (filled) {
+    ctx.fillStyle = color;
+    ctx.globalAlpha = 0.18;
+    ctx.fillRect(x, y, w, h);
+  }
+  ctx.globalAlpha = 1;
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 3;
+  ctx.strokeRect(x, y, w, h);
+
+  ctx.lineWidth = 1;
+  ctx.strokeStyle = "rgba(255,255,255,0.85)";
+  ctx.strokeRect(x + 1.5, y + 1.5, Math.max(1, w - 3), Math.max(1, h - 3));
+
+  ctx.strokeStyle = color;
+  ctx.lineWidth = 1.5;
+  ctx.beginPath();
+  ctx.moveTo(cx - 7, cy); ctx.lineTo(cx + 7, cy);
+  ctx.moveTo(cx, cy - 7); ctx.lineTo(cx, cy + 7);
+  ctx.stroke();
+  ctx.restore();
+}
+
+/* ── Navigation ── */
+document.getElementById("btn-accept").addEventListener("click", () => {
+  if (newPx === null || !cities.length) return;
+  const city = cities[idx];
+  results[city.data_id] = {
+    px: newPx,
+    py: newPy,
+    rect_x1: round1(newX1),
+    rect_y1: round1(newY1),
+    rect_x2: round1(newX2),
+    rect_y2: round1(newY2),
+    rect_w: round1(Math.max(1, newX2 - newX1)),
+    rect_h: round1(Math.max(1, newY2 - newY1)),
+    rect_user_set: true,
+    status: "set"
+  };
+  saveDraftResults();
+  saveToServer();
+  advance();
+});
+
+document.getElementById("btn-skip").addEventListener("click", () => {
+  if (!cities.length) return;
+  const city = cities[idx];
+  const existing = results[city.data_id];
+  const est = estimateMillerPos(city);
+  const d = markerDefaultSize(city.type);
+  const fallbackRect = rectFromCenter(est.px, est.py, d.w, d.h);
+  const r = existing
+    ? { x1: existing.rect_x1, y1: existing.rect_y1, x2: existing.rect_x2, y2: existing.rect_y2 }
+    : fallbackRect;
+  const nr = normalizeRect(r);
+  results[city.data_id] = {
+    px: round1((nr.minX + nr.maxX) / 2),
+    py: round1((nr.minY + nr.maxY) / 2),
+    rect_x1: round1(nr.minX), rect_y1: round1(nr.minY),
+    rect_x2: round1(nr.maxX), rect_y2: round1(nr.maxY),
+    rect_w: round1(Math.max(1, nr.maxX - nr.minX)),
+    rect_h: round1(Math.max(1, nr.maxY - nr.minY)),
+    rect_user_set: !!(existing && existing.rect_user_set),
+    status: "skipped"
+  };
+  saveDraftResults();
+  saveToServer();
+  advance();
+});
+
+document.getElementById("btn-back").addEventListener("click", () => {
+  if (idx > 0) loadCity(idx - 1);
+});
+
+function advance() {
+  updateCityList();
+  if (idx < cities.length - 1) {
+    const nextIdx = idx + 1;
+    const cur  = cities[idx];
+    const next = cities[nextIdx];
+    const noPan = sortMode === "location" &&
+      Number(cur.tabula_segment) === Number(next.tabula_segment) &&
+      cur.tabula_row === next.tabula_row &&
+      Math.abs((Number(cur.tabula_col) || 0) - (Number(next.tabula_col) || 0)) <= 2;
+    loadCity(nextIdx, false, noPan);
+  } else {
+    updatePanel();
+    updateCityList();
+    alert('All places reviewed! Click "Download JSON" to save.');
+  }
+}
+
+function jumpTo(i) { loadCity(i, true); }
+
+/* ── Filter button handlers ── */
+document.getElementById("type-buttons").addEventListener("click", (e) => {
+  const btn = e.target.closest(".filter-btn");
+  if (!btn) return;
+  document.querySelectorAll("#type-buttons .filter-btn").forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+  const val = btn.dataset.type;
+  activeType = val === "" ? null : val;
+  applyFilters();
+});
+
+document.getElementById("seg-buttons").addEventListener("click", (e) => {
+  const btn = e.target.closest(".filter-btn");
+  if (!btn) return;
+  document.querySelectorAll("#seg-buttons .filter-btn").forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+  const val = btn.dataset.seg;
+  activeSegment = val === "" ? null : Number(val);
+  applyFilters();
+});
+
+document.getElementById("place-search").addEventListener("input", (e) => {
+  searchQuery = e.target.value.trim();
+  applyFilters();
+});
+
+document.getElementById("sort-buttons").addEventListener("click", (e) => {
+  const btn = e.target.closest(".filter-btn");
+  if (!btn) return;
+  document.querySelectorAll("#sort-buttons .filter-btn").forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+  sortMode = btn.dataset.sort;
+  applyFilters();
+});
+
+document.getElementById("btn-hide-done").addEventListener("click", () => {
+  hideDone = !hideDone;
+  const btn = document.getElementById("btn-hide-done");
+  btn.classList.toggle("active", hideDone);
+  btn.textContent = hideDone ? "Show done" : "Hide done";
+  buildCityList();
+});
+
+document.getElementById("btn-show-all-markings").addEventListener("click", () => {
+  showAllMarkings = !showAllMarkings;
+  const btn = document.getElementById("btn-show-all-markings");
+  btn.classList.toggle("off", !showAllMarkings);
+  btn.textContent = showAllMarkings ? "All markings ON" : "All markings OFF";
+  redraw();
+});
+
+/* ── Download ── */
+document.getElementById("btn-download").addEventListener("click", () => {
+  const out = {};
+  for (const [did, r] of Object.entries(results)) {
+    if (r.status === "set") out[did] = [r.rect_x1, r.rect_y1, r.rect_x2, r.rect_y2];
+  }
+  const json = JSON.stringify(out, null, 2);
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([json], { type: "application/json" }));
+  a.download = "miller_calibration.json";
+  a.click();
+});
+
+/* ── Helpers for Save Index ── */
+function normalizeName(s) {
+  return String(s || "")
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/[^a-z0-9]+/g, "")
+    .trim();
+}
+
+function buildSetCalibrations() {
+  const byDid = new Map();
+  const byName = new Map();
+  for (const city of allPlaces) {
+    const r = results[city.data_id];
+    if (!r || r.status !== "set") continue;
+    const nr = normalizeRect({ x1: r.rect_x1, y1: r.rect_y1, x2: r.rect_x2, y2: r.rect_y2 });
+    const entry = {
+      px: round1((nr.minX + nr.maxX) / 2),
+      py: round1((nr.minY + nr.maxY) / 2),
+      rect_x1: round1(nr.minX), rect_y1: round1(nr.minY),
+      rect_x2: round1(nr.maxX), rect_y2: round1(nr.maxY),
+      rect_w: round1(Math.max(1, nr.maxX - nr.minX)),
+      rect_h: round1(Math.max(1, nr.maxY - nr.minY)),
+      rect_user_set: true,
+    };
+    byDid.set(Number(city.data_id), entry);
+    const key = normalizeName(city.latin_std || city.latin);
+    if (key) byName.set(key, entry);
+  }
+  return { byDid, byName };
+}
+
+// Saves Miller calibration as miller_* prefixed fields so they don't
+// conflict with existing seg4 coordinates in the database.
+function applyCalibrationsToArray(arr, cal) {
+  let updated = 0;
+  const out = arr.map((p) => {
+    const q = { ...p };
+    const did = Number(q.data_id);
+    let c = Number.isFinite(did) ? cal.byDid.get(did) : null;
+    if (!c) {
+      const key = normalizeName(q.latin_std || q.latin);
+      if (key) c = cal.byName.get(key) || null;
+    }
+    if (c) {
+      q.miller_px      = round1(c.px);
+      q.miller_py      = round1(c.py);
+      q.miller_rect_x1 = round1(c.rect_x1);
+      q.miller_rect_y1 = round1(c.rect_y1);
+      q.miller_rect_x2 = round1(c.rect_x2);
+      q.miller_rect_y2 = round1(c.rect_y2);
+      q.miller_rect_w  = round1(c.rect_w);
+      q.miller_rect_h  = round1(c.rect_h);
+      q.miller_rect_user_set = true;
+      updated += 1;
+    }
+    return q;
+  });
+  return { out, updated };
+}
+
+function triggerDownload(filename, text) {
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(new Blob([text], { type: "application/json" }));
+  a.download = filename;
+  a.click();
+}
+
+async function saveJsonFile(defaultName, text) {
+  if (window.showSaveFilePicker) {
+    try {
+      const handle = await window.showSaveFilePicker({
+        suggestedName: defaultName,
+        types: [{ description: "JSON", accept: { "application/json": [".json"] } }],
+      });
+      const writable = await handle.createWritable();
+      await writable.write(text);
+      await writable.close();
+      return "saved";
+    } catch (e) {
+      if (e && e.name === "AbortError") return "cancelled";
+      console.warn("Save picker failed, using download fallback:", e);
+    }
+  }
+  triggerDownload(defaultName, text);
+  return "downloaded";
+}
+
+
+document.getElementById("btn-save-index").addEventListener("click", async () => {
+  const cal = buildSetCalibrations();
+  if (cal.byDid.size === 0) {
+    alert("No accepted calibrations yet. Use 'Accept & Next' first.");
+    return;
+  }
+  const reviewRecords = Array.isArray(reviewDb.records) ? reviewDb.records : [];
+  const applied = applyCalibrationsToArray(reviewRecords, cal);
+  const payload = { ...reviewDb, records: applied.out };
+  const text = JSON.stringify(payload, null, 2);
+
+  // Try server endpoint first (works in all browsers, including Firefox)
+  try {
+    const res = await fetch("/api/save-calibration", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: text,
+    });
+    const result = await res.json();
+    if (!res.ok || !result.ok) throw new Error(result.error || `HTTP ${res.status}`);
+    setServerSaveStatus("ok", result.records);
+    alert(`Saved ${applied.updated} updated entries to review_places_db.json.`);
+    return;
+  } catch (e) {
+    // Server not running — fall back to file picker / download
+  }
+
+  const status = await saveJsonFile("review_places_db.json", text);
+  if (status !== "cancelled") {
+    alert(`Saved. Updated ${applied.updated} entries in review_places_db.json (miller_* fields).`);
+  }
+});
+
+document.getElementById("btn-ulm-search").addEventListener("click", async function() {
+  const name  = this.dataset.modern || "";
+  const latin = this.dataset.latin  || "";
+  if (!name && !latin) { window.open("https://tp-online.ku.de/suche.php", "_blank"); return; }
+  this.textContent = "…";
+  try {
+    const res = await fetch("/api/ulm-search", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name, latin }),
+    });
+    const data = await res.json();
+    if (data.url) {
+      window.open(data.url, "_blank");
+    } else {
+      window.open("https://tp-online.ku.de/suche.php", "_blank");
+    }
+  } catch (e) {
+    window.open("https://tp-online.ku.de/suche.php", "_blank");
+  } finally {
+    this.textContent = "Search ↗";
+  }
+});
+
+/* ── Keyboard shortcuts ── */
+document.addEventListener("keydown", (e) => {
+  if (e.target.tagName === "INPUT") return;
+  if (e.key === "m" || e.key === "M")  { document.getElementById("btn-mark-mode").click(); }
+  if ((e.key === "Enter" || e.key === "o" || e.key === "O") && newPx !== null) { document.getElementById("btn-accept").click(); }
+  if (e.key === " ")  { e.preventDefault(); document.getElementById("btn-skip").click(); }
+  if (e.key === "Escape") { setMarkMode(false); }
+  if (e.key === "ArrowRight") document.getElementById("btn-skip").click();
+  if (e.key === "ArrowLeft")  document.getElementById("btn-back").click();
+});
+
+window.addEventListener("load", () => requestAnimationFrame(() => init()));
+</script>
+</body>
+</html>

@@ -1,0 +1,15 @@
+record_id,type,status,modern_preferred,latin_std,country,lat,lng,geocoding_lat,geocoding_lng,geocoding_confidence,geocoding_source,geocoding_query,geocoding_provider_title,geocoding_provider_url
+OV:https://omnesviae.org/#TPPlace940,lake,,Lausanne,Lacvm Losonne,CH,46.519478,6.631996,,,,,,,
+OV:https://omnesviae.org/#TPPlace1095,river,,Fiume Ombrone,Umbro Fl{umen},I,43.465813,11.615256,,,,,,,
+OV:https://omnesviae.org/#TPPlace1112,river,,Fiume Ombrone,Umbro Fl(umen).,I,43.004688,11.296956,,,,,,,
+TP:3404,river,needs_refinement,Grati,Fl(umen) Crate{r},I,,,35.95,39.01,,,,,
+TP:3369,river,no_candidate,Aspido,Fl(uvius) Aspia,I,,,,,,none,Aspido,,
+TP:3354,river,needs_refinement,Lavenza,Fl(uvius) Aventia,I,,,,,0.5,nominatim,Lavenza,"Pizzeria Lavenza, 53, Via Gino Menconi, Avenza, Carrara, Massa-Carrara, Tuscany, 54033, Italy",https://www.openstreetmap.org/?mlat=44.0455603&mlon=10.0648315#map=11/44.0455603/10.0648315
+TP:3350,river,needs_refinement,"Vippaco, Vipava",Fl(uvius) Frgid(us),I,,,45.846273,13.962157,,,,,
+TP:3322,river,needs_refinement,Larda,Fl(uvius) Hadra,I,,,,,0.12,wikipedia,Larda,Adana,https://en.wikipedia.org/wiki/Adana
+TP:3310,river,needs_refinement,Malea,Fl(uvius) Iala,I,,,,,0.897,nominatim,Malea,"Canale Malea, Codigoro, Unione Delta del Po, Ferrara, Emilia-Romagna, 44021, Italy",https://www.openstreetmap.org/?mlat=44.8380167&mlon=12.09865#map=11/44.8380167/12.09865
+TP:3317,river,needs_refinement,Imper,Fl(uvius) Lucus,I,,,46.233333,26.1,,,,,
+TP:3336,river,no_candidate,Saterno,Fl(uvius) Saternum,I,,,,,,none,Saterno,,
+TP:3405,river,needs_refinement,San Ippolito,Fl(uvius) Tanno,I,,,,,0.02,wikipedia,San Ippolito,Empoli,https://en.wikipedia.org/wiki/Empoli
+TP:3315,river,needs_refinement,Vesubia,Fl(uvius) Vulpis,I,,,43.8598,7.2242,,,,,
+TP:3505,river,no_candidate,?,Fl{umen} Aunes,,,,,,,none,{umen} Aunes,,
