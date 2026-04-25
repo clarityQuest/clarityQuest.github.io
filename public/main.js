@@ -565,9 +565,10 @@ function showTooltip(place, x, y) {
   const color = TYPE_COLORS[place.type] || "#92400E";
   const typeLabel = TYPE_LABELS[place.type] || place.type;
   const displayLatin = place.latin_std || place.latin;
+  const flags = countryFlags(place.country);
   tt.innerHTML = `
     <div class="tt-latin">${escHtml(displayLatin)}</div>
-    ${place.modern ? `<div class="tt-modern">${escHtml(place.modern)}</div>` : ""}
+    ${place.modern ? `<div class="tt-modern">${flags ? flags + " " : ""}${escHtml(place.modern)}</div>` : (flags ? `<div class="tt-modern">${flags}</div>` : "")}
     <div class="tt-type"><span class="dot" style="background:${color}"></span>${typeLabel}</div>
   `;
   tt.style.left = (x + 16) + "px";
@@ -617,7 +618,7 @@ function showMillerTooltip(item, x, y) {
     ${item.modern   ? `<div class="tt-modern">${escHtml(item.modern)}</div>` : ""}
     <div class="tt-type"><span class="dot" style="background:${color}"></span>${typeLabel}</div>
     ${item.province ? `<div class="tt-detail">Province: <span>${escHtml(item.province)}</span></div>` : ""}
-    ${item.country  ? `<div class="tt-detail">Country: <span>${escHtml(item.country)}</span></div>` : ""}
+    ${item.country  ? `<div class="tt-detail">${countryFlags(item.country)} <span>${escHtml(item.country)}</span></div>` : ""}
   `;
   tt.classList.add("tt-rich");
   tt.style.left = (x + 16) + "px";
@@ -662,7 +663,12 @@ function showInfoPanel(place) {
     const dt = document.createElement("dt");
     dt.textContent = label;
     const dd = document.createElement("dd");
-    dd.textContent = value;
+    if (label === "Country") {
+      const flags = countryFlags(value);
+      dd.textContent = flags ? `${flags} ${value}` : value;
+    } else {
+      dd.textContent = value;
+    }
     dl.appendChild(dt);
     dl.appendChild(dd);
   }
@@ -685,7 +691,31 @@ function showInfoPanel(place) {
     }
   }
 
-  // Link to tabula-peutingeriana.de (the Ulm/Weber site)
+  // Wikipedia link
+  const wikiLink = document.getElementById("panel-wiki-link");
+  if (wikiLink) {
+    const modern = place.modern || "";
+    if (modern) {
+      wikiLink.href = `https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(modern)}`;
+      wikiLink.classList.remove("hidden");
+    } else {
+      wikiLink.classList.add("hidden");
+    }
+  }
+
+  // tp-online (Ulm database)
+  const tpLink = document.getElementById("panel-tp-link");
+  if (tpLink) {
+    const href = tpOnlineHref(place);
+    if (href) {
+      tpLink.href = href;
+      tpLink.classList.remove("hidden");
+    } else {
+      tpLink.classList.add("hidden");
+    }
+  }
+
+  // Link to tabula-peutingeriana.de section viewer
   const ulmLink = document.getElementById("panel-ulm-link");
   if (ulmLink) {
     const href = tabulaSourceHref(place);
@@ -1014,6 +1044,37 @@ function setupInteraction() {
 /* ============================================================
    Utility
    ============================================================ */
+const COUNTRY_TO_ISO2 = {
+  D:"DE",A:"AT",I:"IT",IT:"IT",Italy:"IT",F:"FR",E:"ES",P:"PT",H:"HU",B:"BE",
+  NL:"NL",CH:"CH",CY:"CY",GB:"GB",GR:"GR",TR:"TR",BG:"BG",RO:"RO",HR:"HR",
+  AL:"AL",MK:"MK",MNE:"ME",BIH:"BA",YU:"RS",SLO:"SI",RKS:"XK",V:"VA",
+  TN:"TN",DZ:"DZ",MA:"MA",LAR:"LY",IL:"IL",RL:"LB",SYR:"SY",IRQ:"IQ",
+  IR:"IR",JOR:"JO",GE:"GE",ARM:"AM",AZ:"AZ",RUS:"RU",UA:"UA",TM:"TM",
+  PAK:"PK",AFG:"AF",IND:"IN",ET:"EG",IRE:"IE",
+};
+
+function countryFlags(raw) {
+  if (!raw) return "";
+  return raw.split("|").map(c => {
+    const t = c.trim();
+    const iso = COUNTRY_TO_ISO2[t] || (t.length === 2 ? t.toUpperCase() : null);
+    if (!iso || iso.length !== 2) return "";
+    return String.fromCodePoint(0x1F1E6 + iso.charCodeAt(0) - 65, 0x1F1E6 + iso.charCodeAt(1) - 65);
+  }).filter(Boolean).join("");
+}
+
+function tpOnlineHref(place) {
+  const rid = String(place.record_id || place.id || "");
+  const m = /^TP:(\d+)$/.exec(rid);
+  if (m) return `https://tp-online.ku.de/trefferanzeige.php?id=${m[1]}`;
+  if (place.source === "tabula") {
+    const did = Number(place.data_id);
+    if (Number.isFinite(did) && did > 0 && did < 2000000)
+      return `https://tp-online.ku.de/trefferanzeige.php?id=${did}`;
+  }
+  return "";
+}
+
 function escHtml(s) {
   const d = document.createElement("div");
   d.textContent = s;
