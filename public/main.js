@@ -84,7 +84,9 @@ const S = {
   millerOverlayOn: true,
   millerCalib:    [],   // loaded from miller_rect_* fields in review_places_db.json
   legendOpen:     false,
-  selectedPlace:null,
+  selectedPlace:  null,
+  highlightDataId: null,
+  highlightUntil:  0,
   canvas:       null,
   ctx:          null,
   readableTile: null,
@@ -366,6 +368,32 @@ function loadMillerCalib(allRecords) {
   }
 }
 
+function startHighlight(place) {
+  S.highlightDataId = Number(place.data_id);
+  S.highlightUntil  = Date.now() + 20000;
+  function tick() {
+    renderMarkers();
+    if (Date.now() < S.highlightUntil) requestAnimationFrame(tick);
+    else { S.highlightDataId = null; renderMarkers(); }
+  }
+  requestAnimationFrame(tick);
+}
+
+function drawHighlightRing(ctx, cx, cy, baseR) {
+  const now = Date.now();
+  ctx.save();
+  for (let i = 0; i < 2; i++) {
+    const t = ((now + i * 500) % 1000) / 1000;
+    ctx.globalAlpha = (1 - t) * 0.85;
+    ctx.beginPath();
+    ctx.arc(cx, cy, baseR + t * baseR * 2.5, 0, Math.PI * 2);
+    ctx.strokeStyle = "#FFD700";
+    ctx.lineWidth = 2.5;
+    ctx.stroke();
+  }
+  ctx.restore();
+}
+
 function renderMillerOverlay(ctx) {
   if (!S.viewer || !S.viewer.viewport) return;
   const vp = S.viewer.viewport;
@@ -399,6 +427,9 @@ function renderMillerOverlay(ctx) {
     ctx.lineWidth = 1.5;
     ctx.strokeRect(x, y, w, h);
     ctx.globalAlpha = 1;
+
+    if (item.data_id === S.highlightDataId && Date.now() < S.highlightUntil)
+      drawHighlightRing(ctx, x + w / 2, y + h / 2, Math.max(w, h) / 2 + 4);
 
     if (zoom >= 6 && S.labelsOn) {
       ctx.strokeStyle = "rgba(0,0,0,0.8)";
@@ -481,6 +512,9 @@ function renderMarkers() {
     ctx.lineWidth = 1.5;
     ctx.strokeRect(x, y, w, h);
     ctx.globalAlpha = 1;
+
+    if (p.data_id === S.highlightDataId && Date.now() < S.highlightUntil)
+      drawHighlightRing(ctx, cx, cy, Math.max(w, h) / 2 + 4);
 
     if (showLabels && S.labelsOn && labelCount < MAX_LABELS) {
       const latin  = p.latin_std || p.latin;
@@ -766,6 +800,7 @@ function setupSearch() {
 
     panToPlace(place);
     showInfoPanel(place);
+    startHighlight(place);
 
     results.classList.add("hidden");
     input.value = "";
