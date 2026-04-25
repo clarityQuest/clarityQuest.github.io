@@ -436,8 +436,12 @@ function renderMillerOverlay(ctx) {
       highlightDrawn = true;
     }
 
-    if (zoom >= (S.isMobile ? 3 : 6) && S.labelsOn) {
-      const mfs = Math.max(7, Math.min(zoom * 1.6 + 5, 14));
+    const millerLabelThreshold = S.isMobile ? 3 : 6;
+    if (zoom >= millerLabelThreshold && S.labelsOn) {
+      const mfs = Math.max(7, Math.min((zoom - millerLabelThreshold) * 1.2 + 7, 14));
+      const mAlpha = Math.min(1, (zoom - millerLabelThreshold) * 0.5);
+      ctx.save();
+      ctx.globalAlpha = mAlpha;
       ctx.strokeStyle = "rgba(0,0,0,0.8)";
       ctx.lineWidth = 3;
       ctx.lineJoin = "round";
@@ -455,6 +459,7 @@ function renderMillerOverlay(ctx) {
         ctx.fillStyle = "#e5e7eb";
         ctx.fillText(item.latin_std, x, y + h + 2);
       }
+      ctx.restore();
     }
     drawn++;
   }
@@ -485,10 +490,13 @@ function renderMarkers() {
   const by0 = bounds.y;
   const by1 = bounds.y + bounds.height;
 
-  const showLabels = zoom >= (S.isMobile ? 2 : 4);
+  const labelZoomThreshold = S.isMobile ? 2 : 4;
+  const showLabels = zoom >= labelZoomThreshold;
+  // Fade labels in smoothly above the threshold; fully opaque at threshold+2
+  const labelAlpha = Math.min(1, (zoom - labelZoomThreshold) * 0.5);
 
   let rendered = 0;
-  const MAX_LABELS = S.isMobile ? 60 : 200;
+  const MAX_LABELS = S.isMobile ? 40 : 200;
   let labelCount = 0;
 
   for (const p of S.places) {
@@ -524,11 +532,12 @@ function renderMarkers() {
     if (showLabels && S.labelsOn && labelCount < MAX_LABELS) {
       const latin  = p.latin_std || p.latin;
       const modern = p.modern || null;
-      const fontSize = Math.max(7, Math.min(zoom * 1.6 + 5, 14));
+      const fontSize = Math.max(7, Math.min((zoom - labelZoomThreshold) * 1.2 + 7, 14));
+      ctx.save();
+      ctx.globalAlpha = labelAlpha;
       ctx.strokeStyle = "rgba(0,0,0,0.8)";
       ctx.lineWidth = 3;
       ctx.lineJoin = "round";
-      // Modern name inside box, bottom-aligned
       if (modern) {
         ctx.font = `bold ${Math.round(fontSize * 1.4)}px 'Segoe UI', system-ui, sans-serif`;
         ctx.textBaseline = "bottom";
@@ -536,7 +545,6 @@ function renderMarkers() {
         ctx.fillStyle = "#ffffff";
         ctx.fillText(modern, x + 3, y + h - 2);
       }
-      // Latin name smaller, below the box
       if (latin) {
         ctx.font = `${Math.round((fontSize - 1) * 1.4)}px 'Segoe UI', system-ui, sans-serif`;
         ctx.textBaseline = "top";
@@ -544,6 +552,7 @@ function renderMarkers() {
         ctx.fillStyle = "#e5e7eb";
         ctx.fillText(latin, x, y + h + 2);
       }
+      ctx.restore();
       if (latin || modern) labelCount++;
     }
     rendered++;
@@ -1209,7 +1218,12 @@ function setupInteraction() {
         source:         "tabula",
       });
       e.preventDefaultAction = true;
+      return;
     }
+
+    // Nothing hit — close info panel if open
+    const panel = document.getElementById("info-panel");
+    if (!panel.classList.contains("hidden")) hideInfoPanel();
   });
 }
 
