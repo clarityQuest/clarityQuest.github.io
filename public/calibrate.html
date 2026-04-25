@@ -75,6 +75,7 @@
     .filter-btn[data-type="road_station"].active { border-color: #92400E; background: rgba(146,64,14,0.22); color: #fcd34d; }
     .filter-btn[data-type="mountain"].active     { border-color: #78716c; background: rgba(120,113,108,0.22); color: #d6d3d1; }
     .filter-btn[data-type="spa"].active          { border-color: #0891b2; background: rgba(8,145,178,0.22); color: #67e8f9; }
+    .filter-btn[data-type="temple"].active       { border-color: #9333ea; background: rgba(147,51,234,0.22); color: #d8b4fe; }
     .filter-divider { width: 1px; height: 20px; background: var(--border); flex-shrink: 0; }
     #btn-show-all-markings {
       padding: 4px 11px; border-radius: 5px; border: 1px solid var(--green);
@@ -267,6 +268,7 @@
       <button class="filter-btn" data-type="lake">Lake</button>
       <button class="filter-btn" data-type="water">Water</button>
       <button class="filter-btn" data-type="spa">Spa</button>
+      <button class="filter-btn" data-type="temple">Temple</button>
       <button class="filter-btn" data-type="mountain">Mountain</button>
       <button class="filter-btn" data-type="people">People</button>
     </div>
@@ -397,6 +399,7 @@ const TYPE_COLORS = {
   modern_state:   "#475569",
   water:          "#164e63",
   spa:            "#0891b2",
+  temple:         "#9333ea",
   mountain:       "#78716c",
   people:         "#9d174d",
 };
@@ -414,6 +417,7 @@ const TYPE_LABELS = {
   modern_state:   "Modern State",
   water:          "Water",
   spa:            "Spa",
+  temple:         "Temple",
   mountain:       "Mountain",
   people:         "People",
 };
@@ -665,7 +669,7 @@ async function init() {
   }
   let data;
   try {
-    const res = await fetch("data/review_places_db.json");
+    const res = await fetch(`data/review_places_db.json?v=${Date.now()}`);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const loaded = await res.json();
     reviewDb = (loaded && typeof loaded === "object") ? loaded : { records: [] };

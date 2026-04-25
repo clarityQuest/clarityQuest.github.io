@@ -42,6 +42,7 @@ const TYPE_COLORS = {
   modern_state:   "#475569",
   water:          "#164e63",
   spa:            "#0891b2",
+  temple:         "#9333ea",
   mountain:       "#78716c",
   people:         "#9d174d",
 };
@@ -59,6 +60,7 @@ const TYPE_LABELS = {
   modern_state:   "Modern State",
   water:          "Water",
   spa:            "Spa",
+  temple:         "Temple",
   mountain:       "Mountain",
   people:         "People",
 };
