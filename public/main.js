@@ -87,6 +87,7 @@ const S = {
   selectedPlace:  null,
   highlightDataId: null,
   highlightUntil:  0,
+  highlightVp:     null,  // {vx,vy} viewport centre stored by panToPlace for fallback ring
   isMobile: window.matchMedia("(pointer: coarse)").matches,
   canvas:       null,
   ctx:          null,
@@ -396,12 +397,13 @@ function drawHighlightRing(ctx, cx, cy, baseR) {
 }
 
 function renderMillerOverlay(ctx) {
-  if (!S.viewer || !S.viewer.viewport) return;
+  if (!S.viewer || !S.viewer.viewport) return false;
   const vp = S.viewer.viewport;
   const zoom = vp.getZoom(true);
   const bounds = vp.getBounds(true);
 
   let drawn = 0;
+  let highlightDrawn = false;
   for (const item of S.millerCalib) {
     if (!S.activeTypes.has(item.type)) continue;
     // Quick viewport cull using OSD-normalised coords (normalised by image width)
@@ -429,8 +431,10 @@ function renderMillerOverlay(ctx) {
     ctx.strokeRect(x, y, w, h);
     ctx.globalAlpha = 1;
 
-    if (item.data_id === S.highlightDataId && Date.now() < S.highlightUntil)
+    if (item.data_id === S.highlightDataId && Date.now() < S.highlightUntil) {
       drawHighlightRing(ctx, x + w / 2, y + h / 2, Math.max(w, h) / 2 + 4);
+      highlightDrawn = true;
+    }
 
     if (zoom >= (S.isMobile ? 3 : 6) && S.labelsOn) {
       ctx.strokeStyle = "rgba(0,0,0,0.8)";
@@ -461,6 +465,7 @@ function renderMillerOverlay(ctx) {
   if (statusEl) statusEl.textContent = drawn > 0
     ? `${drawn} calibrated markers`
     : "No calibrations yet — use calibrate.html to mark place positions";
+  return highlightDrawn;
 }
 
 function renderMarkers() {
@@ -469,7 +474,9 @@ function renderMarkers() {
   const el = S.viewer.element;
   ctx.clearRect(0, 0, el.clientWidth, el.clientHeight);
 
-  if (S.millerOverlayOn && S.millerCalib.length && S.mapMode === "old") renderMillerOverlay(ctx);
+  let highlightDrawn = false;
+  if (S.millerOverlayOn && S.millerCalib.length && S.mapMode === "old")
+    highlightDrawn = renderMillerOverlay(ctx) || false;
 
   // SegIV readable markers (disabled when on old map)
   if (!S.markersOn || S.mapMode === "old" || S.newSourceKind === "stitched" || !S.places.length) return;
@@ -514,8 +521,10 @@ function renderMarkers() {
     ctx.strokeRect(x, y, w, h);
     ctx.globalAlpha = 1;
 
-    if (p.data_id === S.highlightDataId && Date.now() < S.highlightUntil)
+    if (p.data_id === S.highlightDataId && Date.now() < S.highlightUntil) {
       drawHighlightRing(ctx, cx, cy, Math.max(w, h) / 2 + 4);
+      highlightDrawn = true;
+    }
 
     if (showLabels && S.labelsOn && labelCount < MAX_LABELS) {
       const latin  = p.latin_std || p.latin;
@@ -548,6 +557,24 @@ function renderMarkers() {
   const statusEl = document.getElementById("status");
   if (statusEl) {
     statusEl.textContent = `${rendered} / ${S.places.length} places`;
+  }
+
+  // Fallback: draw a dot + ring at the estimated position when no real marker was rendered
+  if (!highlightDrawn && S.highlightDataId && Date.now() < S.highlightUntil && S.highlightVp) {
+    const { cx, cy } = viewportToCanvas(S.highlightVp.vx, S.highlightVp.vy);
+    const hlPlace = S.places.find(p => p.data_id === S.highlightDataId);
+    const color = hlPlace ? (TYPE_COLORS[hlPlace.type] || "#92400E") : "#92400E";
+    ctx.save();
+    ctx.globalAlpha = 0.9;
+    ctx.beginPath();
+    ctx.arc(cx, cy, 7, 0, Math.PI * 2);
+    ctx.fillStyle = color;
+    ctx.fill();
+    ctx.strokeStyle = "rgba(255,255,255,0.7)";
+    ctx.lineWidth = 1.5;
+    ctx.stroke();
+    ctx.restore();
+    drawHighlightRing(ctx, cx, cy, 11);
   }
 }
 
@@ -824,13 +851,25 @@ function setupSearch() {
 
 function panToPlace(place) {
   if (S.mapMode === "old") {
+    const millerAspect = MILLER_H / MILLER_W;
     const mc = S.millerCalib.find(m => m.data_id === place.data_id);
     if (mc) {
       const cx = (mc.rect_x1 + mc.rect_x2) / 2 / MILLER_W;
       const cy = (mc.rect_y1 + mc.rect_y2) / 2 / MILLER_W;
-      const aspect = MILLER_H / MILLER_W;
+      S.highlightVp = { vx: cx, vy: cy };
       S.viewer.viewport.fitBounds(
-        new OpenSeadragon.Rect(cx - 0.02, cy - 0.01 * aspect, 0.04, 0.02 * aspect)
+        new OpenSeadragon.Rect(cx - 0.02, cy - 0.01 * millerAspect, 0.04, 0.02 * millerAspect)
+      );
+    } else {
+      // Estimate from tabula segment/row when no calibration exists
+      const seg = Number(place.tabula_segment);
+      const segIdx = Number.isFinite(seg) ? (seg - 2) : 5;
+      const estVx = (segIdx + 0.5) / 11;
+      const rowMap = { a: 1 / 6, b: 1 / 2, c: 5 / 6 };
+      const estVy = (rowMap[place.tabula_row] ?? 0.5) * millerAspect;
+      S.highlightVp = { vx: estVx, vy: estVy };
+      S.viewer.viewport.fitBounds(
+        new OpenSeadragon.Rect(estVx - 0.02, estVy - 0.01 * millerAspect, 0.04, 0.02 * millerAspect)
       );
     }
     return;
@@ -841,11 +880,12 @@ function panToPlace(place) {
     return;
   }
   const aspect = IMG_H / IMG_W;
-  const rect = new OpenSeadragon.Rect(
-    place.vx - 0.02, place.vy - 0.01 * aspect,
-    0.04, 0.02 * aspect
+  const vx = Number.isFinite(place.vx) ? place.vx : 0.5;
+  const vy = Number.isFinite(place.vy) ? place.vy : 0.5;
+  S.highlightVp = { vx, vy };
+  S.viewer.viewport.fitBounds(
+    new OpenSeadragon.Rect(vx - 0.02, vy - 0.01 * aspect, 0.04, 0.02 * aspect)
   );
-  S.viewer.viewport.fitBounds(rect);
 }
 
 /* ============================================================
