@@ -491,12 +491,12 @@ function renderMarkers() {
   const by0 = bounds.y;
   const by1 = bounds.y + bounds.height;
 
-  const labelZoomThreshold = S.isMobile ? 8 : 4;
+  const labelZoomThreshold = S.isMobile ? 12 : 4;
   const showLabels = zoom >= labelZoomThreshold;
   const labelAlpha = Math.min(1, (zoom - labelZoomThreshold) * 0.5);
 
   let rendered = 0;
-  const MAX_LABELS = S.isMobile ? 15 : 200;
+  const MAX_LABELS = S.isMobile ? 8 : 200;
   let labelCount = 0;
 
   for (const p of S.places) {
@@ -532,8 +532,8 @@ function renderMarkers() {
     if (showLabels && S.labelsOn && labelCount < MAX_LABELS) {
       const latin  = p.latin_std || p.latin;
       const modern = p.modern || null;
-      const [minFont, maxFont] = S.isMobile ? [4, 12] : [8, 28];
-      const fontSize = Math.max(minFont, Math.min((zoom - labelZoomThreshold) * 1.8 + minFont, maxFont));
+      const [minFont, maxFont] = S.isMobile ? [3, 9] : [8, 28];
+      const fontSize = Math.max(minFont, Math.min((zoom - labelZoomThreshold) * 1.2 + minFont, maxFont));
       ctx.save();
       ctx.globalAlpha = labelAlpha;
       ctx.strokeStyle = "rgba(0,0,0,0.8)";
