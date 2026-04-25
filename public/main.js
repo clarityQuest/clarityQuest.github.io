@@ -399,14 +399,18 @@ function drawHighlightRing(ctx, cx, cy, baseR) {
 function renderMillerOverlay(ctx) {
   if (!S.viewer || !S.viewer.viewport) return false;
   const vp = S.viewer.viewport;
-  const zoom = vp.getZoom(true);
   const bounds = vp.getBounds(true);
+
+  const maxMFont    = S.isMobile ? 13 : 22;
+  const maxMLabels  = S.isMobile ?  6 : 30;
+  const mLabelRects = [];
+  const MPAD = 4;
+  let mLabelCount = 0;
 
   let drawn = 0;
   let highlightDrawn = false;
   for (const item of S.millerCalib) {
     if (!S.activeTypes.has(item.type)) continue;
-    // Quick viewport cull using OSD-normalised coords (normalised by image width)
     const vx1 = item.rect_x1 / MILLER_W;
     const vx2 = item.rect_x2 / MILLER_W;
     const vy1 = item.rect_y1 / MILLER_W;
@@ -436,30 +440,53 @@ function renderMillerOverlay(ctx) {
       highlightDrawn = true;
     }
 
-    if (S.labelsOn) {
-      const mfs = Math.min(Math.max(w, h) * 0.9, S.isMobile ? 11 : 20);
-      const mAlpha = Math.min(1, (mfs - 6) * 0.7);
-      if (mfs >= 6 && mAlpha > 0) {
-        ctx.save();
-        ctx.globalAlpha = mAlpha;
-        ctx.strokeStyle = "rgba(0,0,0,0.8)";
-        ctx.lineWidth = 3;
-        ctx.lineJoin = "round";
-        if (item.modern) {
-          ctx.font = `bold ${Math.round(mfs)}px 'Segoe UI', system-ui, sans-serif`;
-          ctx.textBaseline = "bottom";
-          ctx.strokeText(item.modern, x + 3, y + h - 2);
-          ctx.fillStyle = "#ffffff";
-          ctx.fillText(item.modern, x + 3, y + h - 2);
+    if (S.labelsOn && mLabelCount < maxMLabels) {
+      // min(w,h): thin/wide markers don't get inflated font from their long axis
+      const mfs = Math.min(Math.min(w, h) * 1.4, maxMFont);
+      if (mfs >= 9) {
+        const mAlpha = Math.min(1, (mfs - 9) * 0.6);
+        if (mAlpha > 0) {
+          const charW = mfs * 0.55;
+          const lineH = mfs * 1.3;
+          const txt1 = item.modern    || "";
+          const txt2 = item.latin_std || "";
+          const boxW = Math.max(txt1.length, txt2.length) * charW;
+          const boxH = (txt1 ? lineH : 0) + (txt2 ? lineH : 0);
+          const bx = x + 2, by = y + h + 2;
+          let overlaps = false;
+          for (const r of mLabelRects) {
+            if (bx < r.x2 && bx + boxW > r.x1 && by < r.y2 && by + boxH > r.y1) {
+              overlaps = true; break;
+            }
+          }
+          if (!overlaps) {
+            mLabelRects.push({ x1: bx - MPAD, y1: by - MPAD,
+                               x2: bx + boxW + MPAD, y2: by + boxH + MPAD });
+            mLabelCount++;
+            ctx.save();
+            ctx.globalAlpha = mAlpha;
+            ctx.strokeStyle = "rgba(0,0,0,0.8)";
+            ctx.lineWidth = 3;
+            ctx.lineJoin = "round";
+            let dy = by;
+            if (txt1) {
+              ctx.font = `bold ${Math.round(mfs)}px 'Segoe UI', system-ui, sans-serif`;
+              ctx.textBaseline = "top";
+              ctx.strokeText(txt1, bx, dy);
+              ctx.fillStyle = "#ffffff";
+              ctx.fillText(txt1, bx, dy);
+              dy += lineH;
+            }
+            if (txt2) {
+              ctx.font = `${Math.round(Math.max(6, mfs - 1))}px 'Segoe UI', system-ui, sans-serif`;
+              ctx.textBaseline = "top";
+              ctx.strokeText(txt2, bx, dy);
+              ctx.fillStyle = "#e5e7eb";
+              ctx.fillText(txt2, bx, dy);
+            }
+            ctx.restore();
+          }
         }
-        if (item.latin_std) {
-          ctx.font = `${Math.round(mfs - 1)}px 'Segoe UI', system-ui, sans-serif`;
-          ctx.textBaseline = "top";
-          ctx.strokeText(item.latin_std, x, y + h + 2);
-          ctx.fillStyle = "#e5e7eb";
-          ctx.fillText(item.latin_std, x, y + h + 2);
-        }
-        ctx.restore();
       }
     }
     drawn++;
