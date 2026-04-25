@@ -15,12 +15,15 @@
 }
 
 body, html {
-  width: 100%; 
+  width: 100%;
   height: 100%;
   overflow: hidden;
   font-family: "Segoe UI", system-ui, sans-serif;
   background-color: var(--bg-color);
   color: var(--text-main);
+}
+@supports (height: 100dvh) {
+  body, html { height: 100dvh; }
 }
 
 #app {
@@ -228,3 +231,77 @@ body, html {
 /* Utilities */
 .hidden { display: none !important; }
 .dot { display: inline-block; width: 10px; height: 10px; border-radius: 50%; border: 1px solid rgba(255,255,255,0.5); }
+
+/* ── Mobile menu overlay ─────────────────────────────────────── */
+#mobile-menu-btn { display: none; }
+#mobile-menu {
+  position: fixed; inset: 0; z-index: 50;
+  display: flex; flex-direction: column; justify-content: flex-end;
+}
+#mobile-menu-backdrop {
+  position: absolute; inset: 0;
+  background: rgba(0,0,0,0.55);
+}
+#mobile-menu-sheet {
+  position: relative;
+  background: var(--panel-bg);
+  border-radius: 16px 16px 0 0;
+  padding: 16px 16px 32px;
+  max-height: 80svh;
+  overflow-y: auto;
+  border-top: 1px solid var(--border-color);
+}
+#mobile-menu-handle {
+  width: 40px; height: 4px;
+  background: var(--border-color);
+  border-radius: 2px;
+  margin: 0 auto 16px;
+}
+#mobile-menu h3 {
+  font-size: 11px; font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  margin: 14px 0 6px;
+}
+#mobile-menu h3:first-of-type { margin-top: 4px; }
+#mobile-type-filter-buttons,
+#mobile-segment-buttons { display: flex; flex-wrap: wrap; gap: 5px; }
+#mobile-display-controls { display: flex; gap: 8px; flex-wrap: wrap; }
+
+/* ── Mobile responsive overrides ────────────────────────────── */
+@media (pointer: coarse), (max-width: 600px) {
+  /* Show hamburger, hide desktop filter row + segment strip */
+  #mobile-menu-btn { display: flex !important; }
+  #segment-buttons { display: none; }
+  #bottom-left-controls { display: none; }
+  #attribution { display: none; }
+
+  /* Search fills remaining top-bar space */
+  #search-container { flex: 1; min-width: 0; margin: 0 4px; }
+  #search-input { width: 100%; min-width: 0; font-size: 16px; /* prevent iOS zoom on focus */ }
+
+  /* Info panel → full-width bottom sheet */
+  #info-panel {
+    position: fixed !important;
+    left: 0 !important; right: 0 !important;
+    bottom: 0 !important; top: auto !important;
+    width: 100% !important;
+    max-height: 72svh;
+    border-radius: 16px 16px 0 0;
+    padding: 12px 16px 28px;
+    box-shadow: 0 -4px 24px rgba(0,0,0,0.6);
+  }
+  #info-panel::before {
+    content: '';
+    display: block;
+    width: 40px; height: 4px;
+    background: var(--border-color);
+    border-radius: 2px;
+    margin: 0 auto 12px;
+  }
+  #panel-map iframe { height: 160px; }
+
+  /* Larger tap targets for controls */
+  .ctrl-btn { min-width: 38px; min-height: 38px; }
+}

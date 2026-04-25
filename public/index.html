@@ -24,6 +24,9 @@
         <button id="control-fullpage" class="ctrl-btn" aria-label="Fullscreen" title="Fullscreen">
           <svg width="18" height="18" viewBox="0 0 18 18"><path d="M2 6V2h4M12 2h4v4M16 12v4h-4M6 16H2v-4" fill="none" stroke="currentColor" stroke-width="1.5"/></svg>
         </button>
+        <button id="mobile-menu-btn" class="ctrl-btn" aria-label="Filters" title="Filters">
+          <svg width="18" height="18" viewBox="0 0 18 18"><line x1="2" y1="5" x2="16" y2="5" stroke="currentColor" stroke-width="2"/><line x1="2" y1="9" x2="16" y2="9" stroke="currentColor" stroke-width="2"/><line x1="2" y1="13" x2="16" y2="13" stroke="currentColor" stroke-width="2"/></svg>
+        </button>
         <div id="segment-buttons" class="segment-btn-group" role="group" aria-label="Select segment"></div>
       </div>
 
@@ -80,6 +83,20 @@
       </div>
     </div>
 
+    <!-- Mobile filter/segment menu -->
+    <div id="mobile-menu" class="hidden">
+      <div id="mobile-menu-backdrop"></div>
+      <div id="mobile-menu-sheet">
+        <div id="mobile-menu-handle"></div>
+        <h3>Categories</h3>
+        <div id="mobile-type-filter-buttons" class="type-filter-group"></div>
+        <h3>Segment</h3>
+        <div id="mobile-segment-buttons" class="segment-btn-group"></div>
+        <h3>Display</h3>
+        <div id="mobile-display-controls"></div>
+      </div>
+    </div>
+
     <!-- Status -->
     <div id="status"></div>
 
@@ -91,6 +108,6 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
-  <script src="main.js?v=20260426e"></script>
+  <script src="main.js?v=20260427"></script>
 </body>
 </html>

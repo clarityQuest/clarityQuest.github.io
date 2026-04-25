@@ -87,6 +87,7 @@ const S = {
   selectedPlace:  null,
   highlightDataId: null,
   highlightUntil:  0,
+  isMobile: window.matchMedia("(pointer: coarse)").matches,
   canvas:       null,
   ctx:          null,
   readableTile: null,
@@ -431,7 +432,7 @@ function renderMillerOverlay(ctx) {
     if (item.data_id === S.highlightDataId && Date.now() < S.highlightUntil)
       drawHighlightRing(ctx, x + w / 2, y + h / 2, Math.max(w, h) / 2 + 4);
 
-    if (zoom >= 6 && S.labelsOn) {
+    if (zoom >= (S.isMobile ? 3 : 6) && S.labelsOn) {
       ctx.strokeStyle = "rgba(0,0,0,0.8)";
       ctx.lineWidth = 3;
       ctx.lineJoin = "round";
@@ -482,10 +483,10 @@ function renderMarkers() {
   const by0 = bounds.y;
   const by1 = bounds.y + bounds.height;
 
-  const showLabels = zoom >= 4;
+  const showLabels = zoom >= (S.isMobile ? 2 : 4);
 
   let rendered = 0;
-  const MAX_LABELS = 200;
+  const MAX_LABELS = S.isMobile ? 60 : 200;
   let labelCount = 0;
 
   for (const p of S.places) {
@@ -883,6 +884,24 @@ function setupControls() {
   document.addEventListener("keydown", (e) => {
     if (e.key === "Escape") hideInfoPanel();
   });
+
+  // Swipe-down to close info panel on mobile
+  if (S.isMobile) {
+    const panel = document.getElementById("info-panel");
+    let swipeStartY = null;
+    panel.addEventListener("touchstart", (e) => {
+      swipeStartY = e.touches[0].clientY;
+    }, { passive: true });
+    panel.addEventListener("touchend", (e) => {
+      if (swipeStartY === null) return;
+      const dy = e.changedTouches[0].clientY - swipeStartY;
+      if (dy > 60) hideInfoPanel();
+      swipeStartY = null;
+    }, { passive: true });
+  }
+
+  // Mobile menu
+  setupMobileMenu();
 }
 
 function setupTypeFilters() {
@@ -940,6 +959,66 @@ function setupTypeFilters() {
   }
 }
 
+function setupMobileMenu() {
+  const btn = document.getElementById("mobile-menu-btn");
+  const menu = document.getElementById("mobile-menu");
+  const backdrop = document.getElementById("mobile-menu-backdrop");
+  if (!btn || !menu) return;
+
+  function openMenu() {
+    // Sync type filter buttons
+    const typeContainer = document.getElementById("mobile-type-filter-buttons");
+    const types = Object.keys(TYPE_COLORS);
+    typeContainer.innerHTML = types.map(t => {
+      const color = TYPE_COLORS[t];
+      const label = TYPE_LABELS[t];
+      const active = S.activeTypes.has(t) ? " active" : "";
+      return `<button class="type-filter-btn${active}" data-type="${t}" title="${label}">
+        <span class="tf-dot" style="background:${color}"></span>${label}
+      </button>`;
+    }).join("");
+    typeContainer.addEventListener("click", (e) => {
+      const b = e.target.closest(".type-filter-btn");
+      if (!b) return;
+      const t = b.dataset.type;
+      if (S.activeTypes.has(t)) { S.activeTypes.delete(t); b.classList.remove("active"); }
+      else { S.activeTypes.add(t); b.classList.add("active"); }
+      // Mirror to desktop buttons
+      document.querySelectorAll(`#type-filter-buttons .type-filter-btn[data-type="${t}"]`)
+        .forEach(db => db.classList.toggle("active", S.activeTypes.has(t)));
+      renderMarkers();
+    });
+
+    // Sync segment buttons
+    const segContainer = document.getElementById("mobile-segment-buttons");
+    segContainer.innerHTML = document.getElementById("segment-buttons").innerHTML;
+    segContainer.addEventListener("click", (e) => {
+      const b = e.target.closest(".seg-btn");
+      if (!b) return;
+      const seg = Number(b.dataset.segment);
+      focusSegment(seg);
+      closeMenu();
+    });
+
+    // Labels toggle
+    const dispContainer = document.getElementById("mobile-display-controls");
+    dispContainer.innerHTML = `<button class="ctrl-btn toggle-btn${S.labelsOn ? " active" : ""}" id="mobile-toggle-labels">Labels</button>`;
+    dispContainer.querySelector("#mobile-toggle-labels").addEventListener("click", (e) => {
+      S.labelsOn = !S.labelsOn;
+      e.currentTarget.classList.toggle("active", S.labelsOn);
+      document.getElementById("toggle-labels")?.classList.toggle("active", S.labelsOn);
+      renderMarkers();
+    });
+
+    menu.classList.remove("hidden");
+  }
+
+  function closeMenu() { menu.classList.add("hidden"); }
+
+  btn.addEventListener("click", openMenu);
+  backdrop.addEventListener("click", closeMenu);
+}
+
 function activeTileSource() {
   return S.originalTile;
 }
@@ -980,14 +1059,10 @@ function swapTileSource(callback, previousMode = S.mapMode) {
 function setupInteraction() {
   let lastHovered = null;
 
-  // Disable OSD navigation while cursor is inside the info panel so scroll/drag works there
-  const infoPanel = document.getElementById("info-panel");
-  infoPanel.addEventListener("mouseenter", () => S.viewer && S.viewer.setMouseNavEnabled(false));
-  infoPanel.addEventListener("mouseleave", () => S.viewer && S.viewer.setMouseNavEnabled(true));
-
   new OpenSeadragon.MouseTracker({
     element: S.viewer.element,
     moveHandler: (e) => {
+      if (S.isMobile) return;
       const pos = e.position;
       const elRect = S.viewer.element.getBoundingClientRect();
       const clientX = elRect.left + pos.x;
@@ -1035,7 +1110,7 @@ function setupInteraction() {
       hideTooltip();
       lastHovered = null;
     },
-    leaveHandler: () => { hideTooltip(); lastHovered = null; },
+    leaveHandler: () => { if (!S.isMobile) { hideTooltip(); lastHovered = null; } },
   });
 
   S.viewer.addHandler("canvas-click", (e) => {
