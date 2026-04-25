@@ -436,31 +436,31 @@ function renderMillerOverlay(ctx) {
       highlightDrawn = true;
     }
 
-    const millerLabelThreshold = 6;
-    if (zoom >= millerLabelThreshold && S.labelsOn) {
-      const [mfsMin, mfsMax] = S.isMobile ? [4, 12] : [8, 28];
-      const mfs = Math.max(mfsMin, Math.min((zoom - millerLabelThreshold) * 1.8 + mfsMin, mfsMax));
-      const mAlpha = Math.min(1, (zoom - millerLabelThreshold) * 0.5);
-      ctx.save();
-      ctx.globalAlpha = mAlpha;
-      ctx.strokeStyle = "rgba(0,0,0,0.8)";
-      ctx.lineWidth = 3;
-      ctx.lineJoin = "round";
-      if (item.modern) {
-        ctx.font = `bold ${Math.round(mfs)}px 'Segoe UI', system-ui, sans-serif`;
-        ctx.textBaseline = "bottom";
-        ctx.strokeText(item.modern, x + 3, y + h - 2);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(item.modern, x + 3, y + h - 2);
+    if (S.labelsOn) {
+      const mfs = Math.min(Math.max(w, h) * 0.9, S.isMobile ? 11 : 20);
+      const mAlpha = Math.min(1, (mfs - 6) * 0.7);
+      if (mfs >= 6 && mAlpha > 0) {
+        ctx.save();
+        ctx.globalAlpha = mAlpha;
+        ctx.strokeStyle = "rgba(0,0,0,0.8)";
+        ctx.lineWidth = 3;
+        ctx.lineJoin = "round";
+        if (item.modern) {
+          ctx.font = `bold ${Math.round(mfs)}px 'Segoe UI', system-ui, sans-serif`;
+          ctx.textBaseline = "bottom";
+          ctx.strokeText(item.modern, x + 3, y + h - 2);
+          ctx.fillStyle = "#ffffff";
+          ctx.fillText(item.modern, x + 3, y + h - 2);
+        }
+        if (item.latin_std) {
+          ctx.font = `${Math.round(mfs - 1)}px 'Segoe UI', system-ui, sans-serif`;
+          ctx.textBaseline = "top";
+          ctx.strokeText(item.latin_std, x, y + h + 2);
+          ctx.fillStyle = "#e5e7eb";
+          ctx.fillText(item.latin_std, x, y + h + 2);
+        }
+        ctx.restore();
       }
-      if (item.latin_std) {
-        ctx.font = `${Math.round(mfs - 1)}px 'Segoe UI', system-ui, sans-serif`;
-        ctx.textBaseline = "top";
-        ctx.strokeText(item.latin_std, x, y + h + 2);
-        ctx.fillStyle = "#e5e7eb";
-        ctx.fillText(item.latin_std, x, y + h + 2);
-      }
-      ctx.restore();
     }
     drawn++;
   }
@@ -491,13 +491,13 @@ function renderMarkers() {
   const by0 = bounds.y;
   const by1 = bounds.y + bounds.height;
 
-  const labelZoomThreshold = S.isMobile ? 12 : 4;
-  const showLabels = zoom >= labelZoomThreshold;
-  const labelAlpha = Math.min(1, (zoom - labelZoomThreshold) * 0.5);
+  // Font size is driven by on-screen marker size, not zoom directly.
+  // Overlap detection prevents label crowding at any zoom level.
+  const maxLabelFont = S.isMobile ? 11 : 20;
+  const labelRects = []; // bounding boxes of already-placed labels
+  const LABEL_PAD = 4;  // extra breathing room around each label
 
   let rendered = 0;
-  const MAX_LABELS = S.isMobile ? 8 : 200;
-  let labelCount = 0;
 
   for (const p of S.places) {
     if (!S.activeTypes.has(p.type)) continue;
@@ -529,32 +529,64 @@ function renderMarkers() {
       highlightDrawn = true;
     }
 
-    if (showLabels && S.labelsOn && labelCount < MAX_LABELS) {
+    if (S.labelsOn) {
       const latin  = p.latin_std || p.latin;
       const modern = p.modern || null;
-      const [minFont, maxFont] = S.isMobile ? [3, 9] : [8, 28];
-      const fontSize = Math.max(minFont, Math.min((zoom - labelZoomThreshold) * 1.2 + minFont, maxFont));
-      ctx.save();
-      ctx.globalAlpha = labelAlpha;
-      ctx.strokeStyle = "rgba(0,0,0,0.8)";
-      ctx.lineWidth = 3;
-      ctx.lineJoin = "round";
-      if (modern) {
-        ctx.font = `bold ${Math.round(fontSize)}px 'Segoe UI', system-ui, sans-serif`;
-        ctx.textBaseline = "bottom";
-        ctx.strokeText(modern, x + 3, y + h - 2);
-        ctx.fillStyle = "#ffffff";
-        ctx.fillText(modern, x + 3, y + h - 2);
+      if (latin || modern) {
+        // Font size proportional to marker screen size — naturally smaller when zoomed out
+        const fontSize = Math.min(Math.max(w, h) * 0.9, maxLabelFont);
+        if (fontSize >= 6) {
+          const alpha = Math.min(1, (fontSize - 6) * 0.7);
+          if (alpha > 0) {
+            // Estimate label bounding box (char width ≈ 0.55 × fontSize)
+            const charW = fontSize * 0.55;
+            const lineH = fontSize * 1.3;
+            const boxW = Math.max(
+              modern ? modern.length * charW : 0,
+              latin  ? latin.length  * charW : 0
+            );
+            const boxH = (modern ? lineH : 0) + (latin ? lineH : 0);
+            const bx = x + 2;
+            const by = y + h + 2;
+
+            // Skip if this label would overlap an already-placed one
+            let overlaps = false;
+            for (const r of labelRects) {
+              if (bx < r.x2 && bx + boxW > r.x1 && by < r.y2 && by + boxH > r.y1) {
+                overlaps = true; break;
+              }
+            }
+            if (!overlaps) {
+              labelRects.push({ x1: bx - LABEL_PAD, y1: by - LABEL_PAD,
+                                x2: bx + boxW + LABEL_PAD, y2: by + boxH + LABEL_PAD });
+              ctx.save();
+              ctx.globalAlpha = alpha;
+              ctx.strokeStyle = "rgba(0,0,0,0.8)";
+              ctx.lineWidth = 3;
+              ctx.lineJoin = "round";
+              const fsBold = Math.round(fontSize);
+              const fsNorm = Math.max(6, fsBold - 1);
+              let dy = by;
+              if (modern) {
+                ctx.font = `bold ${fsBold}px 'Segoe UI', system-ui, sans-serif`;
+                ctx.textBaseline = "top";
+                ctx.strokeText(modern, bx, dy);
+                ctx.fillStyle = "#ffffff";
+                ctx.fillText(modern, bx, dy);
+                dy += lineH;
+              }
+              if (latin) {
+                ctx.font = `${fsNorm}px 'Segoe UI', system-ui, sans-serif`;
+                ctx.textBaseline = "top";
+                ctx.strokeText(latin, bx, dy);
+                ctx.fillStyle = "#e5e7eb";
+                ctx.fillText(latin, bx, dy);
+              }
+              ctx.restore();
+            }
+          }
+        }
       }
-      if (latin) {
-        ctx.font = `${Math.round(fontSize - 1)}px 'Segoe UI', system-ui, sans-serif`;
-        ctx.textBaseline = "top";
-        ctx.strokeText(latin, x, y + h + 2);
-        ctx.fillStyle = "#e5e7eb";
-        ctx.fillText(latin, x, y + h + 2);
-      }
-      ctx.restore();
-      if (latin || modern) labelCount++;
     }
     rendered++;
   }
