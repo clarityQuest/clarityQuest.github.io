@@ -175,6 +175,7 @@ body, html {
 #panel-type { display: flex; align-items: center; gap: 8px; margin-bottom: 16px; font-weight: 600; font-size: 14px; }
 #panel-details dt { font-size: 12px; color: var(--text-muted); text-transform: uppercase; margin-top: 12px; }
 #panel-details dd { font-size: 14px; margin-left: 0; margin-top: 4px; }
+#panel-header { display: block; margin-bottom: 0; }
 #panel-map { margin-top: 14px; border-radius: 6px; overflow: hidden; line-height: 0; }
 #panel-map iframe { display: block; width: 100%; height: 220px; border: 0; border-radius: 6px; pointer-events: auto; }
 #panel-links { display: flex; flex-wrap: wrap; gap: 10px; margin-top: 12px; }
@@ -309,26 +310,23 @@ body, html {
     margin: 0 auto 10px;
   }
 
-  /* Small map thumbnail — absolutely positioned top-right of the panel */
+  /* Side-by-side title + map thumbnail */
+  #panel-header { display: flex; align-items: flex-start; gap: 10px; }
+  #panel-title { flex: 1; min-width: 0; }
+  #panel-type { margin-bottom: 0; }
   #panel-map:not(.hidden) {
     display: block !important;
-    position: absolute;
-    top: 44px;
-    right: 12px;
-    width: 110px;
+    width: 140px;
+    flex-shrink: 0;
     margin: 0;
     border-radius: 6px;
     overflow: hidden;
-    z-index: 1;
   }
   #panel-map:not(.hidden) iframe {
-    height: 72px;
+    height: 105px;
     pointer-events: none;
     display: block;
   }
-
-  /* Reserve space on the right so title text doesn't overlap the map thumbnail */
-  #panel-latin, #panel-modern, #panel-type { padding-right: 122px; }
 
   /* Legend at same bottom level as bottom-left-controls */
   #legend { bottom: 10px; }

@@ -438,8 +438,8 @@ function renderMillerOverlay(ctx) {
 
     const millerLabelThreshold = 6;
     if (zoom >= millerLabelThreshold && S.labelsOn) {
-      const [mfsMin, mfsMax] = S.isMobile ? [6, 10] : [8, 14];
-      const mfs = Math.max(mfsMin, Math.min((zoom - millerLabelThreshold) * 1.5 + mfsMin, mfsMax));
+      const [mfsMin, mfsMax] = S.isMobile ? [6, 20] : [8, 28];
+      const mfs = Math.max(mfsMin, Math.min((zoom - millerLabelThreshold) * 1.8 + mfsMin, mfsMax));
       const mAlpha = Math.min(1, (zoom - millerLabelThreshold) * 0.5);
       ctx.save();
       ctx.globalAlpha = mAlpha;
@@ -532,8 +532,8 @@ function renderMarkers() {
     if (showLabels && S.labelsOn && labelCount < MAX_LABELS) {
       const latin  = p.latin_std || p.latin;
       const modern = p.modern || null;
-      const [minFont, maxFont] = S.isMobile ? [6, 10] : [8, 14];
-      const fontSize = Math.max(minFont, Math.min((zoom - labelZoomThreshold) * 1.5 + minFont, maxFont));
+      const [minFont, maxFont] = S.isMobile ? [6, 20] : [8, 28];
+      const fontSize = Math.max(minFont, Math.min((zoom - labelZoomThreshold) * 1.8 + minFont, maxFont));
       ctx.save();
       ctx.globalAlpha = labelAlpha;
       ctx.strokeStyle = "rgba(0,0,0,0.8)";
@@ -633,13 +633,13 @@ function showTooltip(place, x, y) {
     ${place.modern ? `<div class="tt-modern">${flags ? flags + " " : ""}${escHtml(place.modern)}</div>` : (flags ? `<div class="tt-modern">${flags}</div>` : "")}
     <div class="tt-type"><span class="dot" style="background:${color}"></span>${typeLabel}</div>
   `;
-  tt.style.left = (x + 16) + "px";
-  tt.style.top  = (y - 8) + "px";
+  tt.style.left = (x + 24) + "px";
+  tt.style.top  = (y - 20) + "px";
   tt.classList.remove("hidden");
 
   const rect = tt.getBoundingClientRect();
-  if (rect.right > window.innerWidth) tt.style.left = (x - rect.width - 8) + "px";
-  if (rect.bottom > window.innerHeight) tt.style.top = (y - rect.height - 8) + "px";
+  if (rect.right > window.innerWidth) tt.style.left = (x - rect.width - 16) + "px";
+  if (rect.bottom > window.innerHeight) tt.style.top = (y - rect.height - 16) + "px";
 }
 
 function hideTooltip() {
@@ -683,14 +683,14 @@ function showMillerTooltip(item, x, y) {
     ${item.country  ? `<div class="tt-detail">${countryFlags(item.country)} <span>${escHtml(item.country)}</span></div>` : ""}
   `;
   tt.classList.add("tt-rich");
-  tt.style.left = (x + 16) + "px";
-  tt.style.top  = (y - 8) + "px";
+  tt.style.left = (x + 24) + "px";
+  tt.style.top  = (y - 20) + "px";
   tt.classList.remove("hidden");
 
   // Reposition if off-screen
   const rect = tt.getBoundingClientRect();
-  if (rect.right  > window.innerWidth)  tt.style.left = (x - rect.width  - 8) + "px";
-  if (rect.bottom > window.innerHeight) tt.style.top  = (y - rect.height - 8) + "px";
+  if (rect.right  > window.innerWidth)  tt.style.left = (x - rect.width  - 16) + "px";
+  if (rect.bottom > window.innerHeight) tt.style.top  = (y - rect.height - 16) + "px";
 }
 
 /* ============================================================
@@ -1159,8 +1159,8 @@ function setupInteraction() {
           showTooltip(place, clientX, clientY);
           lastHovered = place;
         } else {
-          tt.style.left = (clientX + 16) + "px";
-          tt.style.top  = (clientY - 8) + "px";
+          tt.style.left = (clientX + 24) + "px";
+          tt.style.top  = (clientY - 20) + "px";
         }
         return;
       }

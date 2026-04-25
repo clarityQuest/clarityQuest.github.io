@@ -59,10 +59,14 @@
     <!-- Click info panel -->
     <aside id="info-panel" class="hidden">
       <button id="close-panel" aria-label="Close">&times;</button>
-      <h2 id="panel-latin"></h2>
-      <h3 id="panel-modern"></h3>
-      <div id="panel-type"><span class="type-dot"></span><span class="type-label"></span></div>
-      <div id="panel-map" class="hidden"></div>
+      <div id="panel-header">
+        <div id="panel-title">
+          <h2 id="panel-latin"></h2>
+          <h3 id="panel-modern"></h3>
+          <div id="panel-type"><span class="type-dot"></span><span class="type-label"></span></div>
+        </div>
+        <div id="panel-map" class="hidden"></div>
+      </div>
       <dl id="panel-details"></dl>
       <div id="panel-links">
         <a id="panel-wiki-link" class="hidden panel-link" href="#" target="_blank" rel="noopener">Wikipedia ↗</a>
@@ -110,6 +114,6 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
-  <script src="main.js?v=20260425e"></script>
+  <script src="main.js?v=20260425f"></script>
 </body>
 </html>
