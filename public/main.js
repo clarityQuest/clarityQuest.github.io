@@ -799,9 +799,17 @@ function setupSearch() {
     const place = S.places.find(p => String(p.id) === id);
     if (!place) return;
 
+    // Ensure the place's type is visible before navigating
+    if (place.type && !S.activeTypes.has(place.type)) {
+      S.activeTypes.add(place.type);
+      document.querySelectorAll(`.type-filter-btn[data-type="${place.type}"]`)
+        .forEach(b => b.classList.add("active"));
+    }
+
     panToPlace(place);
     showInfoPanel(place);
     startHighlight(place);
+    renderMarkers();
 
     results.classList.add("hidden");
     input.value = "";
