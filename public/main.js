@@ -1457,19 +1457,19 @@ const SP_DEFS = [
   // Zoom → font curve (4 control points, piecewise linear)
   { section: "Zoom → Font Curve", type: "curve-point", pointLabel: "Point 1 (low zoom)",
     keyZ: "zfZ1", keyF: "zfF1",
-    minZ: 0.05, maxZ: 10, stepZ: 0.05, minF: 0, maxF: 40, stepF: 0.5,
+    minZ: 0.05, maxZ: 50, stepZ: 0.25, minF: 0, maxF: 40, stepF: 0.5,
     desc: "Leftmost anchor. Below this zoom, font stays at this size." },
   { section: "Zoom → Font Curve", type: "curve-point", pointLabel: "Point 2",
     keyZ: "zfZ2", keyF: "zfF2",
-    minZ: 0.05, maxZ: 10, stepZ: 0.05, minF: 0, maxF: 40, stepF: 0.5,
+    minZ: 0.05, maxZ: 50, stepZ: 0.25, minF: 0, maxF: 40, stepF: 0.5,
     desc: "Second control point. Interpolated linearly between neighbouring points." },
   { section: "Zoom → Font Curve", type: "curve-point", pointLabel: "Point 3",
     keyZ: "zfZ3", keyF: "zfF3",
-    minZ: 0.05, maxZ: 10, stepZ: 0.05, minF: 0, maxF: 40, stepF: 0.5,
+    minZ: 0.05, maxZ: 50, stepZ: 0.25, minF: 0, maxF: 40, stepF: 0.5,
     desc: "Third control point." },
   { section: "Zoom → Font Curve", type: "curve-point", pointLabel: "Point 4 (high zoom)",
     keyZ: "zfZ4", keyF: "zfF4",
-    minZ: 0.05, maxZ: 10, stepZ: 0.05, minF: 0, maxF: 40, stepF: 0.5,
+    minZ: 0.05, maxZ: 50, stepZ: 0.25, minF: 0, maxF: 40, stepF: 0.5,
     desc: "Rightmost anchor. Above this zoom, font stays at this size." },
 ];
 
