@@ -316,14 +316,14 @@ body, html {
   #panel-type { margin-bottom: 0; }
   #panel-map:not(.hidden) {
     display: block !important;
-    width: 140px;
+    width: 180px;
     flex-shrink: 0;
     margin: 0;
     border-radius: 6px;
     overflow: hidden;
   }
   #panel-map:not(.hidden) iframe {
-    height: 105px;
+    height: 140px;
     pointer-events: none;
     display: block;
   }
