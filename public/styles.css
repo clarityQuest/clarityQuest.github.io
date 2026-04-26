@@ -402,4 +402,5 @@ body, html {
     max-height: 75svh;
     border-radius: 16px 16px 0 0;
   }
+  .sp-desc { display: none; }
 }
