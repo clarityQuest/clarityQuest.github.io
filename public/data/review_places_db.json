@@ -2170,7 +2170,16 @@
       "grid_col": null,
       "grid_row": null,
       "tabula_location": "",
-      "match_status": "omnesviae_only"
+      "match_status": "omnesviae_only",
+      "miller_px": 16567.1,
+      "miller_py": 754.7,
+      "miller_rect_x1": 16460.8,
+      "miller_rect_y1": 683,
+      "miller_rect_x2": 16673.4,
+      "miller_rect_y2": 826.3,
+      "miller_rect_w": 212.6,
+      "miller_rect_h": 143.3,
+      "miller_rect_user_set": true
     },
     {
       "record_id": "OV:https://omnesviae.org/#TPPlace1610",
@@ -2196,7 +2205,16 @@
       "grid_col": 5,
       "grid_row": "a",
       "tabula_location": "Seg 5 a5",
-      "match_status": "modern_match"
+      "match_status": "modern_match",
+      "miller_px": 16567.1,
+      "miller_py": 754.7,
+      "miller_rect_x1": 16460.8,
+      "miller_rect_y1": 683,
+      "miller_rect_x2": 16673.4,
+      "miller_rect_y2": 826.3,
+      "miller_rect_w": 212.6,
+      "miller_rect_h": 143.3,
+      "miller_rect_user_set": true
     },
     {
       "record_id": "OV:https://omnesviae.org/#TPPlace962",
@@ -11273,14 +11291,14 @@
       "grid_row": "b",
       "tabula_location": "Seg 10 b2",
       "match_status": "modern_match",
-      "miller_px": 27458.1,
-      "miller_py": 1234,
-      "miller_rect_x1": 27358.6,
-      "miller_rect_y1": 1169.5,
-      "miller_rect_x2": 27557.5,
-      "miller_rect_y2": 1298.4,
-      "miller_rect_w": 198.9,
-      "miller_rect_h": 128.9,
+      "miller_px": 34205.1,
+      "miller_py": 1487.3,
+      "miller_rect_x1": 34111.9,
+      "miller_rect_y1": 1421.6,
+      "miller_rect_x2": 34298.3,
+      "miller_rect_y2": 1553,
+      "miller_rect_w": 186.4,
+      "miller_rect_h": 131.4,
       "miller_rect_user_set": true
     },
     {
@@ -31604,7 +31622,16 @@
       "grid_col": 3,
       "grid_row": "a",
       "tabula_location": "Seg 6 a3",
-      "match_status": "modern_match"
+      "match_status": "modern_match",
+      "miller_px": 18842.1,
+      "miller_py": 940.4,
+      "miller_rect_x1": 18776.9,
+      "miller_rect_y1": 887.8,
+      "miller_rect_x2": 18907.3,
+      "miller_rect_y2": 993,
+      "miller_rect_w": 130.4,
+      "miller_rect_h": 105.2,
+      "miller_rect_user_set": true
     },
     {
       "record_id": "OV:https://omnesviae.org/#TPPlace2187",
@@ -67528,7 +67555,16 @@
       "grid_col": 4,
       "grid_row": "c",
       "tabula_location": "Seg 12 c4",
-      "match_status": "linked_by_id"
+      "match_status": "linked_by_id",
+      "miller_px": 45498.3,
+      "miller_py": 2281.3,
+      "miller_rect_x1": 45396.4,
+      "miller_rect_y1": 2234.8,
+      "miller_rect_x2": 45600.2,
+      "miller_rect_y2": 2327.8,
+      "miller_rect_w": 203.8,
+      "miller_rect_h": 93,
+      "miller_rect_user_set": true
     },
     {
       "record_id": "OV:https://omnesviae.org/#TPPlace1965",
@@ -67589,7 +67625,16 @@
       "grid_col": 3,
       "grid_row": "a",
       "tabula_location": "Seg 9 a3",
-      "match_status": "modern_match"
+      "match_status": "modern_match",
+      "miller_px": 30770.5,
+      "miller_py": 1136.4,
+      "miller_rect_x1": 30670.7,
+      "miller_rect_y1": 1086.3,
+      "miller_rect_x2": 30870.3,
+      "miller_rect_y2": 1186.6,
+      "miller_rect_w": 199.6,
+      "miller_rect_h": 100.3,
+      "miller_rect_user_set": true
     },
     {
       "record_id": "OV:https://omnesviae.org/#TPPlace1479",
@@ -73301,7 +73346,16 @@
       "grid_col": 3,
       "grid_row": "b",
       "tabula_location": "Seg 5 b3",
-      "match_status": "modern_match"
+      "match_status": "modern_match",
+      "miller_px": 14905.3,
+      "miller_py": 1637.3,
+      "miller_rect_x1": 14826.4,
+      "miller_rect_y1": 1585.1,
+      "miller_rect_x2": 14984.1,
+      "miller_rect_y2": 1689.4,
+      "miller_rect_w": 157.7,
+      "miller_rect_h": 104.3,
+      "miller_rect_user_set": true
     },
     {
       "record_id": "OV:https://omnesviae.org/#TPPlace153",
@@ -97423,7 +97477,16 @@
       "tabula_col": 1,
       "tabula_row": "a",
       "tabula_location": "Seg 6 a1",
-      "match_status": "manual_add"
+      "match_status": "manual_add",
+      "miller_px": 16983.1,
+      "miller_py": 848.8,
+      "miller_rect_x1": 16900.8,
+      "miller_rect_y1": 782.5,
+      "miller_rect_x2": 17065.4,
+      "miller_rect_y2": 915,
+      "miller_rect_w": 164.6,
+      "miller_rect_h": 132.5,
+      "miller_rect_user_set": true
     },
     {
       "record_id": "TP:3073",

@@ -1,0 +1,19 @@
+{
+  "fontScale": 0.8,
+  "maxFontDesktop": 48,
+  "maxFontMobile": 11,
+  "minFontThreshold": 0,
+  "fadeRate": 2.6,
+  "maxLabelsDesktop": 500,
+  "maxLabelsMobile": 100,
+  "zoomThreshMid": 3,
+  "zoomThreshAll": 8,
+  "zfZ1": 0.3,
+  "zfF1": 4,
+  "zfZ2": 1,
+  "zfF2": 9,
+  "zfZ3": 26.05,
+  "zfF3": 15,
+  "zfZ4": 49.8,
+  "zfF4": 40
+}
