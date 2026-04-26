@@ -71,16 +71,16 @@ const MAP_RUNTIME_TYPES = new Set(Object.keys(TYPE_COLORS));
 // Label rendering parameters — tunable via the settings panel, saved to label_params.json
 const LP_KEY = "tp_label_params_v1";
 const LP_DEFAULTS = {
-  fontScale:         1.0,   // marker screen size × fontScale = marker-based font ceiling
-  maxFontDesktop:   16,    // hard px cap on desktop
-  maxFontMobile:    10,    // hard px cap on mobile
-  minFontThreshold:  0,    // labels whose computed size is below this are suppressed (0 = no threshold)
-  fadeRate:          0.6,  // opacity = (fs - threshold) × fadeRate, clamped 0–1
+  fontScale:         1.0,   // marker screen size × fontScale = secondary font ceiling
+  maxFontDesktop:  999,    // effectively uncapped — zoom curve drives max font
+  maxFontMobile:   999,    // same
+  minFontThreshold:  0,    // no threshold — always show if font > 0
+  fadeRate:          1.0,  // with threshold=0 this is always opaque; not exposed in UI
   maxLabelsDesktop: 200,   // hard cap on simultaneous labels (desktop)
   maxLabelsMobile:   10,   // hard cap on simultaneous labels (mobile)
   zoomThreshMid:     0.8,  // road_station hidden below this OSD zoom
   zoomThreshAll:     2.5,  // all types visible above this OSD zoom
-  // Zoom → font curve: 4 control points (piecewise linear). Font = min(curve, markerCap, maxFont).
+  // Zoom → font curve: 4 control points (piecewise linear). Font = min(curve, markerCap).
   zfZ1: 0.3,  zfF1:  4,   // point 1 (low zoom)
   zfZ2: 1.0,  zfF2:  9,   // point 2
   zfZ3: 3.0,  zfF3: 14,   // point 3
@@ -1428,32 +1428,20 @@ async function saveLabelParams() {
 
 const SP_DEFS = [
   { section: "Font & Labels",   label: "Marker size multiplier", key: "fontScale",
-    min: 0.2, max: 10.0, step: 0.1,  fmt: v => v.toFixed(1),
-    desc: "Secondary ceiling: marker screen size × this = max font from marker size. Set very high to let the zoom curve drive everything." },
-  { section: "Font & Labels",   label: "Max font — desktop",    key: "maxFontDesktop",
-    min: 6,   max: 100, step: 1,    fmt: v => v + "px",
-    desc: "Hard ceiling on label font size on desktop. Prevents huge labels at high zoom." },
-  { section: "Font & Labels",   label: "Max font — mobile",     key: "maxFontMobile",
-    min: 4,   max: 24,  step: 1,    fmt: v => v + "px",
-    desc: "Hard ceiling on label font size on mobile/touch screens." },
-  { section: "Font & Labels",   label: "Show threshold",        key: "minFontThreshold",
-    min: 0,   max: 20,  step: 1,    fmt: v => v === 0 ? "off" : v + "px",
-    desc: "Labels smaller than this are hidden. Set to 0 to always show labels regardless of size." },
-  { section: "Font & Labels",   label: "Fade rate",             key: "fadeRate",
-    min: 0.1, max: 3.0, step: 0.1,  fmt: v => v.toFixed(1),
-    desc: "How quickly labels fade in above the threshold. Higher = more opaque sooner." },
-  { section: "Label Limits",    label: "Max labels — desktop",  key: "maxLabelsDesktop",
-    min: 5,   max: 500, step: 5,    fmt: v => v >= 500 ? "∞" : String(v),
-    desc: "Maximum labels drawn at once on desktop. Overlap detection may show fewer." },
-  { section: "Label Limits",    label: "Max labels — mobile",   key: "maxLabelsMobile",
-    min: 1,   max: 100, step: 1,    fmt: v => String(v),
+    min: 0.2, max: 10.0, step: 0.1, fmt: v => v.toFixed(1),
+    desc: "Labels grow with marker size × this value. Keeps labels from exceeding their marker. Set high to let only the zoom curve control font size." },
+  { section: "Label Limits",   label: "Max labels — desktop",   key: "maxLabelsDesktop",
+    min: 5,   max: 500,  step: 5,   fmt: v => v >= 500 ? "∞" : String(v),
+    desc: "Maximum labels drawn at once on desktop. Overlap detection may reduce the actual count further." },
+  { section: "Label Limits",   label: "Max labels — mobile",    key: "maxLabelsMobile",
+    min: 1,   max: 100,  step: 1,   fmt: v => String(v),
     desc: "Maximum labels drawn at once on mobile." },
   { section: "Zoom Visibility", label: "Zoom: show mid types",  key: "zoomThreshMid",
-    min: 0.1, max: 3.0, step: 0.05, fmt: v => v.toFixed(2),
-    desc: "Below this OSD zoom level, road stations are hidden. 0 = always show, 3 = only at high zoom." },
+    min: 0.1, max: 50,   step: 0.5, fmt: v => v.toFixed(1),
+    desc: "Below this zoom level, road stations are hidden. Raise to keep them hidden until you zoom in more." },
   { section: "Zoom Visibility", label: "Zoom: show all types",  key: "zoomThreshAll",
-    min: 0.5, max: 8.0, step: 0.05, fmt: v => v.toFixed(2),
-    desc: "Above this OSD zoom level, every place type is visible regardless of category." },
+    min: 0.5, max: 50,   step: 0.5, fmt: v => v.toFixed(1),
+    desc: "Above this zoom level, every place type becomes visible. Raise to require deeper zoom before all types appear." },
   // Zoom → font curve (4 control points, piecewise linear)
   { section: "Zoom → Font Curve", type: "curve-point", pointLabel: "Point 1 (low zoom)",
     keyZ: "zfZ1", keyF: "zfF1",
@@ -1462,7 +1450,7 @@ const SP_DEFS = [
   { section: "Zoom → Font Curve", type: "curve-point", pointLabel: "Point 2",
     keyZ: "zfZ2", keyF: "zfF2",
     minZ: 0.05, maxZ: 50, stepZ: 0.25, minF: 0, maxF: 100, stepF: 1,
-    desc: "Second control point. Interpolated linearly between neighbouring points." },
+    desc: "Second control point — interpolated linearly between neighbours." },
   { section: "Zoom → Font Curve", type: "curve-point", pointLabel: "Point 3",
     keyZ: "zfZ3", keyF: "zfF3",
     minZ: 0.05, maxZ: 50, stepZ: 0.25, minF: 0, maxF: 100, stepF: 1,
