@@ -310,12 +310,12 @@ body, html {
     margin: 0 auto 10px;
   }
 
-  /* Side-by-side title + map thumbnail */
-  #panel-header { display: flex; align-items: stretch; gap: 8px; }
-  #panel-title { flex: 0 0 38%; min-width: 0; }
-  #panel-type { margin-bottom: 0; }
+  /* Side-by-side title + map — header has fixed height so map can fill it */
+  #panel-header { display: flex; align-items: stretch; gap: 8px; height: 200px; }
+  #panel-title  { flex: 0 0 40%; min-width: 0; overflow: hidden; }
+  #panel-type   { margin-bottom: 0; }
   #panel-map:not(.hidden) {
-    display: flex !important;
+    display: block !important;
     flex: 1;
     min-width: 0;
     margin: 0;
@@ -324,13 +324,13 @@ body, html {
   }
   #panel-map:not(.hidden) iframe {
     width: 100%;
-    height: 160px;
-    pointer-events: none;
+    height: 100%;
     display: block;
+    pointer-events: none;
   }
-  /* Smaller fonts so title fits next to large map */
-  #info-panel #panel-latin  { font-size: 13px; margin-bottom: 2px; }
-  #info-panel #panel-modern { font-size: 11px; margin-bottom: 6px; }
+  /* Smaller fonts so title fits the 40% column */
+  #info-panel #panel-latin  { font-size: 13px; margin-bottom: 3px; }
+  #info-panel #panel-modern { font-size: 11px; margin-bottom: 8px; }
   #info-panel #panel-type   { font-size: 11px; }
 
   /* Legend at same bottom level as bottom-left-controls */
