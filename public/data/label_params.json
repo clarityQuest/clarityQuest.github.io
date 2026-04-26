@@ -1,8 +1,9 @@
 {
-  "maxFontMobile": 20,
+  "fontScale": 1,
   "maxFontDesktop": 999,
+  "maxFontMobile": 13,
   "minFontThreshold": 0,
-  "fadeRate": 1.0,
+  "fadeRate": 1,
   "maxLabelsDesktop": 500,
   "maxLabelsMobile": 100,
   "zoomThreshMid": 3,

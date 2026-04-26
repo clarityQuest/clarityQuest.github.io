@@ -1427,6 +1427,12 @@ async function saveLabelParams() {
 }
 
 const SP_DEFS = [
+  { section: "Label Density",  label: "Show from font size",    key: "minFontThreshold",
+    min: 0,   max: 40,   step: 0.5, fmt: v => v === 0 ? "always" : v + "px",
+    desc: "Labels are hidden until the zoom curve produces a font ≥ this size. Raise to show fewer labels at low zoom; lower to show more. 0 = always show." },
+  { section: "Label Density",  label: "Fade-in speed",          key: "fadeRate",
+    min: 0.1, max: 3.0,  step: 0.1, fmt: v => v.toFixed(1),
+    desc: "How quickly labels reach full opacity once above the threshold. Low = gradual fade-in; high = pop in immediately." },
   { section: "Label Limits",   label: "Max font — mobile",      key: "maxFontMobile",
     min: 4,   max: 100,  step: 1,   fmt: v => v + "px",
     desc: "Hard ceiling on label font size on mobile screens. Keeps labels readable even when the zoom curve would produce larger text." },
