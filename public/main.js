@@ -80,7 +80,8 @@ const LP_DEFAULTS = {
   maxLabelsMobile:   10,   // hard cap on simultaneous labels (mobile)
   minFontMobile:     0,    // mobile labels hidden if scaled font falls below this px
   labelPad:          4,    // px padding around each label's overlap bounding box
-  labelPadZoomThresh: 8,  // above this zoom, skip overlap detection entirely (show all labels)
+  labelPadZoomThresh: 8,        // above this zoom (desktop), skip overlap detection
+  labelPadZoomThreshMobile: 8, // above this zoom (mobile), skip overlap detection
   zoomThreshMid:     0.8,  // road_station hidden below this OSD zoom
   zoomThreshAll:     2.5,  // all types visible above this OSD zoom
   // Zoom → font curve: 4 control points (piecewise linear). Font = min(curve, markerCap).
@@ -126,7 +127,7 @@ const S = {
   newSourceKind: "readable-seg4", // "readable-seg4" | "stitched"
   markersOn:      true,
   labelsOn:       true,
-  activeTypes:    new Set(["major_city", "city"]),
+  activeTypes:    new Set(Object.keys(TYPE_COLORS)),
   millerOverlayOn: true,
   millerCalib:    [],   // loaded from miller_rect_* fields in review_places_db.json
   legendOpen:     false,
@@ -497,7 +498,7 @@ function renderMillerOverlay(ctx) {
         const boxH = (txt1 ? lineH : 0) + (txt2 ? lineH : 0);
         const bx = x + 2;
         const by = y + Math.max(2, h - boxH - 2);
-        const skipOverlap = zoom >= LP.labelPadZoomThresh;
+        const skipOverlap = zoom >= (S.isMobile ? LP.labelPadZoomThreshMobile : LP.labelPadZoomThresh);
         let overlaps = false;
         if (!skipOverlap) {
           for (const r of mLabelRects) {
@@ -616,7 +617,7 @@ function renderMarkers() {
           const boxH = (modern ? lineH : 0) + (latin ? lineH : 0);
           const bx = x + 2;
           const by = y + Math.max(2, h - boxH - 2);
-          const skipOverlap = zoom >= LP.labelPadZoomThresh;
+          const skipOverlap = zoom >= (S.isMobile ? LP.labelPadZoomThreshMobile : LP.labelPadZoomThresh);
           let overlaps = false;
           if (!skipOverlap) {
             for (const r of labelRects) {
@@ -1452,6 +1453,9 @@ const SP_DEFS = [
   { section: "Label Limits",   label: "Max labels — mobile",    key: "maxLabelsMobile",
     min: 1,   max: 100,  step: 1,   fmt: v => String(v),
     desc: "Maximum labels drawn at once on mobile." },
+  { section: "Label Limits",   label: "Show all above zoom — mobile", key: "labelPadZoomThreshMobile",
+    min: 0,   max: 50,   step: 0.25, fmt: v => v >= 50 ? "never" : "z " + v.toFixed(2).replace(/0+$/, "").replace(/\.$/, ""),
+    desc: "Above this zoom level on mobile, overlap detection is disabled and all labels are shown." },
   { section: "Label Limits",   label: "Min font — mobile",      key: "minFontMobile",
     min: 0,   max: 20,   step: 0.5, fmt: v => v + "px",
     desc: "Sets the floor of the mobile font curve. The curve range [Point1..Point4] is rescaled to [min..max font mobile], so labels never shrink below this size." },
@@ -1485,6 +1489,24 @@ function buildSettingsPanelBody() {
     inp.step = String(step); inp.value = String(value);
     inp.addEventListener("input", onChange);
     return inp;
+  }
+  function makeStepBtn(symbol, inp, dir, onChange) {
+    const btn = document.createElement("button");
+    btn.type = "button"; btn.className = "sp-step-btn";
+    btn.textContent = symbol;
+    btn.addEventListener("click", () => {
+      dir < 0 ? inp.stepDown() : inp.stepUp();
+      onChange();
+    });
+    return btn;
+  }
+  function wrapWithSteps(inp, onChange) {
+    const wrap = document.createElement("div");
+    wrap.className = "sp-slider-wrap";
+    wrap.appendChild(makeStepBtn("−", inp, -1, onChange));
+    wrap.appendChild(inp);
+    wrap.appendChild(makeStepBtn("+", inp, 1, onChange));
+    return wrap;
   }
 
   let lastSection = null;
@@ -1527,12 +1549,9 @@ function buildSettingsPanelBody() {
         val.className = "sp-val";
         val.id = `sp-val-${key}`;
         val.textContent = fmtFn(LP[key]);
-        const inp = makeSlider(`sp-${key}`, min, max, step, LP[key], () => {
-          LP[key] = Number(inp.value);
-          val.textContent = fmtFn(LP[key]);
-          renderMarkers();
-        });
-        right.appendChild(inp); right.appendChild(val);
+        const onChange = () => { LP[key] = Number(inp.value); val.textContent = fmtFn(LP[key]); renderMarkers(); };
+        const inp = makeSlider(`sp-${key}`, min, max, step, LP[key], onChange);
+        right.appendChild(wrapWithSteps(inp, onChange)); right.appendChild(val);
         row.appendChild(lbl); row.appendChild(right);
         return row;
       }
@@ -1553,12 +1572,9 @@ function buildSettingsPanelBody() {
       const val = document.createElement("span");
       val.className = "sp-val";
       val.textContent = def.fmt(LP[def.key]);
-      const inp = makeSlider(`sp-${def.key}`, def.min, def.max, def.step, LP[def.key], () => {
-        LP[def.key] = Number(inp.value);
-        val.textContent = def.fmt(LP[def.key]);
-        renderMarkers();
-      });
-      right.appendChild(inp); right.appendChild(val);
+      const onChange = () => { LP[def.key] = Number(inp.value); val.textContent = def.fmt(LP[def.key]); renderMarkers(); };
+      const inp = makeSlider(`sp-${def.key}`, def.min, def.max, def.step, LP[def.key], onChange);
+      right.appendChild(wrapWithSteps(inp, onChange)); right.appendChild(val);
       row.appendChild(lbl); row.appendChild(right);
       body.appendChild(row);
     }
