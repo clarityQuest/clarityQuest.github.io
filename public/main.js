@@ -396,6 +396,9 @@ function loadMillerCalib(allRecords) {
             Number.isFinite(x2) && Number.isFinite(y2))) continue;
       result.push({
         data_id:   did,
+        record_id: r.record_id || null,
+        ulm_id:    r.ulm_id    || null,
+        source:    r.source    || null,
         rect_x1:   x1, rect_y1: y1,
         rect_x2:   x2, rect_y2: y2,
         type:      r.type || "road_station",
@@ -1320,12 +1323,14 @@ function setupInteraction() {
         lat:            millerItem.lat,
         lng:            millerItem.lng,
         data_id:        millerItem.data_id,
+        record_id:      millerItem.record_id,
+        ulm_id:         millerItem.ulm_id,
         tabula_segment: millerItem.tabula_segment,
         tabula_row:     millerItem.tabula_row,
         tabula_col:     millerItem.tabula_col,
         grid_col:       millerItem.tabula_col,
         grid_row:       millerItem.tabula_row,
-        source:         "tabula",
+        source:         millerItem.source || "tabula",
       });
       e.preventDefaultAction = true;
       return;
