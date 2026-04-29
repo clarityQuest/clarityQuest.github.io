@@ -22178,7 +22178,16 @@
       "tabula_location": "Seg 8 b5",
       "match_status": "modern_match",
       "ulm_id": 1160,
-      "ulm_img_url": "https://tp-online.ku.de/insetimages/TPPlace1160insetneu.png"
+      "ulm_img_url": "https://tp-online.ku.de/insetimages/TPPlace1160insetneu.png",
+      "miller_px": 22224,
+      "miller_py": 2101.8,
+      "miller_rect_x1": 22163.2,
+      "miller_rect_y1": 2037.3,
+      "miller_rect_x2": 22284.7,
+      "miller_rect_y2": 2166.2,
+      "miller_rect_w": 121.5,
+      "miller_rect_h": 128.9,
+      "miller_rect_user_set": true
     },
     {
       "record_id": "OV:https://omnesviae.org/#TPPlace719",
@@ -105556,7 +105565,16 @@
       "tabula_location": "Seg 7 c3",
       "match_status": "ulm_only",
       "vignette": "D Halle",
-      "ulm_img_url": "https://tp-online.ku.de/insetimages/TPPlace2066insetneu1.jpg"
+      "ulm_img_url": "https://tp-online.ku.de/insetimages/TPPlace2066insetneu1.jpg",
+      "miller_px": 22224,
+      "miller_py": 2101.8,
+      "miller_rect_x1": 22163.2,
+      "miller_rect_y1": 2037.3,
+      "miller_rect_x2": 22284.7,
+      "miller_rect_y2": 2166.2,
+      "miller_rect_w": 121.5,
+      "miller_rect_h": 128.9,
+      "miller_rect_user_set": true
     },
     {
       "record_id": "ULM:2074",
@@ -113058,7 +113076,16 @@
       "tabula_location": "Seg 9 a1",
       "match_status": "ulm_only",
       "vignette": "G Sondervignette",
-      "ulm_img_url": "https://tp-online.ku.de/insetimages/TPPlace3654insetneu1.png"
+      "ulm_img_url": "https://tp-online.ku.de/insetimages/TPPlace3654insetneu1.png",
+      "miller_px": 29541.8,
+      "miller_py": 1002.5,
+      "miller_rect_x1": 29493.6,
+      "miller_rect_y1": 944.1,
+      "miller_rect_x2": 29589.9,
+      "miller_rect_y2": 1060.9,
+      "miller_rect_w": 96.3,
+      "miller_rect_h": 116.8,
+      "miller_rect_user_set": true
     },
     {
       "record_id": "ULM:3655",

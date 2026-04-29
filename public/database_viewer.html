@@ -265,8 +265,30 @@
       border-bottom: 2px solid var(--line);
     }
 
+    .filter-cell {
+      display: flex;
+      gap: 2px;
+      align-items: center;
+    }
+
+    .hide-empty-btn {
+      flex-shrink: 0;
+      width: 20px; height: 20px;
+      border: 1px solid #cbbda6;
+      border-radius: 4px;
+      background: #fffefa;
+      color: var(--muted);
+      font-size: 0.75rem;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+    .hide-empty-btn:hover { background: #f0e8d8; color: var(--ink); }
+    .hide-empty-btn.active { background: var(--marking); color: #fff; border-color: var(--marking); }
+
     thead tr.filter-row th input {
-      width: 100%;
+      flex: 1;
+      min-width: 0;
       padding: 3px 6px;
       font-size: 0.78rem;
       border: 1px solid #cbbda6;
@@ -448,6 +470,7 @@
   <div class="top-header">
     <h1>OmnesViae + Tabula Review Viewer</h1>
     <div class="meta" id="meta">Loading data…</div>
+    <a href="ulm_viewer.html" style="margin-left:auto;color:var(--marking);font-size:0.82rem;text-decoration:none;white-space:nowrap;border-bottom:1px dotted rgba(31,79,122,0.5)">ULM DB ↗</a>
   </div>
 
   <section class="panel">
@@ -548,7 +571,8 @@
   let allRecords = [];
   let allColumns = [];
   let visibleColumns = [];
-  let columnFilters = {};   // { colKey: filterString }
+  let columnFilters = {};    // { colKey: filterString }
+  let columnHideEmpty = new Set(); // colKeys where empty rows are hidden
   let hoverHideTimer = null;
   let osmHideTimer = null;
   let ulmHideTimer = null;
@@ -927,7 +951,8 @@
       if (col === '__rownum') return '<th></th>';
       const v = escapeHtml(columnFilters[col] || '');
       const hasFilter = !!(columnFilters[col] || '').trim();
-      return `<th><input type="search" class="col-filter${hasFilter?' filter-active':''}" data-col="${escapeHtml(col)}" value="${v}" placeholder="…" /></th>`;
+      const hideEmpty = columnHideEmpty.has(col);
+      return `<th><div class="filter-cell"><input type="search" class="col-filter${hasFilter?' filter-active':''}" data-col="${escapeHtml(col)}" value="${v}" placeholder="…" /><button class="hide-empty-btn${hideEmpty?' active':''}" data-col-hide="${escapeHtml(col)}" title="Hide rows where this column is empty">∅</button></div></th>`;
     }).join('');
     requestAnimationFrame(updateFilterRowTop);
   }
@@ -1087,6 +1112,11 @@
         if (!cellText.includes(val.trim().toLowerCase())) return false;
       }
 
+      // Hide-empty column filters
+      for (const col of columnHideEmpty) {
+        if (!getColFilterValue(r, col).trim()) return false;
+      }
+
       return true;
     });
 
@@ -1132,6 +1162,17 @@
     const col = input.dataset.col;
     columnFilters[col] = input.value;
     input.classList.toggle('filter-active', !!input.value.trim());
+    applyFilters();
+  });
+
+  // Hide-empty buttons (delegated)
+  refs.filterRow.addEventListener('click', event => {
+    const btn = event.target.closest('.hide-empty-btn');
+    if (!btn) return;
+    const col = btn.dataset.colHide;
+    if (columnHideEmpty.has(col)) columnHideEmpty.delete(col);
+    else columnHideEmpty.add(col);
+    btn.classList.toggle('active', columnHideEmpty.has(col));
     applyFilters();
   });
 
