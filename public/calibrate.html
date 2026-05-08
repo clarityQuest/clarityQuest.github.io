@@ -199,6 +199,21 @@
       text-align: center; margin-top: 4px;
     }
 
+    /* Map reference popup — selected place Latin + ULM image, follows cursor */
+    #map-ref-popup {
+      position: fixed; display: none; z-index: 148; pointer-events: none;
+      background: rgba(10,10,18,0.93); border: 1px solid rgba(255,255,255,0.22);
+      border-radius: 8px; padding: 8px 10px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.6);
+      font-family: "Segoe UI", system-ui, sans-serif;
+      width: 520px;
+    }
+    #mrp-latin { font-weight: 700; font-size: 26px; color: #e4e4e7; margin-bottom: 6px;
+      white-space: nowrap; overflow: hidden; text-overflow: ellipsis; line-height: 1.2; }
+    #mrp-img { display: block; width: 100%; height: 300px;
+      object-fit: contain; border-radius: 6px; background: #1a1a2a;
+      border: 1px solid rgba(255,255,255,0.18); }
+
     .coord-block { background: rgba(255,255,255,0.05); border-radius: 5px; padding: 4px 8px; }
     .coord-label { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
     .coord-val { font-size: 9px; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -446,16 +461,22 @@
 </div>
 
 <!-- Marking hover tooltip -->
+<div id="map-ref-popup">
+  <div id="mrp-latin"></div>
+  <img id="mrp-img" src="" alt="" />
+</div>
+
 <div id="marking-tooltip" style="
   display:none; position:fixed; z-index:150; pointer-events:none;
   background:rgba(10,10,18,0.93); border:1px solid rgba(255,255,255,0.18);
   border-radius:8px; padding:10px 14px; max-width:280px;
   box-shadow:0 4px 16px rgba(0,0,0,0.5); font-family:'Segoe UI',system-ui,sans-serif;
 ">
-  <div id="mtt-latin"  style="font-weight:700;font-size:15px;color:#e4e4e7;margin-bottom:2px"></div>
-  <div id="mtt-modern" style="font-size:13px;color:#a1a1aa;margin-bottom:6px"></div>
-  <div id="mtt-type"   style="display:flex;align-items:center;gap:6px;font-size:12px;color:#71717a"></div>
-  <div id="mtt-loc"    style="font-size:11px;color:#52525b;margin-top:4px"></div>
+  <div id="mtt-latin"    style="font-weight:700;font-size:15px;color:#e4e4e7;margin-bottom:2px"></div>
+  <div id="mtt-modern"  style="font-size:13px;color:#a1a1aa;margin-bottom:4px"></div>
+  <div id="mtt-country" style="font-size:12px;color:#a1a1aa;margin-bottom:4px;display:flex;align-items:center;gap:4px"></div>
+  <div id="mtt-type"    style="display:flex;align-items:center;gap:6px;font-size:12px;color:#71717a"></div>
+  <div id="mtt-loc"     style="font-size:11px;color:#52525b;margin-top:4px"></div>
 </div>
 
 <!-- ULM image hover popup -->
@@ -520,6 +541,27 @@ const DRAFT_STORAGE_KEY = "tp_calibrate_miller_v1";
 
 // Types excluded from "All" — only shown via their dedicated toggle buttons
 const BACKGROUND_TYPES = new Set(['water', 'region']);
+
+function escHtml(s) {
+  return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
+}
+const COUNTRY_TO_ISO2 = {
+  D:"DE",A:"AT",I:"IT",IT:"IT",Italy:"IT",F:"FR",E:"ES",P:"PT",H:"HU",B:"BE",
+  NL:"NL",CH:"CH",CY:"CY",GB:"GB",GR:"GR",TR:"TR",BG:"BG",RO:"RO",HR:"HR",
+  AL:"AL",MK:"MK",MNE:"ME",BIH:"BA",YU:"RS",SLO:"SI",RKS:"XK",V:"VA",
+  TN:"TN",DZ:"DZ",MA:"MA",LAR:"LY",IL:"IL",RL:"LB",SYR:"SY",IRQ:"IQ",
+  IR:"IR",JOR:"JO",GE:"GE",ARM:"AM",AZ:"AZ",RUS:"RU",UA:"UA",TM:"TM",
+  PAK:"PK",AFG:"AF",IND:"IN",ET:"EG",IRE:"IE",
+};
+function countryFlagHtml(raw) {
+  if (!raw) return "";
+  return raw.split("|").map(c => {
+    const t = c.trim();
+    const iso = COUNTRY_TO_ISO2[t] || (t.length === 2 ? t.toUpperCase() : null);
+    if (!iso || iso.length !== 2) return "";
+    return `<img src="https://flagcdn.com/24x18/${iso.toLowerCase()}.png" alt="${escHtml(t)}" title="${escHtml(t)}" style="height:1.1em;vertical-align:middle;border-radius:1px;margin-right:3px">`;
+  }).filter(Boolean).join("");
+}
 
 let allPlaces  = [];   // all loaded places (unfiltered)
 let cities     = [];   // current working list (after filters)
@@ -1215,24 +1257,48 @@ function setupInteraction() {
   });
 
   // Hover tooltip over existing markings
-  const mtt      = document.getElementById("marking-tooltip");
-  const mttLatin  = document.getElementById("mtt-latin");
-  const mttModern = document.getElementById("mtt-modern");
-  const mttType   = document.getElementById("mtt-type");
-  const mttLoc    = document.getElementById("mtt-loc");
+  const mtt         = document.getElementById("marking-tooltip");
+  const mttLatin    = document.getElementById("mtt-latin");
+  const mttModern   = document.getElementById("mtt-modern");
+  const mttCountry  = document.getElementById("mtt-country");
+  const mttType     = document.getElementById("mtt-type");
+  const mttLoc      = document.getElementById("mtt-loc");
+  const mrp         = document.getElementById("map-ref-popup");
+  const mrpLatin    = document.getElementById("mrp-latin");
+  const mrpImg      = document.getElementById("mrp-img");
   let mttHidden = true;
 
   function hideMtt() {
     if (!mttHidden) { mtt.style.display = "none"; mttHidden = true; }
+    mrp.style.display = "none";
   }
 
   new OpenSeadragon.MouseTracker({
     element: viewer.element,
     moveHandler(e) {
-      if (!showAllMarkings) { hideMtt(); return; }
       const elRect = viewer.element.getBoundingClientRect();
       const mx = elRect.left + e.position.x;
       const my = elRect.top  + e.position.y;
+
+      // ── Reference popup: selected place Latin + ULM image, always shown ──
+      const selCity = cities[idx];
+      if (selCity) {
+        mrpLatin.textContent = selCity.latin_std || selCity.latin || "";
+        if (ulmResolvedUrl) {
+          if (mrpImg.src !== ulmResolvedUrl) mrpImg.src = ulmResolvedUrl;
+          mrpImg.style.display = "";
+        } else {
+          mrpImg.style.display = "none";
+        }
+        mrp.style.left = (mx - 560) + "px";
+        mrp.style.top  = (my + 60) + "px";
+        mrp.style.display = "block";
+      } else {
+        mrp.style.display = "none";
+      }
+
+      // ── Marking hover tooltip: only when over an existing marking ──
+      if (!showAllMarkings) { hideMtt(); return; }
 
       let hit = null;
       for (let i = allPlaces.length - 1; i >= 0; i--) {
@@ -1248,21 +1314,28 @@ function setupInteraction() {
         if (mx >= rx1 && mx <= rx2 && my >= ry1 && my <= ry2) { hit = place; break; }
       }
 
-      if (!hit) { hideMtt(); return; }
+      if (!hit) { if (!mttHidden) { mtt.style.display = "none"; mttHidden = true; } return; }
 
       const color = TYPE_COLORS[hit.type] || "#92400E";
       const label = TYPE_LABELS[hit.type] || hit.type;
       mttLatin.textContent  = hit.latin_std || hit.latin || "";
       mttModern.textContent = hit.modern || "";
       mttModern.style.display = hit.modern ? "" : "none";
+      const flagHtml = countryFlagHtml(hit.country);
+      if (hit.country) {
+        mttCountry.innerHTML = flagHtml + escHtml(hit.country);
+        mttCountry.style.display = "flex";
+      } else {
+        mttCountry.style.display = "none";
+      }
       mttType.innerHTML = `<span style="width:10px;height:10px;border-radius:2px;background:${color};flex-shrink:0"></span>${label}`;
       mttLoc.textContent = hit.tabula_location || "";
       mttLoc.style.display = hit.tabula_location ? "" : "none";
 
-      const ttW = 280, ttH = 110;
-      let tx = mx + 18, ty = my - 10;
-      if (tx + ttW > window.innerWidth)  tx = mx - ttW - 18;
-      if (ty + ttH > window.innerHeight) ty = my - ttH - 10;
+      const ttW = 280, ttH = 120;
+      let tx = mx + 100, ty = my + 20;
+      if (tx + ttW > window.innerWidth)  tx = mx - ttW - 100;
+      if (ty + ttH > window.innerHeight) ty = my - ttH - 20;
       mtt.style.left = tx + "px";
       mtt.style.top  = ty + "px";
       mtt.style.display = "block";
@@ -1431,7 +1504,12 @@ function updatePanel() {
     ? `<a href="${href}" target="_blank" rel="noopener">${locStr}</a>`
     : locStr || "—";
 
-  document.getElementById("meta-country").textContent = city.country || "—";
+  const metaCountryEl = document.getElementById("meta-country");
+  if (city.country) {
+    metaCountryEl.innerHTML = countryFlagHtml(city.country) + escHtml(city.country);
+  } else {
+    metaCountryEl.textContent = "—";
+  }
 
   // ULM DB link — use direct ID from DB when available, else fall back to name search
   const ulmBtn = document.getElementById("btn-ulm-search");
@@ -1790,20 +1868,29 @@ document.getElementById("btn-back").addEventListener("click", () => {
 
 function advance() {
   updateCityList();
-  if (idx < cities.length - 1) {
-    const nextIdx = idx + 1;
-    const cur  = cities[idx];
-    const next = cities[nextIdx];
-    const noPan = sortMode === "location" &&
-      Number(cur.tabula_segment) === Number(next.tabula_segment) &&
-      cur.tabula_row === next.tabula_row &&
-      Math.abs((Number(cur.tabula_col) || 0) - (Number(next.tabula_col) || 0)) <= 2;
-    loadCity(nextIdx, false, noPan);
-  } else {
+  if (idx >= cities.length - 1) {
     updatePanel();
     updateCityList();
     alert('All places reviewed! Click "Download JSON" to save.');
+    return;
   }
+  // When "hide done" is active, skip over already-calibrated items
+  let nextIdx = idx + 1;
+  if (hideDone) {
+    while (nextIdx < cities.length - 1) {
+      const s = results[cities[nextIdx].data_id]?.status;
+      if (s !== "set" && s !== "preloaded") break;
+      nextIdx++;
+    }
+  }
+  const cur  = cities[idx];
+  const next = cities[nextIdx];
+  const noPan = nextIdx === idx + 1 &&
+    sortMode === "location" &&
+    Number(cur.tabula_segment) === Number(next.tabula_segment) &&
+    cur.tabula_row === next.tabula_row &&
+    Math.abs((Number(cur.tabula_col) || 0) - (Number(next.tabula_col) || 0)) <= 2;
+  loadCity(nextIdx, false, noPan);
 }
 
 function jumpTo(i) { loadCity(i, true); }

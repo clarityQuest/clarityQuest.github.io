@@ -1828,6 +1828,23 @@ async function init() {
     renderMarkers();
   });
 
+  // On large screens the browser finishes CSS layout after OSD's "open" fires,
+  // so the first render uses wrong zoom. ResizeObserver catches the settle and
+  // forces OSD to recalculate its viewport before re-rendering.
+  let roSettled = false;
+  const ro = new ResizeObserver(() => {
+    const w = S.viewer.element.clientWidth;
+    const h = S.viewer.element.clientHeight;
+    if (!w || !h || !S.viewer.viewport) return;
+    sizeCanvas();
+    if (!roSettled) {
+      roSettled = true;
+      S.viewer.viewport.resize(new OpenSeadragon.Point(w, h));
+    }
+    renderMarkers();
+  });
+  ro.observe(S.viewer.element);
+
   window.addEventListener("resize", () => { sizeCanvas(); renderMarkers(); });
 
   // Setup UI
