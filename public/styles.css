@@ -126,6 +126,7 @@ body, html {
 }
 .ctrl-btn:hover { background: rgba(50, 50, 60, 0.95); }
 .toggle-btn { padding: 8px 12px; font-weight: 600; font-size: 13px; }
+.toggle-btn-sm { padding: 6px 8px; font-size: 11px; }
 .toggle-btn.active { border-color: var(--accent); color: var(--accent); }
 
 /* Search */
@@ -160,7 +161,7 @@ body, html {
 /* Info Panel */
 #info-panel {
   position: absolute;
-  right: 20px; top: 60px; width: 640px;
+  right: 20px; top: 60px; width: 512px;
   background: var(--panel-bg);
   border: 1px solid var(--border-color);
   border-radius: 8px; padding: 20px; z-index: 30;

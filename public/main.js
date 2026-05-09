@@ -83,6 +83,7 @@ const MAP_RUNTIME_TYPES = new Set(Object.keys(TYPE_COLORS));
 // Label rendering parameters — tunable via the settings panel, saved to label_params.json
 const LP_KEY = "tp_label_params_v1";
 const LP_DEFAULTS = {
+  markerAlpha:       1.0,   // marker fill/stroke opacity multiplier
   fontScale:         1.0,   // marker screen size × fontScale = secondary font ceiling
   maxFontDesktop:  999,    // effectively uncapped — zoom curve drives max font
   maxFontMobile:   999,    // same
@@ -146,7 +147,7 @@ const S = {
   newSourceKind: "readable-seg4", // "readable-seg4" | "stitched"
   markersOn:      true,
   labelsOn:       true,
-  activeTypes:    new Set(Object.keys(TYPE_COLORS)),
+  activeTypes:    new Set(["city", "temple", "spa"]),
   millerOverlayOn: true,
   millerCalib:    [],   // loaded from miller_rect_* fields in review_places_db.json
   legendOpen:     false,
@@ -496,14 +497,17 @@ function renderMillerOverlay(ctx) {
     const h = Math.max(1, Math.abs(p2.cy - p1.cy));
     const color = TYPE_COLORS[item.type] || "#92400E";
 
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.23;
-    ctx.fillRect(x, y, w, h);
-    ctx.globalAlpha = 0.65;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(x, y, w, h);
-    ctx.globalAlpha = 1;
+    if (S.markersOn) {
+      const ma = LP.markerAlpha ?? 1.0;
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.23 * ma;
+      ctx.fillRect(x, y, w, h);
+      ctx.globalAlpha = 0.65 * ma;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x, y, w, h);
+      ctx.globalAlpha = 1;
+    }
 
     if (item.data_id === S.highlightDataId && Date.now() < S.highlightUntil) {
       drawHighlightRing(ctx, x + w / 2, y + h / 2, Math.max(w, h) / 2 + 4);
@@ -520,7 +524,7 @@ function renderMillerOverlay(ctx) {
         const boxW = Math.max(txt1.length, txt2.length) * charW;
         const boxH = (txt1 ? lineH : 0) + (txt2 ? lineH : 0);
         const bx = x + 2;
-        const by = y + Math.max(2, h - boxH - 2);
+        const by = y + Math.max(2, h - boxH - 2) + lineH * 0.3;
         const skipOverlap = zoom >= (S.isMobile ? LP.labelPadZoomThreshMobile : LP.labelPadZoomThresh);
         let overlaps = false;
         if (!skipOverlap) {
@@ -540,20 +544,20 @@ function renderMillerOverlay(ctx) {
           ctx.lineWidth = 3;
           ctx.lineJoin = "round";
           let dy = by;
-          if (txt1) {
-            ctx.font = `bold ${Math.round(mfs)}px 'Segoe UI', system-ui, sans-serif`;
-            ctx.textBaseline = "top";
-            ctx.strokeText(txt1, bx, dy);
-            ctx.fillStyle = "#ffffff";
-            ctx.fillText(txt1, bx, dy);
-            dy += lineH;
-          }
           if (txt2) {
             ctx.font = `${Math.round(Math.max(6, mfs - 1))}px 'Segoe UI', system-ui, sans-serif`;
             ctx.textBaseline = "top";
             ctx.strokeText(txt2, bx, dy);
             ctx.fillStyle = "#e5e7eb";
             ctx.fillText(txt2, bx, dy);
+            dy += lineH;
+          }
+          if (txt1) {
+            ctx.font = `bold ${Math.round(mfs)}px 'Segoe UI', system-ui, sans-serif`;
+            ctx.textBaseline = "top";
+            ctx.strokeText(txt1, bx, dy);
+            ctx.fillStyle = "#ffffff";
+            ctx.fillText(txt1, bx, dy);
           }
           ctx.restore();
         }
@@ -575,14 +579,14 @@ function renderMarkers() {
   if (S.canvas.width !== el.clientWidth * dpr || S.canvas.height !== el.clientHeight * dpr) {
     sizeCanvas();
   }
-  ctx.clearRect(0, 0, el.clientWidth, el.clientHeight);
+  ctx.clearRect(0, 0, S.canvas.width, S.canvas.height);
 
   let highlightDrawn = false;
   if (S.millerOverlayOn && S.millerCalib.length && S.mapMode === "old")
     highlightDrawn = renderMillerOverlay(ctx) || false;
 
   // SegIV readable markers (disabled when on old map)
-  if (!S.markersOn || S.mapMode === "old" || S.newSourceKind === "stitched" || !S.places.length) return;
+  if (S.mapMode === "old" || S.newSourceKind === "stitched" || !S.places.length) return;
 
   const vp = S.viewer.viewport;
   const zoom = vp.getZoom(true);
@@ -620,14 +624,17 @@ function renderMarkers() {
     const cy = (p1.cy + p2.cy) / 2;
     const color = TYPE_COLORS[p.type] || "#92400E";
 
-    ctx.fillStyle = color;
-    ctx.globalAlpha = 0.23;
-    ctx.fillRect(x, y, w, h);
-    ctx.globalAlpha = 0.65;
-    ctx.strokeStyle = color;
-    ctx.lineWidth = 1.5;
-    ctx.strokeRect(x, y, w, h);
-    ctx.globalAlpha = 1;
+    if (S.markersOn) {
+      const ma = LP.markerAlpha ?? 1.0;
+      ctx.fillStyle = color;
+      ctx.globalAlpha = 0.23 * ma;
+      ctx.fillRect(x, y, w, h);
+      ctx.globalAlpha = 0.65 * ma;
+      ctx.strokeStyle = color;
+      ctx.lineWidth = 1.5;
+      ctx.strokeRect(x, y, w, h);
+      ctx.globalAlpha = 1;
+    }
 
     if (p.data_id === S.highlightDataId && Date.now() < S.highlightUntil) {
       drawHighlightRing(ctx, cx, cy, Math.max(w, h) / 2 + 4);
@@ -648,7 +655,7 @@ function renderMarkers() {
           );
           const boxH = (modern ? lineH : 0) + (latin ? lineH : 0);
           const bx = x + 2;
-          const by = y + Math.max(2, h - boxH - 2);
+          const by = y + Math.max(2, h - boxH - 2) + lineH * 0.3;
           const skipOverlap = zoom >= (S.isMobile ? LP.labelPadZoomThreshMobile : LP.labelPadZoomThresh);
           let overlaps = false;
           if (!skipOverlap) {
@@ -670,20 +677,20 @@ function renderMarkers() {
             const fsBold = Math.round(fontSize);
             const fsNorm = Math.max(6, fsBold - 1);
             let dy = by;
-            if (modern) {
-              ctx.font = `bold ${fsBold}px 'Segoe UI', system-ui, sans-serif`;
-              ctx.textBaseline = "top";
-              ctx.strokeText(modern, bx, dy);
-              ctx.fillStyle = "#ffffff";
-              ctx.fillText(modern, bx, dy);
-              dy += lineH;
-            }
             if (latin) {
               ctx.font = `${fsNorm}px 'Segoe UI', system-ui, sans-serif`;
               ctx.textBaseline = "top";
               ctx.strokeText(latin, bx, dy);
               ctx.fillStyle = "#e5e7eb";
               ctx.fillText(latin, bx, dy);
+              dy += lineH;
+            }
+            if (modern) {
+              ctx.font = `bold ${fsBold}px 'Segoe UI', system-ui, sans-serif`;
+              ctx.textBaseline = "top";
+              ctx.strokeText(modern, bx, dy);
+              ctx.fillStyle = "#ffffff";
+              ctx.fillText(modern, bx, dy);
             }
             ctx.restore();
           }
@@ -1145,6 +1152,15 @@ function setupTypeFilters() {
     });
   }
 
+  const markersBtn = document.getElementById("toggle-markers");
+  if (markersBtn) {
+    markersBtn.addEventListener("click", () => {
+      S.markersOn = !S.markersOn;
+      markersBtn.classList.toggle("active", S.markersOn);
+      renderMarkers();
+    });
+  }
+
   const labelsBtn = document.getElementById("toggle-labels");
   if (labelsBtn) {
     labelsBtn.addEventListener("click", () => {
@@ -1221,9 +1237,16 @@ function setupMobileMenu() {
     // Labels toggle + Label Settings shortcut
     const dispContainer = document.getElementById("mobile-display-controls");
     dispContainer.innerHTML = `
+      <button class="ctrl-btn toggle-btn${S.markersOn ? " active" : ""}" id="mobile-toggle-markers">Markers</button>
       <button class="ctrl-btn toggle-btn${S.labelsOn ? " active" : ""}" id="mobile-toggle-labels">Labels</button>
       <button class="ctrl-btn" id="mobile-settings-open">Label Settings</button>
     `;
+    dispContainer.querySelector("#mobile-toggle-markers").addEventListener("click", (e) => {
+      S.markersOn = !S.markersOn;
+      e.currentTarget.classList.toggle("active", S.markersOn);
+      document.getElementById("toggle-markers")?.classList.toggle("active", S.markersOn);
+      renderMarkers();
+    });
     dispContainer.querySelector("#mobile-toggle-labels").addEventListener("click", (e) => {
       S.labelsOn = !S.labelsOn;
       e.currentTarget.classList.toggle("active", S.labelsOn);
@@ -1340,6 +1363,7 @@ function setupInteraction() {
 
   S.viewer.addHandler("canvas-click", (e) => {
     if (S.isMobile && !e.quick) return;
+    e.preventDefaultAction = true;
     const pos = e.position;
     const elRect = S.viewer.element.getBoundingClientRect();
     const clientX = elRect.left + pos.x;
@@ -1349,7 +1373,6 @@ function setupInteraction() {
     const place = hitTest(clientX, clientY);
     if (place) {
       showInfoPanel(place);
-      e.preventDefaultAction = true;
       return;
     }
 
@@ -1375,7 +1398,6 @@ function setupInteraction() {
         grid_row:       millerItem.tabula_row,
         source:         millerItem.source || "tabula",
       });
-      e.preventDefaultAction = true;
       return;
     }
 
@@ -1493,6 +1515,9 @@ async function saveLabelParams() {
 }
 
 const SP_DEFS = [
+  { section: "Markers",       label: "Marker opacity",           key: "markerAlpha",
+    min: 0,   max: 1,    step: 0.05, fmt: v => Math.round(v * 100) + "%",
+    desc: "Transparency of marker rectangles. 100% = fully opaque, 0% = invisible." },
   { section: "Label Density",  label: "Label spacing",          key: "labelPad",
     min: -10, max: 20,   step: 1,   fmt: v => v + "px",
     desc: "Padding around each label's collision box. Negative values allow labels to overlap, increasing density. 0 = labels touch edge-to-edge." },
@@ -1840,6 +1865,7 @@ async function init() {
     if (!roSettled) {
       roSettled = true;
       S.viewer.viewport.resize(new OpenSeadragon.Point(w, h));
+      focusSegment(S.selectedSegment, true);
     }
     renderMarkers();
   });

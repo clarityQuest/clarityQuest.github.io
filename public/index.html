@@ -47,7 +47,8 @@
     <!-- Bottom-left category filter -->
     <div id="bottom-left-controls">
       <div class="toggle-row">
-        <button id="toggle-all-types" class="ctrl-btn toggle-btn" title="Show / hide all categories">Show/Hide All</button>
+        <button id="toggle-all-types" class="ctrl-btn toggle-btn toggle-btn-sm" title="Show / hide all categories">All</button>
+        <button id="toggle-markers" class="ctrl-btn toggle-btn active" title="Show/hide markers">Markers</button>
         <button id="toggle-labels" class="ctrl-btn toggle-btn active" title="Show/hide place name labels">Labels</button>
       </div>
       <div id="type-filter-buttons" class="type-filter-group" role="group" aria-label="Filter by place type"></div>
@@ -81,7 +82,7 @@
         <a id="panel-wiki-link" class="hidden panel-link" href="#" target="_blank" rel="noopener">Wikipedia ↗</a>
         <a id="panel-tp-link" class="hidden panel-link" href="#" target="_blank" rel="noopener">Ulm DB ↗</a>
       </div>
-      <div id="panel-sources">Data: <a href="https://www.tabula-peutingeriana.de/" target="_blank" rel="noopener">tabula-peutingeriana.de</a> (M. Weber) · <a href="https://tp-online.ku.de/" target="_blank" rel="noopener">tp-online.ku.de</a> (Univ. Ulm) · Image: <a href="https://commons.wikimedia.org/wiki/File:Tabula_Peutingeriana.jpg" target="_blank" rel="noopener">K. Miller, 1887</a> · Map: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</div>
+      <div id="panel-sources">Data: <a href="https://www.tabula-peutingeriana.de/" target="_blank" rel="noopener">tabula-peutingeriana.de</a> (M. Weber) · <a href="https://tp-online.ku.de/" target="_blank" rel="noopener">tp-online.ku.de</a> (Univ. Ulm) · Image: <a href="https://commons.wikimedia.org/wiki/File:Tabula_Peutingeriana.jpg" target="_blank" rel="noopener">K. Miller, 1887</a> · Map: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors · DB: <a href="https://tp-online.ku.de/" target="_blank" rel="noopener">Univ. Ulm (ULM)</a></div>
     </aside>
 
     <!-- Legend -->
@@ -130,11 +131,12 @@
     <!-- Attribution -->
     <div id="attribution">
       Data: <a href="https://www.tabula-peutingeriana.de/" target="_blank" rel="noopener">tabula-peutingeriana.de</a> (M. Weber)
+      · <a href="https://tp-online.ku.de/" target="_blank" rel="noopener">ULM (Univ. Ulm)</a>
       · Image: Wikimedia Commons (K. Miller, 1887)
     </div>
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
-  <script src="main.js?v=20260507c"></script>
+  <script src="main.js?v=20260509h"></script>
 </body>
 </html>
