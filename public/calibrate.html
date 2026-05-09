@@ -988,7 +988,7 @@ function applyFilters() {
       if (activeType && p.type !== activeType) return false;
     }
     if (activeSegment && p.tabula_segment !== activeSegment) return false;
-    if (!(p.modern || (p.lat != null && p.lng != null) || p.tabula_segment)) return false;
+    if (!(p.modern || (p.lat != null && p.lng != null) || p.tabula_segment || p.miller_rect_x1 != null)) return false;
     if (filterModernOnly   && !p.modern)   return false;
     if (filterVignetteOnly && !p.vignette) return false;
     if (activeVignette && (p.vignette || "") !== activeVignette) return false;
