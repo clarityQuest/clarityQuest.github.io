@@ -105,6 +105,16 @@
     #btn-hide-done.active {
       border-color: #f59e0b; background: rgba(245,158,11,0.12); color: #fcd34d;
     }
+    #btn-auto-pan {
+      padding: 4px 11px; border-radius: 5px; border: 1px solid rgba(255,255,255,0.2);
+      background: transparent; color: var(--muted);
+      font-size: 12px; font-weight: 600; cursor: pointer; white-space: nowrap;
+      transition: all 0.12s;
+    }
+    #btn-auto-pan:hover { background: rgba(255,255,255,0.07); color: var(--text); }
+    #btn-auto-pan.active {
+      border-color: #3b82f6; background: rgba(59,130,246,0.12); color: #93c5fd;
+    }
     .filter-select {
       background: rgba(255,255,255,0.05); color: var(--text);
       border: 1px solid rgba(255,255,255,0.15); border-radius: 5px;
@@ -382,6 +392,7 @@
     <div class="filter-divider"></div>
     <button id="btn-hide-done" title="Hide places already calibrated from the list">Hide done</button>
     <button id="btn-show-all-markings" title="Show/hide all accepted calibration markings on map">All markings ON</button>
+    <button id="btn-auto-pan" class="active" title="Toggle whether the map moves when selecting a list item">Auto pan ON</button>
   </div>
 
   <div id="main">
@@ -397,6 +408,7 @@
       <div class="meta-block" id="place-meta">
         <div class="meta-row"><span class="meta-key">Modern</span><span class="meta-val" id="meta-modern"></span></div>
         <div class="meta-row"><span class="meta-key">Location</span><span class="meta-val" id="meta-location"></span></div>
+        <div class="meta-row"><span class="meta-key">ULM Seg</span><span class="meta-val" id="meta-ulm-location"></span></div>
         <div class="meta-row"><span class="meta-key">Country</span><span class="meta-val" id="meta-country"></span></div>
         <div class="meta-row" id="meta-ulm-row"><span class="meta-key">Ulm DB</span><span class="meta-val"><button id="btn-ulm-search" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0;text-decoration:underline;">Search ↗</button></span></div>
       </div>
@@ -573,6 +585,7 @@ let activeSegment = null; // null = All
 let sortMode = "alpha";   // "alpha" | "location"
 let searchQuery = "";     // free-text filter
 let hideDone = false;     // hide calibrated places from sidebar list
+let autoPan  = true;      // pan/zoom map when selecting a list item
 let showBackgroundWater  = false;   // water layer toggle (independent of type filter)
 let showBackgroundRegion = false;   // region layer toggle
 let filterModernOnly   = false;     // only places with a modern name
@@ -988,12 +1001,12 @@ function applyFilters() {
       if (activeType && p.type !== activeType) return false;
     }
     if (activeSegment && p.tabula_segment !== activeSegment) return false;
-    if (!(p.modern || (p.lat != null && p.lng != null) || p.tabula_segment || p.miller_rect_x1 != null)) return false;
     if (filterModernOnly   && !p.modern)   return false;
     if (filterVignetteOnly && !p.vignette) return false;
     if (activeVignette && (p.vignette || "") !== activeVignette) return false;
     if (activeCountry  && (p.country  || "") !== activeCountry)  return false;
-    if (q && !((p.latin_std || p.latin || "").toLowerCase().includes(q) ||
+    if (q && !((p.latin_std || "").toLowerCase().includes(q) ||
+               (p.latin || "").toLowerCase().includes(q) ||
                (p.modern || "").toLowerCase().includes(q) ||
                String(p.data_id || "").includes(q))) return false;
     return true;
@@ -1035,6 +1048,7 @@ function clearPanel() {
   document.getElementById("place-type-badge").style.cssText = "";
   document.getElementById("meta-modern").textContent = "—";
   document.getElementById("meta-location").textContent = "—";
+  document.getElementById("meta-ulm-location").textContent = "—";
   document.getElementById("meta-country").textContent = "—";
   document.getElementById("meta-ulm-row").style.display = "";
   setUlmImg(null);
@@ -1401,7 +1415,7 @@ function loadCity(i, zoomIn = false, noPan = false) {
   setMarkMode(false);
   updatePanel();
   updateCityList();
-  if (!noPan) panToCity(city, existing, zoomIn);
+  if (!noPan && autoPan) panToCity(city, existing, zoomIn);
   else redraw();
 }
 
@@ -1503,6 +1517,16 @@ function updatePanel() {
   document.getElementById("meta-location").innerHTML = href
     ? `<a href="${href}" target="_blank" rel="noopener">${locStr}</a>`
     : locStr || "—";
+
+  // ULM Planquadrat notation (e.g. "9B4") — segment+ROW+col in ULM style
+  const ulmLocEl = document.getElementById("meta-ulm-location");
+  if (ulmLocEl) {
+    const ulmPq = seg ? `${seg}${row.toUpperCase()}${col ?? ""}` : "";
+    const ulmHref = city.ulm_id ? `https://tp-online.ku.de/trefferanzeige.php?id=${city.ulm_id}` : null;
+    ulmLocEl.innerHTML = ulmPq
+      ? (ulmHref ? `<a href="${ulmHref}" target="_blank" rel="noopener">${ulmPq}</a>` : ulmPq)
+      : "—";
+  }
 
   const metaCountryEl = document.getElementById("meta-country");
   if (city.country) {
@@ -1961,6 +1985,13 @@ document.getElementById("btn-hide-done").addEventListener("click", () => {
   btn.classList.toggle("active", hideDone);
   btn.textContent = hideDone ? "Show done" : "Hide done";
   buildCityList();
+});
+
+document.getElementById("btn-auto-pan").addEventListener("click", () => {
+  autoPan = !autoPan;
+  const btn = document.getElementById("btn-auto-pan");
+  btn.classList.toggle("active", autoPan);
+  btn.textContent = autoPan ? "Auto pan ON" : "Auto pan OFF";
 });
 
 document.getElementById("btn-show-all-markings").addEventListener("click", () => {
