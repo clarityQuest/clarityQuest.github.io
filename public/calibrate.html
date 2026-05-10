@@ -1518,10 +1518,10 @@ function updatePanel() {
     ? `<a href="${href}" target="_blank" rel="noopener">${locStr}</a>`
     : locStr || "—";
 
-  // ULM Planquadrat notation (e.g. "9B4") — segment+ROW+col in ULM style
+  // ULM Planquadrat — use stored ulm_planquadrat (original ULM value, pre-shift)
   const ulmLocEl = document.getElementById("meta-ulm-location");
   if (ulmLocEl) {
-    const ulmPq = seg ? `${seg}${row.toUpperCase()}${col ?? ""}` : "";
+    const ulmPq = city.ulm_planquadrat || "";
     const ulmHref = city.ulm_id ? `https://tp-online.ku.de/trefferanzeige.php?id=${city.ulm_id}` : null;
     ulmLocEl.innerHTML = ulmPq
       ? (ulmHref ? `<a href="${ulmHref}" target="_blank" rel="noopener">${ulmPq}</a>` : ulmPq)
