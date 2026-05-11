@@ -141,6 +141,7 @@ function computeFont(zoom) {
 const S = {
   viewer:       null,
   places:       [],
+  allRecords:   [],
   segments:     [],
   mapMode:      "old",       // "old" | "new"
   selectedSegment: DEFAULT_SEGMENT,
@@ -280,15 +281,9 @@ function focusSegment(segmentNumber, immediate = false) {
   applySegmentUIState();
   const segW = Math.max(0.00001, bounds.x1 - bounds.x0);
   const segH = Math.max(0.00001, bounds.y1 - bounds.y0);
-  const cx = bounds.x0 + segW / 2;
-  const cy = bounds.y0 + segH / 2;
 
-  // Zoom so the segment fills the viewport.
-  // OSD normalises ALL coordinates to image WIDTH (x: 0..1, y: 0..1/imageAspect).
-  // bounds.y0/y1 are in image-height-normalised space (0..1), so convert to OSD space.
-  const vp = S.viewer.viewport;
-  const containerEl = S.viewer.container;
-  const viewportAspect = containerEl ? containerEl.clientWidth / Math.max(1, containerEl.clientHeight) : 1;
+  // OSD normalises coordinates to image WIDTH (x: 0..1, y: 0..1/imageAspect).
+  // bounds.y values are in image-height-fraction (0..1), so divide by imageAspect.
   const imageEl = S.viewer.world.getItemAt(0);
   const imageAspect = imageEl
     ? imageEl.getContentSize().x / Math.max(1, imageEl.getContentSize().y)
@@ -296,15 +291,17 @@ function focusSegment(segmentNumber, immediate = false) {
         ? Number(S.stitchedTile.Image.Size.Width) / Math.max(1, Number(S.stitchedTile.Image.Size.Height))
         : 16);
 
-  // Convert y from image-height-fraction → OSD viewport units (divide by imageAspect)
-  const osdCy = cy / imageAspect;
-  // Zoom to fill width:  Z = 1/segW
-  // Zoom to fill height: Z = imageAspect / (viewportAspect * segH)
-  //   because viewport height in OSD units = (1/viewportAspect)/Z = segH/imageAspect
-  const zoomFill = Math.max(1 / segW, imageAspect / (viewportAspect * segH)) * 0.82;
+  // Expand bounds by 10% on each side for breathing room (~83% fill).
+  const pad = 0.10;
+  const osdRect = new OpenSeadragon.Rect(
+    bounds.x0 - segW * pad,
+    (bounds.y0 - segH * pad) / imageAspect,
+    segW * (1 + 2 * pad),
+    segH * (1 + 2 * pad) / imageAspect
+  );
 
-  vp.panTo(new OpenSeadragon.Point(cx, osdCy), immediate);
-  vp.zoomTo(zoomFill, new OpenSeadragon.Point(cx, osdCy), immediate);
+  // fitBounds is atomic (no pan/zoom race) and handles both axes correctly.
+  S.viewer.viewport.fitBounds(osdRect, immediate);
   return true;
 }
 
@@ -895,7 +892,8 @@ function showInfoPanel(place) {
   if (panelMap) {
     const hasCoords = Number.isFinite(lat) && Number.isFinite(lng) &&
                       lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
-    if (hasCoords) {
+    const hasModern = Boolean(place.modern && place.modern.trim());
+    if (hasCoords && hasModern) {
       const dLon = 0.9, dLat = 0.55;
       const bbox = `${(lng-dLon).toFixed(4)},${(lat-dLat).toFixed(4)},${(lng+dLon).toFixed(4)},${(lat+dLat).toFixed(4)}`;
       const src = `https://www.openstreetmap.org/export/embed.html?bbox=${bbox}&layer=mapnik&marker=${lat.toFixed(5)},${lng.toFixed(5)}`;
@@ -954,10 +952,13 @@ function setupSearch() {
       const q = input.value.trim().toLowerCase();
       if (q.length < 2) { results.classList.add("hidden"); return; }
 
-      const matches = S.places.filter(p =>
-        (p.latin_std || p.latin).toLowerCase().includes(q) ||
-        (p.modern && p.modern.toLowerCase().includes(q))
-      ).slice(0, 30);
+      const pool = S.allRecords.length ? S.allRecords : S.places;
+      const matches = pool.filter(p => {
+        const lat = (p.latin_std || p.latin || "").toLowerCase();
+        const latRaw = (p.latin || "").toLowerCase();
+        const mod = (p.modern || "").toLowerCase();
+        return lat.includes(q) || latRaw.includes(q) || mod.includes(q);
+      }).slice(0, 30);
 
       if (!matches.length) { results.classList.add("hidden"); return; }
 
@@ -977,7 +978,8 @@ function setupSearch() {
     const item = e.target.closest(".search-item");
     if (!item) return;
     const id = item.dataset.id;
-    const place = S.places.find(p => String(p.id) === id);
+    const pool = S.allRecords.length ? S.allRecords : S.places;
+    const place = pool.find(p => String(p.id) === id);
     if (!place) return;
 
     // Ensure the place's type is visible before navigating
@@ -989,6 +991,7 @@ function setupSearch() {
 
     panToPlace(place);
     startHighlight(place);
+    showInfoPanel(place);
     renderMarkers();
 
     results.classList.add("hidden");
@@ -1741,38 +1744,7 @@ async function init() {
   S.boundsBySource.stitched = boundsConfig?.maps?.stitched?.segments || stitchedDefaultBounds;
   S.boundsBySource.readableSeg4 = boundsConfig?.maps?.readableSeg4?.segments || { "4": { x0: 0, y0: 0, x1: 1, y1: 1 } };
 
-  const db = await loadJSON("data/review_places_db.json?" + Date.now());
-  const rawRecords = Array.isArray(db) ? db : (Array.isArray(db.records) ? db.records : []);
-  console.log(`[TP] DB loaded: ${rawRecords.length} records, ` +
-    `${rawRecords.filter(r => r.miller_rect_x1 != null).length} with Miller calibrations`);
-  const placeData = rawRecords
-    .filter((r) => {
-      if (!r || typeof r !== "object") return false;
-      if (!MAP_RUNTIME_TYPES.has(r.type)) return false;
-      return r.px != null && r.py != null && Number.isFinite(Number(r.px)) && Number.isFinite(Number(r.py));
-    })
-    .map((r, idx) => ({
-      ...r,
-      id: r.id ?? r.record_id ?? `${r.source || "r"}-${r.data_id ?? idx}`,
-      latin_std: r.latin_std || r.latin,
-      modern: r.modern_preferred || r.modern_tabula || r.modern_omnesviae || "",
-      province: r.province || r.region || "",
-      grid_col: r.grid_col ?? r.tabula_col,
-      grid_row: r.grid_row ?? r.tabula_row,
-      px: Number(r.px),
-      py: Number(r.py),
-      data_id: Number.isFinite(Number(r.data_id)) ? Number(r.data_id) : r.data_id,
-    }));
-  const draftMap = loadCalibrateDraftMap();
-  S.millerCalib = loadMillerCalib(rawRecords);
-
-  // Viewport coordinates: OSD normalises by width, so vx = px/IMG_W, vy = py/IMG_W
-  S.places = placeData.map(p => ({
-    ...p,
-    ...(Number.isFinite(Number(p.data_id)) ? (draftMap.get(Number(p.data_id)) || {}) : {}),
-    vx: p.px / IMG_W,
-    vy: p.py / IMG_W,
-  }));
+  await reloadDb();
 
   // Readable tile source (Weber segment IV DZI)
   const isFile = window.location.protocol === "file:";
@@ -1862,7 +1834,6 @@ async function init() {
     sizeCanvas();
     if (!roSettled) {
       roSettled = true;
-      S.viewer.viewport.resize(new OpenSeadragon.Point(w, h));
       if (!initialFocused) {
         focusSegment(S.selectedSegment, true);
         initialFocused = true;
@@ -1878,7 +1849,6 @@ async function init() {
     roSettled = true;
     const w = S.viewer.element.clientWidth;
     const h = S.viewer.element.clientHeight;
-    if (w && h) S.viewer.viewport.resize(new OpenSeadragon.Point(w, h));
     if (!initialFocused) { focusSegment(S.selectedSegment, true); initialFocused = true; }
     renderMarkers();
   }, 300);
@@ -1895,6 +1865,56 @@ async function init() {
   initSettingsPanel();
 
   console.log(`Tabula Peutingeriana loaded: ${S.places.length} seg4 places, ${S.millerCalib.length} Miller calibrations`);
+
+  // Listen for calibrate saves on the same local server and hot-reload the DB.
+  try {
+    new BroadcastChannel("tp_db_updated").onmessage = async () => {
+      await reloadDb();
+      renderMarkers();
+      console.log("[TP] DB hot-reloaded from calibrate save");
+    };
+  } catch {}
+}
+
+async function reloadDb() {
+  const db = await loadJSON("data/review_places_db.json?" + Date.now());
+  const rawRecords = Array.isArray(db) ? db : (Array.isArray(db.records) ? db.records : []);
+  console.log(`[TP] DB loaded: ${rawRecords.length} records, ` +
+    `${rawRecords.filter(r => r.miller_rect_x1 != null).length} with Miller calibrations`);
+  const placeData = rawRecords
+    .filter((r) => {
+      if (!r || typeof r !== "object") return false;
+      if (!MAP_RUNTIME_TYPES.has(r.type)) return false;
+      return r.px != null && r.py != null && Number.isFinite(Number(r.px)) && Number.isFinite(Number(r.py));
+    })
+    .map((r, idx) => ({
+      ...r,
+      id: r.id ?? r.record_id ?? `${r.source || "r"}-${r.data_id ?? idx}`,
+      latin_std: r.latin_std || r.latin,
+      modern: r.modern_preferred || r.modern_tabula || r.modern_omnesviae || "",
+      province: r.province || r.region || "",
+      grid_col: r.grid_col ?? r.tabula_col,
+      grid_row: r.grid_row ?? r.tabula_row,
+      px: Number(r.px),
+      py: Number(r.py),
+      data_id: Number.isFinite(Number(r.data_id)) ? Number(r.data_id) : r.data_id,
+    }));
+  S.allRecords = rawRecords.map((r, idx) => ({
+    ...r,
+    id: r.id ?? r.record_id ?? `${r.source || "r"}-${r.data_id ?? idx}`,
+    latin_std: r.latin_std || r.latin || "",
+    modern: r.modern_preferred || r.modern_tabula || r.modern_omnesviae || "",
+    province: r.province || r.region || "",
+    data_id: Number.isFinite(Number(r.data_id)) ? Number(r.data_id) : r.data_id,
+  }));
+  const draftMap = loadCalibrateDraftMap();
+  S.millerCalib = loadMillerCalib(rawRecords);
+  S.places = placeData.map(p => ({
+    ...p,
+    ...(Number.isFinite(Number(p.data_id)) ? (draftMap.get(Number(p.data_id)) || {}) : {}),
+    vx: p.px / IMG_W,
+    vy: p.py / IMG_W,
+  }));
 }
 
 window.addEventListener("DOMContentLoaded", init);

@@ -224,7 +224,8 @@
       object-fit: contain; border-radius: 6px; background: #1a1a2a;
       border: 1px solid rgba(255,255,255,0.18); }
 
-    .coord-block { background: rgba(255,255,255,0.05); border-radius: 5px; padding: 4px 8px; }
+    .coord-pair { display: flex; gap: 5px; }
+    .coord-block { background: rgba(255,255,255,0.05); border-radius: 5px; padding: 4px 8px; flex: 1; min-width: 0; }
     .coord-label { font-size: 8px; color: var(--muted); text-transform: uppercase; letter-spacing: .06em; margin-bottom: 2px; }
     .coord-val { font-size: 9px; font-family: monospace; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
     #cur-val { color: var(--yellow); }
@@ -241,7 +242,8 @@
     #btn-mark-mode.active {
       background: var(--accent); color: #fff;
     }
-    #btn-mark-mode .hint { font-size: 9px; font-weight: 400; display: block; margin-top: 1px; opacity: 0.8; }
+    #btn-mark-mode .hint { font-size: 9px; font-weight: 400; display: none; margin-top: 1px; opacity: 0.8; }
+    #btn-mark-mode:hover .hint { display: block; }
 
     #hint-box {
       font-size: 10px; color: var(--muted); line-height: 1.45;
@@ -251,6 +253,8 @@
     .spacer { flex: 1; }
 
     #btn-group { display: flex; flex-direction: column; gap: 5px; }
+    #btn-nav-row { display: flex; gap: 4px; }
+    #btn-nav-row .nav-btn { flex: 1; }
     .nav-btn {
       padding: 7px 10px; border-radius: 6px; border: 1px solid var(--border);
       background: rgba(255,255,255,0.04); color: var(--text);
@@ -313,6 +317,24 @@
       font-size: 15px; color: var(--muted); pointer-events: none;
     }
     #empty-msg.visible { display: flex; }
+
+    /* Edit modal */
+    #edit-modal { display:none; position:fixed; inset:0; z-index:200; background:rgba(0,0,0,0.7); align-items:center; justify-content:center; }
+    #edit-modal.open { display:flex; }
+    #edit-box { background:#1a1a2e; border:1px solid var(--border); border-radius:10px; padding:24px; width:420px; max-width:95vw; max-height:90vh; overflow-y:auto; display:flex; flex-direction:column; gap:12px; }
+    #edit-box h3 { margin:0 0 4px; font-size:15px; color:var(--text); }
+    .edit-field { display:flex; flex-direction:column; gap:4px; }
+    .edit-field label { font-size:11px; color:var(--muted); text-transform:uppercase; letter-spacing:.05em; }
+    .edit-field input, .edit-field select { background:#0f1117; border:1px solid var(--border); border-radius:5px; color:var(--text); padding:6px 8px; font-size:13px; }
+    .edit-field input:focus, .edit-field select:focus { outline:none; border-color:var(--accent); }
+    #edit-btn-row { display:flex; gap:8px; margin-top:4px; flex-wrap:wrap; }
+    #edit-btn-row button { padding:7px 16px; border-radius:6px; border:1px solid; font-size:13px; font-weight:600; cursor:pointer; background:transparent; }
+    #btn-edit-save { border-color:var(--accent); color:var(--accent); }
+    #btn-edit-save:hover { background:rgba(59,130,246,0.12); }
+    #btn-edit-cancel { border-color:rgba(255,255,255,0.2); color:var(--muted); }
+    #btn-edit-cancel:hover { background:rgba(255,255,255,0.06); }
+    #btn-edit-delete { border-color:#ef4444; color:#ef4444; margin-left:auto; }
+    #btn-edit-delete:hover { background:rgba(239,68,68,0.12); }
   </style>
 </head>
 <body>
@@ -345,8 +367,8 @@
       <button class="filter-btn" data-type="people">People</button>
     </div>
     <div class="filter-group bg-type-group" id="bg-type-buttons">
-      <button class="filter-btn bg-type-btn" data-bgtype="water">Water</button>
-      <button class="filter-btn bg-type-btn" data-bgtype="region">Region</button>
+      <button class="filter-btn bg-type-btn active" data-bgtype="water">Water</button>
+      <button class="filter-btn bg-type-btn active" data-bgtype="region">Region</button>
     </div>
     <div class="filter-divider"></div>
     <span class="filter-label">Segment</span>
@@ -379,6 +401,7 @@
     <div class="filter-group">
       <button class="filter-btn prop-btn" id="btn-modern-only" title="Only places with a modern name">With Modern</button>
       <button class="filter-btn prop-btn" id="btn-vignette-only" title="Only places with a vignette symbol">With Vignette</button>
+      <button class="filter-btn prop-btn" id="btn-new-only" title="Recently added ULM entries without calibration">New / Uncalibrated</button>
     </div>
     <div class="filter-divider"></div>
     <span class="filter-label">Vignette</span>
@@ -427,15 +450,17 @@
         <div id="tabula-preview-label">Tabula location on segment</div>
       </div>
 
-      <div class="coord-block">
-        <div class="coord-label">Stored marker (yellow rectangle)</div>
-        <div class="coord-val" id="cur-val">—</div>
+      <div class="coord-pair">
+        <div class="coord-block">
+          <div class="coord-label">Stored (yellow)</div>
+          <div class="coord-val" id="cur-val">—</div>
+        </div>
+        <div class="coord-block">
+          <div class="coord-label">New (green)</div>
+          <div class="coord-val" id="new-val">not set</div>
+        </div>
       </div>
-      <div class="coord-block">
-        <div class="coord-label">New marker (green rectangle)</div>
-        <div class="coord-val" id="new-val">not set</div>
-        <div id="coord-delta"></div>
-      </div>
+      <div id="coord-delta"></div>
 
       <div id="status-badge" class="badge-pending">Pending</div>
 
@@ -444,18 +469,24 @@
         <span class="hint">pan/zoom first, then click</span>
       </button>
 
+      <button class="nav-btn" id="btn-accept" disabled style="margin-top:4px;">✓ Accept &amp; Next</button>
+
       <div id="hint-box">
         1. Pan &amp; zoom to find the location<br>
         2. Enable pin mode, then click or drag a rectangle<br>
         3. Accept or adjust
       </div>
 
+      <button id="btn-edit-entry" style="margin-top:4px;padding:6px 12px;border-radius:6px;border:1px solid rgba(255,255,255,0.25);background:rgba(255,255,255,0.05);color:var(--muted);font-size:12px;cursor:pointer;width:100%;">✏ Edit DB Entry</button>
+
       <div class="spacer"></div>
 
       <div id="btn-group">
-        <button class="nav-btn" id="btn-back">← Back</button>
-        <button class="nav-btn" id="btn-skip">→ Skip</button>
-        <button class="nav-btn" id="btn-accept" disabled>✓ Accept &amp; Next</button>
+        <div id="btn-nav-row">
+          <button class="nav-btn" id="btn-back" style="font-size:11px;padding:4px 6px;">← Back</button>
+          <button class="nav-btn" id="btn-skip" style="font-size:11px;padding:4px 6px;">→ Skip</button>
+          <button class="nav-btn" id="btn-clear-rect" style="font-size:11px;padding:4px 6px;border-color:#ef4444;color:#ef4444;" title="Remove the calibration marker for this place">🗑 Clear</button>
+        </div>
       </div>
     </div>
 
@@ -495,6 +526,43 @@
 <div id="ulm-img-popup">
   <img id="ulm-img-popup-img" src="" alt="" />
   <div id="ulm-img-popup-cap"></div>
+</div>
+
+<div id="edit-modal">
+  <div id="edit-box">
+    <h3 id="edit-title">Edit Entry</h3>
+    <div class="edit-field"><label>Latin (latin_std)</label><input id="ef-latin" type="text"></div>
+    <div class="edit-field"><label>Modern name</label><input id="ef-modern" type="text"></div>
+    <div class="edit-field"><label>Type</label>
+      <select id="ef-type">
+        <option value="city">City</option>
+        <option value="road_station">Road Station</option>
+        <option value="port">Port</option>
+        <option value="spa">Spa</option>
+        <option value="temple">Temple</option>
+        <option value="river">River</option>
+        <option value="lake">Lake</option>
+        <option value="island">Island</option>
+        <option value="region">Region</option>
+        <option value="mountain">Mountain</option>
+        <option value="people">People</option>
+        <option value="roman_province">Roman Province</option>
+        <option value="water">Water</option>
+        <option value="modern_state">Modern State</option>
+      </select>
+    </div>
+    <div class="edit-field"><label>Tabula Segment</label><input id="ef-segment" type="number" min="2" max="12" step="1"></div>
+    <div class="edit-field"><label>Tabula Row (a/b/c)</label><input id="ef-row" type="text" maxlength="1"></div>
+    <div class="edit-field"><label>Tabula Col</label><input id="ef-col" type="number" min="1" max="12" step="1"></div>
+    <div class="edit-field"><label>Country (ISO)</label><input id="ef-country" type="text" maxlength="3"></div>
+    <div class="edit-field"><label>Lat</label><input id="ef-lat" type="number" step="any"></div>
+    <div class="edit-field"><label>Lng</label><input id="ef-lng" type="number" step="any"></div>
+    <div id="edit-btn-row">
+      <button id="btn-edit-save">Save</button>
+      <button id="btn-edit-cancel">Cancel</button>
+      <button id="btn-edit-delete">Delete Entry</button>
+    </div>
+  </div>
 </div>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
@@ -552,7 +620,7 @@ const TYPE_LABELS = {
 const DRAFT_STORAGE_KEY = "tp_calibrate_miller_v1";
 
 // Types excluded from "All" — only shown via their dedicated toggle buttons
-const BACKGROUND_TYPES = new Set(['water', 'region']);
+const BACKGROUND_TYPES = new Set([]);   // no types hidden by default; water/region toggle buttons kept for opt-in hiding
 
 function escHtml(s) {
   return String(s ?? "").replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;").replace(/"/g,"&quot;");
@@ -586,9 +654,10 @@ let sortMode = "alpha";   // "alpha" | "location"
 let searchQuery = "";     // free-text filter
 let hideDone = false;     // hide calibrated places from sidebar list
 let autoPan  = true;      // pan/zoom map when selecting a list item
-let showBackgroundWater  = false;   // water layer toggle (independent of type filter)
-let showBackgroundRegion = false;   // region layer toggle
+let showBackgroundWater  = true;    // water shown by default; toggle hides it
+let showBackgroundRegion = true;    // region shown by default; toggle hides it
 let filterModernOnly   = false;     // only places with a modern name
+let filterNewOnly      = false;     // only ulm_only entries without miller calibration
 let filterVignetteOnly = false;     // only places with a vignette
 let activeVignette = "";            // "" = All; otherwise exact vignette string
 let activeCountry  = "";            // "" = All; otherwise exact country string
@@ -862,6 +931,7 @@ async function saveToServer() {
     const result = await res.json();
     if (!res.ok || !result.ok) throw new Error(result.error || `HTTP ${res.status}`);
     setServerSaveStatus("ok", result.records);
+    try { new BroadcastChannel("tp_db_updated").postMessage("saved"); } catch {}
   } catch (e) {
     setServerSaveStatus("error", 0, e.message);
   }
@@ -877,10 +947,14 @@ function setServerSaveStatus(state, records, errMsg) {
   } else if (state === "ok") {
     el.textContent = `✓ Saved`;
     el.style.color = "#22c55e";
+    el.style.fontWeight = "";
+    el.title = "";
     serverSaveTimer = setTimeout(() => { el.textContent = ""; }, 4000);
   } else if (state === "error") {
-    el.textContent = `⚠ ${errMsg || "Save failed"}`;
+    el.textContent = `⚠ NOT SAVED – run server.py`;
     el.style.color = "#ef4444";
+    el.style.fontWeight = "700";
+    el.title = errMsg || "Save failed – start scripts/server.py and reload";
   }
 }
 
@@ -991,18 +1065,14 @@ async function init() {
 function applyFilters() {
   const q = searchQuery.toLowerCase();
   cities = allPlaces.filter((p) => {
-    const isBg = BACKGROUND_TYPES.has(p.type);
-    if (isBg) {
-      // Background types only shown when their toggle is explicitly on
-      const bgOn = (p.type === 'water' && showBackgroundWater) ||
-                   (p.type === 'region' && showBackgroundRegion);
-      if (!bgOn) return false;
-    } else {
-      if (activeType && p.type !== activeType) return false;
-    }
+    // water/region toggles now hide those types (opt-out) rather than show them (opt-in)
+    if (p.type === 'water'  && !showBackgroundWater)  return false;
+    if (p.type === 'region' && !showBackgroundRegion) return false;
+    if (activeType && p.type !== activeType) return false;
     if (activeSegment && p.tabula_segment !== activeSegment) return false;
     if (filterModernOnly   && !p.modern)   return false;
     if (filterVignetteOnly && !p.vignette) return false;
+    if (filterNewOnly && !(p.match_status === 'ulm_only' && !results[p.data_id])) return false;
     if (activeVignette && (p.vignette || "") !== activeVignette) return false;
     if (activeCountry  && (p.country  || "") !== activeCountry)  return false;
     if (q && !((p.latin_std || "").toLowerCase().includes(q) ||
@@ -1860,6 +1930,160 @@ document.getElementById("btn-accept").addEventListener("click", () => {
   advance();
 });
 
+document.getElementById("btn-clear-rect").addEventListener("click", () => {
+  if (!cities.length) return;
+  const city = cities[idx];
+  if (!confirm(`Remove the calibration marker for "${city.latin_std || city.latin}"?`)) return;
+  const did = city.data_id;
+  // Remove from results
+  delete results[did];
+  saveDraftResults();
+  // Remove miller_rect_* fields from reviewDb record and save
+  const rec = (Array.isArray(reviewDb.records) ? reviewDb.records : []).find(r => Number(r.data_id) === Number(did));
+  if (rec) {
+    delete rec.miller_px; delete rec.miller_py;
+    delete rec.miller_rect_x1; delete rec.miller_rect_y1;
+    delete rec.miller_rect_x2; delete rec.miller_rect_y2;
+    delete rec.miller_rect_w; delete rec.miller_rect_h;
+    delete rec.miller_rect_user_set;
+  }
+  // Also clear runtime place
+  const rp = allPlaces.find(p => Number(p.data_id) === Number(did));
+  if (rp) {
+    delete rp.miller_rect_x1; delete rp.miller_rect_y1;
+    delete rp.miller_rect_x2; delete rp.miller_rect_y2;
+  }
+  // Save full reviewDb directly
+  setServerSaveStatus("saving");
+  fetch("/api/save-calibration", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(reviewDb, null, 2),
+  }).then(r => r.json()).then(result => {
+    if (!result.ok) throw new Error(result.error);
+    setServerSaveStatus("ok", result.records);
+    try { new BroadcastChannel("tp_db_updated").postMessage("saved"); } catch {}
+  }).catch(e => setServerSaveStatus("error", 0, e.message));
+  // Reset newPx so panel shows "not set"
+  newPx = null; newPy = null; newX1 = null; newY1 = null; newX2 = null; newY2 = null;
+  selectionRect = null;
+  updatePanel();
+  redraw();
+});
+
+/* ── Edit modal ── */
+function openEditModal() {
+  if (!cities.length) return;
+  const city = cities[idx];
+  const rec = (Array.isArray(reviewDb.records) ? reviewDb.records : []).find(r => Number(r.data_id) === Number(city.data_id));
+  if (!rec) return;
+  document.getElementById("edit-title").textContent = `Edit: ${city.latin_std || city.latin} (#${city.data_id})`;
+  document.getElementById("ef-latin").value = rec.latin_std || rec.latin || "";
+  document.getElementById("ef-modern").value = rec.modern_preferred || rec.modern_tabula || rec.modern_omnesviae || rec.modern || "";
+  document.getElementById("ef-type").value = rec.type || "road_station";
+  document.getElementById("ef-segment").value = rec.tabula_segment ?? "";
+  document.getElementById("ef-row").value = rec.tabula_row || "";
+  document.getElementById("ef-col").value = rec.tabula_col ?? "";
+  document.getElementById("ef-country").value = rec.country || "";
+  document.getElementById("ef-lat").value = rec.lat ?? "";
+  document.getElementById("ef-lng").value = rec.lng ?? "";
+  document.getElementById("edit-modal").classList.add("open");
+}
+
+function closeEditModal() {
+  document.getElementById("edit-modal").classList.remove("open");
+}
+
+function saveEditDirectly() {
+  const city = cities[idx];
+  const rec = (Array.isArray(reviewDb.records) ? reviewDb.records : []).find(r => Number(r.data_id) === Number(city.data_id));
+  const rp  = allPlaces.find(p => Number(p.data_id) === Number(city.data_id));
+  if (!rec) { closeEditModal(); return; }
+
+  const latin   = document.getElementById("ef-latin").value.trim();
+  const modern  = document.getElementById("ef-modern").value.trim();
+  const type    = document.getElementById("ef-type").value;
+  const seg     = document.getElementById("ef-segment").value;
+  const row     = document.getElementById("ef-row").value.trim().toLowerCase();
+  const col     = document.getElementById("ef-col").value;
+  const country = document.getElementById("ef-country").value.trim().toUpperCase();
+  const lat     = document.getElementById("ef-lat").value;
+  const lng     = document.getElementById("ef-lng").value;
+
+  if (latin)  { rec.latin_std = latin; rec.latin = latin; }
+  if (modern) { rec.modern_preferred = modern; rec.modern = modern; }
+  rec.type = type;
+  if (seg !== "")  { rec.tabula_segment = Number(seg); rec.grid_col = Number(col || rec.grid_col); }
+  if (row)         { rec.tabula_row = row; rec.grid_row = row; }
+  if (col !== "")  { rec.tabula_col = Number(col); rec.grid_col = Number(col); }
+  if (country)     { rec.country = country; }
+  if (lat !== "")  { rec.lat = Number(lat); }
+  if (lng !== "")  { rec.lng = Number(lng); }
+  if (seg && row && col) {
+    rec.tabula_location = `Seg ${seg} ${row}${col}`;
+  }
+
+  // Mirror to runtime record
+  if (rp) {
+    Object.assign(rp, { latin_std: rec.latin_std, latin: rec.latin,
+      modern: rec.modern_preferred || rec.modern, type: rec.type,
+      tabula_segment: rec.tabula_segment, tabula_row: rec.tabula_row,
+      tabula_col: rec.tabula_col, country: rec.country,
+      lat: rec.lat, lng: rec.lng });
+  }
+
+  closeEditModal();
+  updatePanel();
+  buildCityList();
+  // Save full DB directly
+  setServerSaveStatus("saving");
+  fetch("/api/save-calibration", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(reviewDb, null, 2),
+  }).then(r => r.json()).then(result => {
+    if (!result.ok) throw new Error(result.error);
+    setServerSaveStatus("ok", result.records);
+    try { new BroadcastChannel("tp_db_updated").postMessage("saved"); } catch {}
+  }).catch(e => setServerSaveStatus("error", 0, e.message));
+}
+
+function deleteEntryFromDb() {
+  if (!cities.length) return;
+  const city = cities[idx];
+  if (!confirm(`Delete "${city.latin_std || city.latin}" (#${city.data_id}) from the database? This cannot be undone.`)) return;
+  // Remove from reviewDb
+  const i = (Array.isArray(reviewDb.records) ? reviewDb.records : []).findIndex(r => Number(r.data_id) === Number(city.data_id));
+  if (i !== -1) reviewDb.records.splice(i, 1);
+  // Remove from allPlaces
+  const j = allPlaces.findIndex(p => Number(p.data_id) === Number(city.data_id));
+  if (j !== -1) allPlaces.splice(j, 1);
+  // Remove from results
+  delete results[city.data_id];
+  saveDraftResults();
+  closeEditModal();
+  applyFilters();
+  if (idx >= cities.length) idx = Math.max(0, cities.length - 1);
+  if (cities.length) loadCity(idx);
+  else clearPanel();
+  // Save
+  setServerSaveStatus("saving");
+  fetch("/api/save-calibration", {
+    method: "POST", headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(reviewDb, null, 2),
+  }).then(r => r.json()).then(result => {
+    if (!result.ok) throw new Error(result.error);
+    setServerSaveStatus("ok", result.records);
+    try { new BroadcastChannel("tp_db_updated").postMessage("saved"); } catch {}
+  }).catch(e => setServerSaveStatus("error", 0, e.message));
+}
+
+document.getElementById("btn-edit-entry").addEventListener("click", openEditModal);
+document.getElementById("btn-edit-save").addEventListener("click", saveEditDirectly);
+document.getElementById("btn-edit-cancel").addEventListener("click", closeEditModal);
+document.getElementById("btn-edit-delete").addEventListener("click", deleteEntryFromDb);
+document.getElementById("edit-modal").addEventListener("click", (e) => {
+  if (e.target === document.getElementById("edit-modal")) closeEditModal();
+});
+
 document.getElementById("btn-skip").addEventListener("click", () => {
   if (!cities.length) return;
   const city = cities[idx];
@@ -1976,6 +2200,12 @@ document.getElementById("btn-modern-only").addEventListener("click", function ()
 document.getElementById("btn-vignette-only").addEventListener("click", function () {
   filterVignetteOnly = !filterVignetteOnly;
   this.classList.toggle("active", filterVignetteOnly);
+  applyFilters();
+});
+
+document.getElementById("btn-new-only").addEventListener("click", function () {
+  filterNewOnly = !filterNewOnly;
+  this.classList.toggle("active", filterNewOnly);
   applyFilters();
 });
 

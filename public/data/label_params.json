@@ -1,4 +1,5 @@
 {
+  "markerAlpha": 0.65,
   "fontScale": 1,
   "maxFontDesktop": 999,
   "maxFontMobile": 11,
@@ -7,8 +8,8 @@
   "maxLabelsDesktop": 500,
   "maxLabelsMobile": 46,
   "minFontMobile": 7,
-  "labelPad": 8,
-  "labelPadZoomThresh": 8,
+  "labelPad": 12,
+  "labelPadZoomThresh": 24.25,
   "labelPadZoomThreshMobile": 13.75,
   "zoomThreshMid": 3,
   "zoomThreshAll": 8,
