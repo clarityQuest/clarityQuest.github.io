@@ -235,13 +235,56 @@ body, html {
 .tt-detail { font-size: 13px; color: #999; margin-top: 2px; }
 .tt-detail span { color: #ccc; }
 
-/* Legend, Status & Footer Elements */
-#legend { position: absolute; bottom: 40px; left: 50%; transform: translateX(-50%); z-index: 10; }
-#legend-toggle { background: var(--panel-bg); color: var(--text-main); border: 1px solid var(--border-color); border-radius: 6px; padding: 8px 12px; font-size: 13px; font-weight: 600; cursor: pointer; margin-left: auto; display: block; }
-#legend-body { background: var(--panel-bg); border: 1px solid var(--border-color); border-radius: 6px; padding: 12px; margin-top: 8px; display: none; box-shadow: 0 4px 12px rgba(0,0,0,0.5); }
-#legend.open #legend-body { display: block; }
-.legend-item { display: flex; align-items: center; gap: 8px; font-size: 13px; margin-bottom: 8px; }
-.legend-item:last-child { margin-bottom: 0; }
+/* Region-solo button */
+.region-solo-btn.active { border-color: #7c3aed !important; color: #c4b5fd !important; background: rgba(124,58,237,0.18) !important; }
+
+/* About Panel */
+#about-panel {
+  position: absolute;
+  right: 20px; top: 60px;
+  width: 480px; max-width: calc(100vw - 40px);
+  background: var(--panel-bg);
+  border: 1px solid var(--border-color);
+  border-radius: 10px; padding: 24px 24px 16px;
+  z-index: 30;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  pointer-events: auto;
+  overflow-y: auto;
+  max-height: calc(100vh - 80px);
+}
+#close-about {
+  position: absolute; top: 12px; right: 12px;
+  background: transparent; border: none; color: var(--text-muted);
+  font-size: 24px; cursor: pointer; line-height: 1;
+}
+#close-about:hover { color: #fff; }
+.about-title { font-size: 22px; font-weight: 700; margin-bottom: 2px; }
+.about-subtitle { font-size: 13px; color: var(--text-muted); margin-bottom: 18px; font-style: italic; }
+.about-section { margin-bottom: 18px; }
+.about-section h3 { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .07em; color: var(--text-muted); margin-bottom: 8px; }
+.about-section p { font-size: 14px; line-height: 1.6; color: var(--text-main); margin-bottom: 8px; }
+.about-section p:last-child { margin-bottom: 0; }
+.about-section p em { color: #c4b5fd; font-style: normal; }
+.about-section p strong { color: #fcd34d; }
+.about-facts { display: grid; grid-template-columns: auto 1fr; gap: 4px 16px; }
+.about-facts div { display: contents; }
+.about-facts dt { font-size: 11px; text-transform: uppercase; letter-spacing: .05em; color: var(--text-muted); padding: 3px 0; }
+.about-facts dd { font-size: 13px; color: var(--text-main); margin: 0; padding: 3px 0; }
+.about-links { display: flex; flex-direction: column; gap: 8px; }
+.about-link {
+  display: flex; align-items: center; gap: 10px;
+  padding: 8px 12px; border-radius: 6px;
+  border: 1px solid var(--border-color);
+  background: rgba(255,255,255,0.03);
+  color: var(--accent); text-decoration: none;
+  font-size: 13px; transition: background 0.15s;
+}
+.about-link:hover { background: rgba(59,130,246,0.12); text-decoration: none; }
+.about-link-icon { font-size: 16px; flex-shrink: 0; }
+.about-footer { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-color); font-size: 11px; color: var(--text-muted); line-height: 1.5; }
+.about-footer a { color: var(--accent); text-decoration: none; }
+
+/* Status & Footer Elements */
 #status, #attribution { position: absolute; bottom: 10px; z-index: 10; font-size: 12px; color: var(--text-muted); background: rgba(15, 17, 23, 0.8); padding: 4px 8px; border-radius: 4px; pointer-events: none; }
 #status { left: 10px; }
 #attribution { right: 10px; pointer-events: auto; }
@@ -340,10 +383,6 @@ body, html {
   #info-panel #panel-latin  { font-size: 14px; margin-bottom: 3px; }
   #info-panel #panel-modern { font-size: 12px; margin-bottom: 8px; }
   #info-panel #panel-type   { font-size: 16px; }
-
-  /* Legend: move to right to avoid overlap with bottom-left buttons */
-  #legend { bottom: 10px; left: auto; right: 10px; transform: none; }
-  #legend-toggle { min-height: 38px; }
 
   /* Larger tap targets for controls */
   .ctrl-btn { min-width: 38px; min-height: 38px; }

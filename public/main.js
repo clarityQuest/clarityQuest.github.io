@@ -149,9 +149,10 @@ const S = {
   markersOn:      true,
   labelsOn:       true,
   activeTypes:    new Set(["city", "temple", "spa"]),
+  regionSolo:     false,
+  savedActiveTypes: null,
   millerOverlayOn: true,
   millerCalib:    [],   // loaded from miller_rect_* fields in review_places_db.json
-  legendOpen:     false,
   selectedPlace:  null,
   highlightDataId: null,
   highlightUntil:  0,
@@ -1083,12 +1084,6 @@ function setupControls() {
     });
   }
 
-  // Legend toggle
-  document.getElementById("legend-toggle").addEventListener("click", () => {
-    S.legendOpen = !S.legendOpen;
-    document.getElementById("legend").classList.toggle("open", S.legendOpen);
-  });
-
   // Close info panel
   document.getElementById("close-panel").addEventListener("click", hideInfoPanel);
   document.addEventListener("keydown", (e) => {
@@ -1114,10 +1109,24 @@ function setupControls() {
   setupMobileMenu();
 }
 
+function exitRegionSolo() {
+  if (!S.regionSolo) return;
+  S.regionSolo = false;
+  if (S.savedActiveTypes) {
+    S.activeTypes = S.savedActiveTypes;
+    S.savedActiveTypes = null;
+  }
+  document.getElementById("region-solo-btn")?.classList.remove("active");
+  document.querySelectorAll("#type-filter-buttons .type-filter-btn").forEach(b => {
+    b.classList.toggle("active", S.activeTypes.has(b.dataset.type));
+  });
+}
+
 function setupTypeFilters() {
   const container = document.getElementById("type-filter-buttons");
   if (!container) return;
-  const types = Object.keys(TYPE_COLORS);
+  // 'region' is handled separately via the region-solo button
+  const types = Object.keys(TYPE_COLORS).filter(t => t !== "region");
   container.innerHTML = types.map(t => {
     const color = TYPE_COLORS[t];
     const label = TYPE_LABELS[t];
@@ -1129,6 +1138,8 @@ function setupTypeFilters() {
   container.addEventListener("click", (e) => {
     const btn = e.target.closest(".type-filter-btn");
     if (!btn) return;
+    // Exit region solo if active so standard filters take effect
+    if (S.regionSolo) exitRegionSolo();
     const type = btn.dataset.type;
     if (S.activeTypes.has(type)) {
       S.activeTypes.delete(type);
@@ -1143,17 +1154,33 @@ function setupTypeFilters() {
   const toggleAllBtn = document.getElementById("toggle-all-types");
   if (toggleAllBtn) {
     toggleAllBtn.addEventListener("click", () => {
-      const allActive = S.activeTypes.size === Object.keys(TYPE_COLORS).length;
+      if (S.regionSolo) exitRegionSolo();
+      const allActive = types.every(t => S.activeTypes.has(t));
       if (allActive) {
-        S.activeTypes.clear();
+        types.forEach(t => S.activeTypes.delete(t));
         container.querySelectorAll(".type-filter-btn").forEach(b => b.classList.remove("active"));
         toggleAllBtn.classList.remove("active");
-        toggleAllBtn.textContent = "Show/Hide All";
       } else {
-        Object.keys(TYPE_COLORS).forEach(t => S.activeTypes.add(t));
+        types.forEach(t => S.activeTypes.add(t));
         container.querySelectorAll(".type-filter-btn").forEach(b => b.classList.add("active"));
         toggleAllBtn.classList.add("active");
-        toggleAllBtn.textContent = "Show/Hide All";
+      }
+      renderMarkers();
+    });
+  }
+
+  // Region solo button
+  const regionSoloBtn = document.getElementById("region-solo-btn");
+  if (regionSoloBtn) {
+    regionSoloBtn.addEventListener("click", () => {
+      if (S.regionSolo) {
+        exitRegionSolo();
+      } else {
+        S.regionSolo = true;
+        S.savedActiveTypes = new Set(S.activeTypes);
+        S.activeTypes = new Set(["region"]);
+        regionSoloBtn.classList.add("active");
+        container.querySelectorAll(".type-filter-btn").forEach(b => b.classList.remove("active"));
       }
       renderMarkers();
     });
@@ -1176,6 +1203,15 @@ function setupTypeFilters() {
       renderMarkers();
     });
   }
+
+  // About panel
+  const aboutBtn = document.getElementById("about-btn");
+  const aboutPanel = document.getElementById("about-panel");
+  const closeAbout = document.getElementById("close-about");
+  if (aboutBtn && aboutPanel) {
+    aboutBtn.addEventListener("click", () => aboutPanel.classList.toggle("hidden"));
+    closeAbout?.addEventListener("click", () => aboutPanel.classList.add("hidden"));
+  }
 }
 
 function setupMobileMenu() {
@@ -1185,10 +1221,10 @@ function setupMobileMenu() {
   if (!btn || !menu) return;
 
   function openMenu() {
-    // Sync type filter buttons
+    // Sync type filter buttons (region excluded — handled by region-solo button)
     const typeContainer = document.getElementById("mobile-type-filter-buttons");
-    const types = Object.keys(TYPE_COLORS);
-    const allOn = S.activeTypes.size === types.length;
+    const types = Object.keys(TYPE_COLORS).filter(t => t !== "region");
+    const allOn = types.every(t => S.activeTypes.has(t));
     typeContainer.innerHTML =
       `<button class="ctrl-btn toggle-btn${allOn ? " active" : ""}" id="mobile-toggle-all" style="width:100%;margin-bottom:6px">Select All</button>` +
       types.map(t => {
@@ -1201,9 +1237,10 @@ function setupMobileMenu() {
       }).join("");
 
     typeContainer.querySelector("#mobile-toggle-all").addEventListener("click", (e) => {
-      const allActive = S.activeTypes.size === types.length;
+      if (S.regionSolo) exitRegionSolo();
+      const allActive = types.every(t => S.activeTypes.has(t));
       if (allActive) {
-        S.activeTypes.clear();
+        types.forEach(t => S.activeTypes.delete(t));
         typeContainer.querySelectorAll(".type-filter-btn").forEach(b => b.classList.remove("active"));
         e.currentTarget.classList.remove("active");
         document.querySelectorAll("#type-filter-buttons .type-filter-btn").forEach(b => b.classList.remove("active"));
@@ -1221,6 +1258,7 @@ function setupMobileMenu() {
     typeContainer.addEventListener("click", (e) => {
       const b = e.target.closest(".type-filter-btn");
       if (!b) return;
+      if (S.regionSolo) exitRegionSolo();
       const t = b.dataset.type;
       if (S.activeTypes.has(t)) { S.activeTypes.delete(t); b.classList.remove("active"); }
       else { S.activeTypes.add(t); b.classList.add("active"); }
