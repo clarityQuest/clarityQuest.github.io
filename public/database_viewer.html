@@ -463,6 +463,123 @@
     @media (max-width: 860px) {
       .controls { grid-template-columns: 1fr; }
     }
+
+    /* Show-empty-only button */
+    .show-empty-btn {
+      flex-shrink: 0;
+      width: 20px; height: 20px;
+      border: 1px solid #cbbda6;
+      border-radius: 4px;
+      background: #fffefa;
+      color: var(--muted);
+      font-size: 0.72rem;
+      cursor: pointer;
+      padding: 0;
+      line-height: 1;
+    }
+    .show-empty-btn:hover { background: #f0e8d8; color: var(--ink); }
+    .show-empty-btn.active { background: #7a2a15; color: #fff; border-color: #7a2a15; }
+
+    /* Row edit button */
+    .edit-row-btn {
+      padding: 2px 7px;
+      border: 1px solid #cbbda6;
+      border-radius: 5px;
+      background: #fffefa;
+      color: var(--marking);
+      font: inherit;
+      font-size: 0.78rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .edit-row-btn:hover { background: #e8f0f8; border-color: var(--marking); }
+
+    /* Edit modal */
+    .edit-modal-backdrop {
+      position: fixed; inset: 0;
+      background: rgba(0,0,0,0.38);
+      z-index: 90;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+    .edit-modal-backdrop.open { display: flex; }
+
+    .edit-modal {
+      background: var(--paper);
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      box-shadow: 0 14px 36px rgba(0,0,0,0.28);
+      width: min(660px, calc(100vw - 32px));
+      max-height: calc(100vh - 48px);
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+
+    .edit-modal-head {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 14px;
+      border-bottom: 1px solid var(--line);
+      background: #f7f0e0;
+      gap: 12px;
+    }
+    .edit-modal-head-title {
+      flex: 1; min-width: 0;
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+      font-size: 0.92rem; font-weight: 600;
+    }
+    .edit-modal-close {
+      background: transparent; border: none;
+      font-size: 1.2rem; cursor: pointer;
+      color: var(--muted); line-height: 1; flex-shrink: 0; padding: 0 2px;
+    }
+    .edit-modal-close:hover { color: var(--ink); }
+
+    .edit-modal-body {
+      flex: 1; overflow-y: auto;
+      padding: 10px 14px;
+      display: flex; flex-direction: column; gap: 5px;
+    }
+
+    .edit-field-row {
+      display: grid;
+      grid-template-columns: 160px 1fr;
+      gap: 6px; align-items: center;
+    }
+    .edit-field-label {
+      font-size: 0.78rem; color: var(--muted);
+      word-break: break-all; text-align: right;
+    }
+    .edit-field-input {
+      width: 100%; padding: 4px 8px;
+      border: 1px solid #cbbda6; border-radius: 5px;
+      background: #fffefa; color: var(--ink);
+      font: inherit; font-size: 0.82rem;
+    }
+    .edit-field-input:focus { outline: none; border-color: var(--marking); background: #fff; }
+
+    .edit-modal-footer {
+      flex-shrink: 0;
+      display: flex; gap: 8px; align-items: center;
+      padding: 10px 14px;
+      border-top: 1px solid var(--line);
+      background: #f7f0e0;
+    }
+    .edit-modal-status { font-size: 0.82rem; color: var(--ok); flex: 1; }
+    .edit-modal-btn {
+      padding: 6px 15px; border-radius: 7px;
+      border: 1px solid #cbbda6; background: #fffefa;
+      color: var(--ink); font: inherit; font-size: 0.87rem; cursor: pointer;
+    }
+    .edit-modal-btn:hover { background: #f0e8d8; }
+    .edit-modal-btn.save { background: var(--marking); color: #fff; border-color: var(--marking); }
+    .edit-modal-btn.save:hover { background: #163d5e; }
+    .edit-modal-btn.delete { background: var(--alert); color: #fff; border-color: var(--alert); }
+    .edit-modal-btn.delete:hover { background: #6d172a; }
   </style>
 </head>
 <body>
@@ -567,12 +684,32 @@
   </div>
 </div>
 
+<!-- Edit modal -->
+<div class="edit-modal-backdrop" id="edit-modal-backdrop">
+  <div class="edit-modal" id="edit-modal-dialog" role="dialog" aria-modal="true" aria-label="Edit DB entry">
+    <div class="edit-modal-head">
+      <span class="edit-modal-head-title" id="edit-modal-title">Edit Entry</span>
+      <button class="edit-modal-close" id="edit-modal-close" aria-label="Close">×</button>
+    </div>
+    <div class="edit-modal-body" id="edit-modal-body"></div>
+    <div class="edit-modal-footer">
+      <span class="edit-modal-status" id="edit-modal-status"></span>
+      <button class="edit-modal-btn delete" id="edit-modal-delete">Delete Entry</button>
+      <button class="edit-modal-btn" id="edit-modal-cancel">Cancel</button>
+      <button class="edit-modal-btn save" id="edit-modal-save">Save</button>
+    </div>
+  </div>
+</div>
+
 <script>
   let allRecords = [];
   let allColumns = [];
   let visibleColumns = [];
   let columnFilters = {};    // { colKey: filterString }
   let columnHideEmpty = new Set(); // colKeys where empty rows are hidden
+  let columnShowEmptyOnly = new Set(); // colKeys where only empty rows are shown
+  let dbFullData = null;     // full {meta,records} DB object for saves
+  let editingDataId = null;
   let hoverHideTimer = null;
   let osmHideTimer = null;
   let ulmHideTimer = null;
@@ -928,7 +1065,8 @@
   }
 
   function renderHeadRow() {
-    refs.headRow.innerHTML = visibleColumns.map(col => {
+    const editTh = '<th style="width:36px;padding:4px 4px 2px"></th>';
+    refs.headRow.innerHTML = editTh + visibleColumns.map(col => {
       const desc = getColumnDesc(col);
       const titleAttr = desc ? ` title="${escapeHtml(desc)}"` : '';
       return `<th${titleAttr}><span class="th-label">${escapeHtml(getColumnLabel(col))}</span></th>`;
@@ -947,12 +1085,14 @@
   }
 
   function renderFilterRow() {
-    refs.filterRow.innerHTML = visibleColumns.map(col => {
+    const editTh = '<th style="width:36px;padding:0"></th>';
+    refs.filterRow.innerHTML = editTh + visibleColumns.map(col => {
       if (col === '__rownum') return '<th></th>';
       const v = escapeHtml(columnFilters[col] || '');
       const hasFilter = !!(columnFilters[col] || '').trim();
       const hideEmpty = columnHideEmpty.has(col);
-      return `<th><div class="filter-cell"><input type="search" class="col-filter${hasFilter?' filter-active':''}" data-col="${escapeHtml(col)}" value="${v}" placeholder="…" /><button class="hide-empty-btn${hideEmpty?' active':''}" data-col-hide="${escapeHtml(col)}" title="Hide rows where this column is empty">∅</button></div></th>`;
+      const showEmpty = columnShowEmptyOnly.has(col);
+      return `<th><div class="filter-cell"><input type="search" class="col-filter${hasFilter?' filter-active':''}" data-col="${escapeHtml(col)}" value="${v}" placeholder="…" /><button class="hide-empty-btn${hideEmpty?' active':''}" data-col-hide="${escapeHtml(col)}" title="Hide rows where this column is empty">∅</button><button class="show-empty-btn${showEmpty?' active':''}" data-col-show-empty="${escapeHtml(col)}" title="Show only rows where this column is empty">∅!</button></div></th>`;
     }).join('');
     requestAnimationFrame(updateFilterRowTop);
   }
@@ -1056,7 +1196,10 @@
                type: r.type, country: r.country,
              })))}">${escapeHtml(r.tabula_location||'')}</a>`
         : escapeHtml(r.tabula_location||'');
-      return `<tr class="${rowClass}">${visibleColumns.map(col => `<td>${renderCell(r,col,i+1,sourceBadgeClass,matchClass,locationCell)}</td>`).join('')}</tr>`;
+      const editBtn = r.data_id != null
+        ? `<td style="padding:4px"><button class="edit-row-btn" data-edit-id="${r.data_id}" title="Edit entry">✎</button></td>`
+        : '<td></td>';
+      return `<tr class="${rowClass}">${editBtn}${visibleColumns.map(col => `<td>${renderCell(r,col,i+1,sourceBadgeClass,matchClass,locationCell)}</td>`).join('')}</tr>`;
     }).join('');
   }
 
@@ -1117,6 +1260,11 @@
         if (!getColFilterValue(r, col).trim()) return false;
       }
 
+      // Show-empty-only column filters
+      for (const col of columnShowEmptyOnly) {
+        if (getColFilterValue(r, col).trim()) return false;
+      }
+
       return true;
     });
 
@@ -1133,6 +1281,7 @@
       ]);
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
+      dbFullData = data;
       allRecords = (data.records||[]).map(r => ({ ...r, remaining_refinement: remainingIds.has(r.record_id) }));
 
       initColumns(allRecords);
@@ -1165,15 +1314,29 @@
     applyFilters();
   });
 
-  // Hide-empty buttons (delegated)
+  // Hide-empty / show-empty-only buttons (delegated, mutually exclusive per column)
   refs.filterRow.addEventListener('click', event => {
-    const btn = event.target.closest('.hide-empty-btn');
-    if (!btn) return;
-    const col = btn.dataset.colHide;
-    if (columnHideEmpty.has(col)) columnHideEmpty.delete(col);
-    else columnHideEmpty.add(col);
-    btn.classList.toggle('active', columnHideEmpty.has(col));
-    applyFilters();
+    const hideBtn = event.target.closest('.hide-empty-btn');
+    if (hideBtn) {
+      const col = hideBtn.dataset.colHide;
+      if (columnHideEmpty.has(col)) columnHideEmpty.delete(col);
+      else { columnHideEmpty.add(col); columnShowEmptyOnly.delete(col); }
+      hideBtn.classList.toggle('active', columnHideEmpty.has(col));
+      const showBtn = refs.filterRow.querySelector(`.show-empty-btn[data-col-show-empty="${CSS.escape(col)}"]`);
+      if (showBtn) showBtn.classList.remove('active');
+      applyFilters();
+      return;
+    }
+    const showBtn = event.target.closest('.show-empty-btn');
+    if (showBtn) {
+      const col = showBtn.dataset.colShowEmpty;
+      if (columnShowEmptyOnly.has(col)) columnShowEmptyOnly.delete(col);
+      else { columnShowEmptyOnly.add(col); columnHideEmpty.delete(col); }
+      showBtn.classList.toggle('active', columnShowEmptyOnly.has(col));
+      const hideBtn2 = refs.filterRow.querySelector(`.hide-empty-btn[data-col-hide="${CSS.escape(col)}"]`);
+      if (hideBtn2) hideBtn2.classList.remove('active');
+      applyFilters();
+    }
   });
 
   // Tabula cell hover
@@ -1265,6 +1428,122 @@
     const input = event.target.closest('input[data-col-key]');
     if (!input) return;
     applyVisibleColumnsChange(input.dataset.colKey, input.checked);
+  });
+
+  /* ── Edit modal ── */
+  function openEditModal(dataId) {
+    if (!dbFullData) { alert('DB not loaded yet'); return; }
+    const r = dbFullData.records.find(rec => rec.data_id == dataId);
+    if (!r) { alert('Record not found: ' + dataId); return; }
+    editingDataId = r.data_id;
+    document.getElementById('edit-modal-title').textContent =
+      'Edit: ' + (r.latin || r.modern_preferred || 'data_id ' + r.data_id);
+    document.getElementById('edit-modal-status').textContent = '';
+
+    const body = document.getElementById('edit-modal-body');
+    body.innerHTML = Object.entries(r).map(([k, v]) => {
+      const raw = v == null ? '' : (typeof v === 'object' ? JSON.stringify(v) : String(v));
+      return `<div class="edit-field-row">
+        <label class="edit-field-label" for="ef-${escapeHtml(k)}">${escapeHtml(k)}</label>
+        <input class="edit-field-input" id="ef-${escapeHtml(k)}" data-field="${escapeHtml(k)}" type="text" value="${escapeHtml(raw)}" />
+      </div>`;
+    }).join('');
+
+    document.getElementById('edit-modal-backdrop').classList.add('open');
+  }
+
+  function closeEditModal() {
+    document.getElementById('edit-modal-backdrop').classList.remove('open');
+    editingDataId = null;
+  }
+
+  async function saveEditModal() {
+    if (editingDataId == null) return;
+    const dbIdx = dbFullData.records.findIndex(r => r.data_id == editingDataId);
+    if (dbIdx < 0) { alert('Record not found'); return; }
+
+    const updated = {};
+    document.querySelectorAll('#edit-modal-body .edit-field-input').forEach(input => {
+      const key = input.dataset.field;
+      let val = input.value;
+      if (val === '') val = null;
+      else if (val === 'true') val = true;
+      else if (val === 'false') val = false;
+      else if (!isNaN(val) && val.trim() !== '') val = Number(val);
+      updated[key] = val;
+    });
+
+    dbFullData.records[dbIdx] = updated;
+
+    const allIdx = allRecords.findIndex(r => r.data_id == editingDataId);
+    if (allIdx >= 0) allRecords[allIdx] = { ...updated, remaining_refinement: allRecords[allIdx]?.remaining_refinement || false };
+
+    const statusEl = document.getElementById('edit-modal-status');
+    statusEl.textContent = 'Saving…';
+    statusEl.style.color = 'var(--muted)';
+    try {
+      const res = await fetch('/api/save-calibration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dbFullData),
+      });
+      const json = await res.json();
+      if (json.ok) {
+        statusEl.textContent = 'Saved ✓';
+        statusEl.style.color = 'var(--ok)';
+        setTimeout(closeEditModal, 700);
+        applyFilters();
+      } else {
+        statusEl.textContent = 'Error: ' + (json.error || 'Unknown');
+        statusEl.style.color = 'var(--alert)';
+      }
+    } catch (e) {
+      statusEl.textContent = 'Error: ' + e.message;
+      statusEl.style.color = 'var(--alert)';
+    }
+  }
+
+  async function deleteEditModal() {
+    if (editingDataId == null) return;
+    const r = dbFullData.records.find(rec => rec.data_id == editingDataId);
+    if (!r) return;
+    const name = r.latin || r.modern_preferred || String(r.data_id);
+    if (!confirm(`Delete "${name}" (data_id=${r.data_id}) from the database?\n\nThis cannot be undone.`)) return;
+    if (!confirm(`Confirm permanent deletion of data_id=${r.data_id} — "${name}"?`)) return;
+
+    dbFullData.records = dbFullData.records.filter(rec => rec.data_id != editingDataId);
+    allRecords = allRecords.filter(rec => rec.data_id != editingDataId);
+    closeEditModal();
+    applyFilters();
+
+    try {
+      await fetch('/api/save-calibration', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(dbFullData),
+      });
+    } catch (e) {
+      alert('Error saving after delete: ' + e.message);
+    }
+  }
+
+  document.getElementById('edit-modal-close').addEventListener('click', closeEditModal);
+  document.getElementById('edit-modal-cancel').addEventListener('click', closeEditModal);
+  document.getElementById('edit-modal-save').addEventListener('click', saveEditModal);
+  document.getElementById('edit-modal-delete').addEventListener('click', deleteEditModal);
+  document.getElementById('edit-modal-backdrop').addEventListener('click', e => {
+    if (e.target === e.currentTarget) closeEditModal();
+  });
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.getElementById('edit-modal-backdrop').classList.contains('open')) closeEditModal();
+  });
+
+  // Edit button click delegation
+  refs.rows.addEventListener('click', event => {
+    const btn = event.target.closest('.edit-row-btn');
+    if (!btn) return;
+    const id = btn.dataset.editId;
+    if (id != null && id !== '') openEditModal(Number(id));
   });
 
   loadData();
