@@ -235,8 +235,10 @@ body, html {
 .tt-detail { font-size: 13px; color: #999; margin-top: 2px; }
 .tt-detail span { color: #ccc; }
 
-/* Region-solo button */
-.region-solo-btn.active { border-color: #7c3aed !important; color: #c4b5fd !important; background: rgba(124,58,237,0.18) !important; }
+/* Region-solo button — dashed border signals "area" type */
+.region-solo-btn { border-style: dashed !important; color: #a78bfa !important; }
+.region-solo-btn:hover { border-style: dashed !important; }
+.region-solo-btn.active { border-style: solid !important; border-color: #7c3aed !important; color: #c4b5fd !important; background: rgba(124,58,237,0.22) !important; }
 
 /* About Panel */
 #about-panel {

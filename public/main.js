@@ -622,16 +622,32 @@ function renderMarkers() {
     const cy = (p1.cy + p2.cy) / 2;
     const color = TYPE_COLORS[p.type] || "#92400E";
 
+    const isRegion = p.type === "region";
+
     if (S.markersOn) {
       const ma = LP.markerAlpha ?? 1.0;
-      ctx.fillStyle = color;
-      ctx.globalAlpha = 0.23 * ma;
-      ctx.fillRect(x, y, w, h);
-      ctx.globalAlpha = 0.65 * ma;
-      ctx.strokeStyle = color;
-      ctx.lineWidth = 1.5;
-      ctx.strokeRect(x, y, w, h);
-      ctx.globalAlpha = 1;
+      if (isRegion) {
+        // Regions: semi-transparent fill + dashed border — area style, not point style
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.07 * ma;
+        ctx.fillRect(x, y, w, h);
+        ctx.globalAlpha = 0.35 * ma;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.setLineDash([7, 5]);
+        ctx.strokeRect(x, y, w, h);
+        ctx.setLineDash([]);
+        ctx.globalAlpha = 1;
+      } else {
+        ctx.fillStyle = color;
+        ctx.globalAlpha = 0.23 * ma;
+        ctx.fillRect(x, y, w, h);
+        ctx.globalAlpha = 0.65 * ma;
+        ctx.strokeStyle = color;
+        ctx.lineWidth = 1.5;
+        ctx.strokeRect(x, y, w, h);
+        ctx.globalAlpha = 1;
+      }
     }
 
     if (p.data_id === S.highlightDataId && Date.now() < S.highlightUntil) {
@@ -639,58 +655,77 @@ function renderMarkers() {
       highlightDrawn = true;
     }
 
-    if (S.labelsOn && labelCount < MAX_LABELS) {
+    if (S.labelsOn) {
       const latin  = p.latin_std || p.latin;
       const modern = truncWords(p.modern, 4) || null;
       if (latin || modern) {
         const fontSize = computeFont(zoom);
         if (fontSize > 0) {
-          const charW = fontSize * 0.55;
-          const lineH = fontSize * 1.3;
-          const boxW = Math.max(
-            modern ? modern.length * charW : 0,
-            latin  ? latin.length  * charW : 0
-          );
-          const boxH = (modern ? lineH : 0) + (latin ? lineH : 0);
-          const bx = x + 2;
-          const by = y + Math.max(2, h - boxH - 2) + lineH * 0.3;
-          const skipOverlap = zoom >= (S.isMobile ? LP.labelPadZoomThreshMobile : LP.labelPadZoomThresh);
-          let overlaps = false;
-          if (!skipOverlap) {
-            for (const r of labelRects) {
-              if (bx < r.x2 && bx + boxW > r.x1 && by < r.y2 && by + boxH > r.y1) {
-                overlaps = true; break;
-              }
-            }
-          }
-          if (!overlaps) {
-            const reserveW = Math.min(boxW, w);
-            labelRects.push({ x1: bx - LABEL_PAD, y1: by - LABEL_PAD,
-                              x2: bx + reserveW + LABEL_PAD, y2: by + boxH + LABEL_PAD });
-            labelCount++;
+          if (isRegion) {
+            // Region label: uppercase italic, centered in the area, no overlap check
+            const regionFs = Math.max(7, Math.round(fontSize * 1.4));
+            const label = (latin || modern || "").toUpperCase();
             ctx.save();
-            ctx.strokeStyle = "rgba(0,0,0,0.8)";
+            ctx.font = `italic ${regionFs}px 'Segoe UI', system-ui, sans-serif`;
+            ctx.textBaseline = "middle";
+            ctx.textAlign = "center";
+            ctx.strokeStyle = "rgba(0,0,0,0.7)";
             ctx.lineWidth = 3;
             ctx.lineJoin = "round";
-            const fsBold = Math.round(fontSize);
-            const fsNorm = Math.max(6, fsBold - 1);
-            let dy = by;
-            if (latin) {
-              ctx.font = `${fsNorm}px 'Segoe UI', system-ui, sans-serif`;
-              ctx.textBaseline = "top";
-              ctx.strokeText(latin, bx, dy);
-              ctx.fillStyle = "#e5e7eb";
-              ctx.fillText(latin, bx, dy);
-              dy += lineH;
-            }
-            if (modern) {
-              ctx.font = `bold ${fsBold}px 'Segoe UI', system-ui, sans-serif`;
-              ctx.textBaseline = "top";
-              ctx.strokeText(modern, bx, dy);
-              ctx.fillStyle = "#ffffff";
-              ctx.fillText(modern, bx, dy);
-            }
+            ctx.strokeText(label, cx, cy);
+            ctx.fillStyle = color;
+            ctx.globalAlpha = 0.85;
+            ctx.fillText(label, cx, cy);
+            ctx.globalAlpha = 1;
             ctx.restore();
+          } else if (labelCount < MAX_LABELS) {
+            const charW = fontSize * 0.55;
+            const lineH = fontSize * 1.3;
+            const boxW = Math.max(
+              modern ? modern.length * charW : 0,
+              latin  ? latin.length  * charW : 0
+            );
+            const boxH = (modern ? lineH : 0) + (latin ? lineH : 0);
+            const bx = x + 2;
+            const by = y + Math.max(2, h - boxH - 2) + lineH * 0.3;
+            const skipOverlap = zoom >= (S.isMobile ? LP.labelPadZoomThreshMobile : LP.labelPadZoomThresh);
+            let overlaps = false;
+            if (!skipOverlap) {
+              for (const r of labelRects) {
+                if (bx < r.x2 && bx + boxW > r.x1 && by < r.y2 && by + boxH > r.y1) {
+                  overlaps = true; break;
+                }
+              }
+            }
+            if (!overlaps) {
+              const reserveW = Math.min(boxW, w);
+              labelRects.push({ x1: bx - LABEL_PAD, y1: by - LABEL_PAD,
+                                x2: bx + reserveW + LABEL_PAD, y2: by + boxH + LABEL_PAD });
+              labelCount++;
+              ctx.save();
+              ctx.strokeStyle = "rgba(0,0,0,0.8)";
+              ctx.lineWidth = 3;
+              ctx.lineJoin = "round";
+              const fsBold = Math.round(fontSize);
+              const fsNorm = Math.max(6, fsBold - 1);
+              let dy = by;
+              if (latin) {
+                ctx.font = `${fsNorm}px 'Segoe UI', system-ui, sans-serif`;
+                ctx.textBaseline = "top";
+                ctx.strokeText(latin, bx, dy);
+                ctx.fillStyle = "#e5e7eb";
+                ctx.fillText(latin, bx, dy);
+                dy += lineH;
+              }
+              if (modern) {
+                ctx.font = `bold ${fsBold}px 'Segoe UI', system-ui, sans-serif`;
+                ctx.textBaseline = "top";
+                ctx.strokeText(modern, bx, dy);
+                ctx.fillStyle = "#ffffff";
+                ctx.fillText(modern, bx, dy);
+              }
+              ctx.restore();
+            }
           }
         }
       }
