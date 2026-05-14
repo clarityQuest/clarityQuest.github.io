@@ -1062,11 +1062,15 @@ function setupControls() {
     focusSegment(S.selectedSegment);
   });
   document.getElementById("control-fullpage").addEventListener("click", () => {
-    if (S.viewer.isFullPage()) {
-      S.viewer.setFullScreen(false);
+    if (document.fullscreenElement) {
+      document.exitFullscreen();
     } else {
-      S.viewer.setFullScreen(true);
+      document.documentElement.requestFullscreen();
     }
+  });
+  document.addEventListener("fullscreenchange", () => {
+    // Let OSD adapt to the new size after fullscreen transition
+    setTimeout(() => renderMarkers(), 150);
   });
 
   // Calibration overlay toggle
@@ -1365,7 +1369,7 @@ function setupInteraction() {
   });
 
   S.viewer.addHandler("canvas-click", (e) => {
-    if (S.isMobile && !e.quick) return;
+    if (!e.quick) return;  // ignore pans and long-press (applies to all devices)
     e.preventDefaultAction = true;
     const pos = e.position;
     const elRect = S.viewer.element.getBoundingClientRect();

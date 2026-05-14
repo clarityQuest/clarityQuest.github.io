@@ -834,10 +834,11 @@ function loadUlmImageById(ulmId, targetDataId) {
   const city = cities.find(c => c.ulm_id === ulmId && c.data_id === targetDataId)
              || cities[idx];
   const directUrl = city?.ulm_img_url || null;
+  const base = `https://tp-online.ku.de/insetimages/TPPlace${ulmId}insetneu`;
+  // Always try both extensions; stored URL goes first, then the alternate
   const candidates = directUrl
-    ? [directUrl]
-    : [`https://tp-online.ku.de/insetimages/TPPlace${ulmId}insetneu.png`,
-       `https://tp-online.ku.de/insetimages/TPPlace${ulmId}insetneu.jpg`];
+    ? [directUrl, directUrl.endsWith('.jpg') ? `${base}.png` : `${base}.jpg`]
+    : [`${base}.png`, `${base}.jpg`];
 
   const tryNext = (i) => {
     if (i >= candidates.length) { setUlmImg(null); return; }
