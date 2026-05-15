@@ -87,6 +87,7 @@
       </div>
       <dl id="panel-details"></dl>
       <div id="panel-map" class="hidden"></div>
+      <div id="panel-ulm-label" class="hidden" data-i18n="tabula_view_label">Original Tabula Peutingeriana view</div>
       <div id="panel-ulm-section" class="hidden">
         <a id="panel-ulm-link" href="#" target="_blank" rel="noopener" title="Open in Ulm Database">
           <img id="panel-ulm-img" src="" alt="ULM database image" />
@@ -95,11 +96,14 @@
       <div id="panel-sources">Data: <a href="https://www.tabula-peutingeriana.de/" target="_blank" rel="noopener">tabula-peutingeriana.de</a> (M. Weber) · <a href="https://tp-online.ku.de/" target="_blank" rel="noopener">tp-online.ku.de</a> (Univ. Ulm) · Image: <a href="https://commons.wikimedia.org/wiki/File:Tabula_Peutingeriana.jpg" target="_blank" rel="noopener">K. Miller, 1887</a> · Map: © <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener">OpenStreetMap</a> contributors</div>
     </aside>
 
+    <!-- About modal backdrop -->
+    <div id="about-modal-backdrop" class="hidden"></div>
+
     <!-- About Panel -->
     <aside id="about-panel" class="hidden">
       <button id="close-about" aria-label="Close">&times;</button>
       <h2 class="about-title">Tabula Peutingeriana</h2>
-      <p class="about-subtitle">The Road Map of the Ancient World</p>
+      <p class="about-subtitle" data-i18n="about_subtitle">The Road Map of the Ancient World</p>
 
       <div id="about-lang-row">
         <button class="lang-btn" data-lang="de">&#127465;&#127466; Deutsch</button>
@@ -108,63 +112,63 @@
       </div>
 
       <section class="about-section">
-        <p>The Tabula Peutingeriana is one of the most remarkable surviving documents of antiquity — a medieval copy of a Roman road map that charts the entire known world, from the Atlantic coast of Britain to the Indian subcontinent, in extraordinary detail.</p>
+        <p data-i18n="about_intro">The Tabula Peutingeriana is one of the most remarkable surviving documents of antiquity — a medieval copy of a Roman road map that charts the entire known world, from the Atlantic coast of Britain to the Indian subcontinent, in extraordinary detail.</p>
       </section>
 
       <section class="about-section">
-        <h3>At a Glance</h3>
+        <h3 data-i18n="about_glance_h">At a Glance</h3>
         <dl class="about-facts">
-          <div><dt>Original date</dt><dd>c. 4th – 5th century AD</dd></div>
-          <div><dt>Surviving copy</dt><dd>c. 1200 AD (Colmar scriptorium)</dd></div>
-          <div><dt>Dimensions</dt><dd>6.75 m long · 34 cm tall (scroll)</dd></div>
-          <div><dt>Cities &amp; places</dt><dd>~3,500 names across 12 segments</dd></div>
-          <div><dt>Preserved at</dt><dd>Österreichische Nationalbibliothek, Vienna</dd></div>
-          <div><dt>UNESCO status</dt><dd>Memory of the World (2007)</dd></div>
-          <div><dt>Named after</dt><dd>Konrad Peutinger (1465–1547), German humanist</dd></div>
+          <div><dt data-i18n="about_orig_date">Original date</dt><dd data-i18n="about_orig_date_v">c. 4th – 5th century AD</dd></div>
+          <div><dt data-i18n="about_copy">Surviving copy</dt><dd data-i18n="about_copy_v">c. 1200 AD (Colmar scriptorium)</dd></div>
+          <div><dt data-i18n="about_dims">Dimensions</dt><dd data-i18n="about_dims_v">6.75 m long · 34 cm tall (scroll)</dd></div>
+          <div><dt data-i18n="about_cities">Cities &amp; places</dt><dd data-i18n="about_cities_v">~3,500 names across 12 segments</dd></div>
+          <div><dt data-i18n="about_preserved">Preserved at</dt><dd data-i18n="about_preserved_v">&#214;sterreichische Nationalbibliothek, Vienna</dd></div>
+          <div><dt data-i18n="about_unesco">UNESCO status</dt><dd data-i18n="about_unesco_v">Memory of the World (2007)</dd></div>
+          <div><dt data-i18n="about_named">Named after</dt><dd data-i18n="about_named_v">Konrad Peutinger (1465&#8211;1547), German humanist</dd></div>
         </dl>
       </section>
 
       <section class="about-section">
-        <h3>A Map Unlike Any Other</h3>
-        <p>This is not a geographic map in the modern sense. The scroll format forced the cartographer to compress the north-south dimension dramatically — the Mediterranean Sea appears as a narrow strip, and Italy is rotated almost horizontally. What matters is <em>connectivity</em>: roads, distances in Roman miles (<em>milia passuum</em>), and the cities they link.</p>
-        <p>Three cities receive special pictorial treatment — <strong>Rome</strong>, <strong>Constantinople</strong>, and <strong>Antioch</strong> — each shown as an enthroned figure, reflecting their supreme importance in the late Roman world.</p>
+        <h3 data-i18n="about_map_h">A Map Unlike Any Other</h3>
+        <p data-i18n-html="about_map_p1">This is not a geographic map in the modern sense. The scroll format forced the cartographer to compress the north-south dimension dramatically — the Mediterranean Sea appears as a narrow strip, and Italy is rotated almost horizontally. What matters is <em>connectivity</em>: roads, distances in Roman miles (<em>milia passuum</em>), and the cities they link.</p>
+        <p data-i18n-html="about_map_p2">Three cities receive special pictorial treatment — <strong>Rome</strong>, <strong>Constantinople</strong>, and <strong>Antioch</strong> — each shown as an enthroned figure, reflecting their supreme importance in the late Roman world.</p>
       </section>
 
       <section class="about-section">
-        <h3>The Lost Segment</h3>
-        <p>Segment I — covering Britain (except the southeast), the Iberian Peninsula, and the Atlantic coast of Morocco — has been lost since at least the 16th century. The remaining eleven segments survive intact, making this viewer's collection complete for Segments II through XII.</p>
+        <h3 data-i18n="about_lost_h">The Lost Segment</h3>
+        <p data-i18n="about_lost_p">Segment I — covering Britain (except the southeast), the Iberian Peninsula, and the Atlantic coast of Morocco — has been lost since at least the 16th century. The remaining eleven segments survive intact, making this viewer's collection complete for Segments II through XII.</p>
       </section>
 
       <section class="about-section">
-        <h3>History of the Document</h3>
-        <p>The map was copied around 1200 AD by a monk in Colmar (Alsace), likely from an earlier Carolingian copy of a late antique original. Konrad Celtes discovered it in 1494 and passed it to Konrad Peutinger of Augsburg, who gave it its modern name. After Peutinger's death it passed through various hands before entering the Imperial Library in Vienna in 1738, where it remains today.</p>
+        <h3 data-i18n="about_hist_h">History of the Document</h3>
+        <p data-i18n="about_hist_p">The map was copied around 1200 AD by a monk in Colmar (Alsace), likely from an earlier Carolingian copy of a late antique original. Konrad Celtes discovered it in 1494 and passed it to Konrad Peutinger of Augsburg, who gave it its modern name. After Peutinger's death it passed through various hands before entering the Imperial Library in Vienna in 1738, where it remains today.</p>
       </section>
 
       <section class="about-section about-links-section">
-        <h3>Learn More</h3>
+        <h3 data-i18n="about_learn_h">Learn More</h3>
         <div class="about-links">
           <a class="about-link" href="https://en.wikipedia.org/wiki/Tabula_Peutingeriana" target="_blank" rel="noopener">
-            <span class="about-link-icon">📖</span>
+            <span class="about-link-icon">&#128214;</span>
             <span>Wikipedia – Tabula Peutingeriana</span>
           </a>
           <a class="about-link" href="https://www.onb.ac.at/en/library/collections/manuscripts-and-rare-books/highlights-of-the-collection/tabula-peutingeriana" target="_blank" rel="noopener">
-            <span class="about-link-icon">🏛</span>
-            <span>Österreichische Nationalbibliothek</span>
+            <span class="about-link-icon">&#127963;</span>
+            <span>&#214;sterreichische Nationalbibliothek</span>
           </a>
           <a class="about-link" href="https://www.tabula-peutingeriana.de/" target="_blank" rel="noopener">
-            <span class="about-link-icon">🗺</span>
+            <span class="about-link-icon">&#128506;</span>
             <span>tabula-peutingeriana.de (M. Weber)</span>
           </a>
           <a class="about-link" href="https://tp-online.ku.de/" target="_blank" rel="noopener">
-            <span class="about-link-icon">🔬</span>
-            <span>Universität Ulm – tp-online.ku.de</span>
+            <span class="about-link-icon">&#128300;</span>
+            <span>Universit&#228;t Ulm – tp-online.ku.de</span>
           </a>
           <a class="about-link" href="https://www.youtube.com/results?search_query=Tabula+Peutingeriana" target="_blank" rel="noopener">
-            <span class="about-link-icon">▶</span>
+            <span class="about-link-icon">&#9654;</span>
             <span>YouTube – Tabula Peutingeriana documentaries</span>
           </a>
           <a class="about-link" href="https://commons.wikimedia.org/wiki/File:Tabula_Peutingeriana.jpg" target="_blank" rel="noopener">
-            <span class="about-link-icon">🖼</span>
+            <span class="about-link-icon">&#128444;</span>
             <span>Full map image (Wikimedia Commons)</span>
           </a>
         </div>
@@ -215,6 +219,6 @@
   </div>
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/openseadragon/4.1.0/openseadragon.min.js"></script>
-  <script src="main.js?v=20260515c"></script>
+  <script src="main.js?v=20260515d"></script>
 </body>
 </html>

@@ -181,7 +181,8 @@ body, html {
 #panel-segment-badge { font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,0.06); border: 1px solid var(--border-color); border-radius: 4px; padding: 3px 8px; white-space: nowrap; }
 /* Links row: standalone block below the type badge */
 #panel-links { display: flex; flex-wrap: wrap; gap: 6px; margin: 8px 0; }
-.panel-link { font-size: 14px; color: var(--accent); text-decoration: none; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); border-radius: 4px; padding: 3px 8px; }
+.panel-link { font-size: 16px; color: var(--accent); text-decoration: none; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.25); border-radius: 4px; padding: 4px 10px; }
+#panel-ulm-label { font-size: 11px; color: var(--text-muted); text-transform: uppercase; letter-spacing: .06em; margin-top: 14px; margin-bottom: 4px; }
 .panel-link:hover { background: rgba(59,130,246,0.2); text-decoration: none; }
 /* Language buttons (used in About panel) */
 .lang-btn { padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border-color); background: transparent; color: var(--text-muted); font-size: 12px; cursor: pointer; line-height: 1.5; transition: color 0.15s, border-color 0.15s; }
@@ -254,19 +255,29 @@ body, html {
 #region-solo-btn:hover { border-style: dashed !important; }
 #region-solo-btn.active { border-style: solid !important; border-color: #7c3aed !important; color: #c4b5fd !important; background: rgba(124,58,237,0.22) !important; }
 
-/* About Panel */
+/* About modal backdrop */
+#about-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.55);
+  z-index: 28;
+  cursor: default;
+}
+
+/* About Panel – centered modal */
 #about-panel {
-  position: absolute;
-  right: 20px; top: 60px;
-  width: 480px; max-width: calc(100vw - 40px);
+  position: fixed;
+  top: 50%; left: 50%;
+  transform: translate(-50%, -50%);
+  width: 680px; max-width: calc(100vw - 24px);
+  max-height: 88vh;
   background: var(--panel-bg);
   border: 1px solid var(--border-color);
-  border-radius: 10px; padding: 24px 24px 16px;
+  border-radius: 12px; padding: 28px 28px 20px;
   z-index: 30;
-  box-shadow: 0 8px 32px rgba(0,0,0,0.6);
+  box-shadow: 0 16px 48px rgba(0,0,0,0.75);
   pointer-events: auto;
   overflow-y: auto;
-  max-height: calc(100vh - 80px);
 }
 #close-about {
   position: absolute; top: 12px; right: 12px;

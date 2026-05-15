@@ -90,6 +90,25 @@ const I18N = {
     wiki_link: "Wikipedia ↗", ulm_link: "Ulm DB ↗",
     unknown_modern: "(unknown modern name)",
     wiki_lang: "en",
+    tabula_view_label: "Original Tabula Peutingeriana view",
+    about_subtitle: "The Road Map of the Ancient World",
+    about_intro: "The Tabula Peutingeriana is one of the most remarkable surviving documents of antiquity — a medieval copy of a Roman road map that charts the entire known world, from the Atlantic coast of Britain to the Indian subcontinent, in extraordinary detail.",
+    about_glance_h: "At a Glance",
+    about_orig_date: "Original date", about_orig_date_v: "c. 4th – 5th century AD",
+    about_copy: "Surviving copy",     about_copy_v: "c. 1200 AD (Colmar scriptorium)",
+    about_dims: "Dimensions",         about_dims_v: "6.75 m long · 34 cm tall (scroll)",
+    about_cities: "Cities & places",  about_cities_v: "~3,500 names across 12 segments",
+    about_preserved: "Preserved at",  about_preserved_v: "Österreichische Nationalbibliothek, Vienna",
+    about_unesco: "UNESCO status",    about_unesco_v: "Memory of the World (2007)",
+    about_named: "Named after",       about_named_v: "Konrad Peutinger (1465–1547), German humanist",
+    about_map_h: "A Map Unlike Any Other",
+    about_map_p1: "This is not a geographic map in the modern sense. The scroll format forced the cartographer to compress the north-south dimension dramatically — the Mediterranean Sea appears as a narrow strip, and Italy is rotated almost horizontally. What matters is <em>connectivity</em>: roads, distances in Roman miles (<em>milia passuum</em>), and the cities they link.",
+    about_map_p2: "Three cities receive special pictorial treatment — <strong>Rome</strong>, <strong>Constantinople</strong>, and <strong>Antioch</strong> — each shown as an enthroned figure, reflecting their supreme importance in the late Roman world.",
+    about_lost_h: "The Lost Segment",
+    about_lost_p: "Segment I — covering Britain (except the southeast), the Iberian Peninsula, and the Atlantic coast of Morocco — has been lost since at least the 16th century. The remaining eleven segments survive intact, making this viewer's collection complete for Segments II through XII.",
+    about_hist_h: "History of the Document",
+    about_hist_p: "The map was copied around 1200 AD by a monk in Colmar (Alsace), likely from an earlier Carolingian copy of a late antique original. Konrad Celtes discovered it in 1494 and passed it to Konrad Peutinger of Augsburg, who gave it its modern name. After Peutinger's death it passed through various hands before entering the Imperial Library in Vienna in 1738, where it remains today.",
+    about_learn_h: "Learn More",
   },
   de: {
     city: "Stadt", port: "Hafen", road_station: "Straßenstation",
@@ -101,6 +120,25 @@ const I18N = {
     wiki_link: "Wikipedia ↗", ulm_link: "Ulm DB ↗",
     unknown_modern: "(moderner Name unbekannt)",
     wiki_lang: "de",
+    tabula_view_label: "Originalansicht der Tabula Peutingeriana",
+    about_subtitle: "Die Straßenkarte der antiken Welt",
+    about_intro: "Die Tabula Peutingeriana ist eines der bemerkenswertesten erhaltenen Dokumente der Antike — eine mittelalterliche Kopie einer römischen Straßenkarte, die die gesamte bekannte Welt von der Atlantikküste Britanniens bis zum indischen Subkontinent in außerordentlicher Detailtreue erfasst.",
+    about_glance_h: "Auf einen Blick",
+    about_orig_date: "Ursprüngliches Datum", about_orig_date_v: "ca. 4.–5. Jahrhundert n. Chr.",
+    about_copy: "Erhaltene Kopie",           about_copy_v: "ca. 1200 n. Chr. (Skriptorium Colmar)",
+    about_dims: "Abmessungen",               about_dims_v: "6,75 m lang · 34 cm hoch (Rolle)",
+    about_cities: "Städte & Orte",           about_cities_v: "ca. 3.500 Namen auf 12 Segmenten",
+    about_preserved: "Aufbewahrt in",        about_preserved_v: "Österreichische Nationalbibliothek, Wien",
+    about_unesco: "UNESCO-Status",           about_unesco_v: "Memory of the World (2007)",
+    about_named: "Benannt nach",             about_named_v: "Konrad Peutinger (1465–1547), deutscher Humanist",
+    about_map_h: "Eine Karte wie keine andere",
+    about_map_p1: "Dies ist keine geographische Karte im modernen Sinne. Das Rollenformat zwang den Kartographen, die Nord-Süd-Ausdehnung dramatisch zu komprimieren — das Mittelmeer erscheint als schmaler Streifen, und Italien ist fast horizontal gedreht. Entscheidend ist die <em>Vernetzung</em>: Straßen, Entfernungen in römischen Meilen (<em>milia passuum</em>) und die Städte, die sie verbinden.",
+    about_map_p2: "Drei Städte erhalten eine besondere bildliche Darstellung — <strong>Rom</strong>, <strong>Konstantinopel</strong> und <strong>Antiochien</strong> — jeweils als thronende Figur, was ihre überragende Bedeutung in der spätrömischen Welt widerspiegelt.",
+    about_lost_h: "Das verlorene Segment",
+    about_lost_p: "Segment I — das Britannien (außer dem Südosten), die iberische Halbinsel und die atlantische Küste Marokkos umfasste — ist seit mindestens dem 16. Jahrhundert verloren. Die übrigen elf Segmente sind vollständig erhalten, sodass diese Sammlung für die Segmente II bis XII vollständig ist.",
+    about_hist_h: "Geschichte des Dokuments",
+    about_hist_p: "Die Karte wurde um 1200 n. Chr. von einem Mönch in Colmar (Elsass) kopiert, wahrscheinlich nach einer früheren karolingischen Kopie eines spätantiken Originals. Konrad Celtes entdeckte sie 1494 und übergab sie Konrad Peutinger aus Augsburg, der ihr ihren heutigen Namen gab. Nach Peutingers Tod gelangte sie über verschiedene Hände in die Kaiserliche Bibliothek in Wien (1738), wo sie bis heute aufbewahrt wird.",
+    about_learn_h: "Mehr erfahren",
   },
 };
 
@@ -222,11 +260,27 @@ function setLang(lang) {
   if (S.selectedPlace) showInfoPanel(S.selectedPlace);
 }
 
-function updateLangButtons() {
+function applyI18n() {
+  const dict = I18N[getLang()] || I18N.en;
+  document.querySelectorAll("[data-i18n]").forEach(el => {
+    const v = dict[el.dataset.i18n];
+    if (v != null) el.textContent = v;
+  });
+  document.querySelectorAll("[data-i18n-html]").forEach(el => {
+    const v = dict[el.dataset.i18nHtml];
+    if (v != null) el.innerHTML = v;
+  });
   document.querySelectorAll(".lang-btn").forEach(btn => {
     btn.classList.toggle("active", btn.dataset.lang === S.lang);
   });
+  document.querySelectorAll(".type-filter-btn[data-type]").forEach(btn => {
+    const type = btn.dataset.type;
+    const label = dict[type] || TYPE_LABELS[type] || type;
+    btn.innerHTML = `<span class="tf-dot" style="background:${TYPE_COLORS[type]}"></span>${label}`;
+    btn.title = label;
+  });
 }
+function updateLangButtons() { applyI18n(); }
 
 /* ============================================================
    Data loading
@@ -573,12 +627,12 @@ function renderMillerOverlay(ctx) {
       const isArea = ["region", "roman_province", "modern_state", "people"].includes(item.type);
       if (isArea) {
         ctx.fillStyle = color;
-        ctx.globalAlpha = 0.07 * ma;
+        ctx.globalAlpha = 0.15 * ma;
         ctx.fillRect(x, y, w, h);
-        ctx.globalAlpha = 0.35 * ma;
+        ctx.globalAlpha = 0.6 * ma;
         ctx.strokeStyle = color;
-        ctx.lineWidth = 1.5;
-        ctx.setLineDash([7, 5]);
+        ctx.lineWidth = 2;
+        ctx.setLineDash([8, 5]);
         ctx.strokeRect(x, y, w, h);
         ctx.setLineDash([]);
         ctx.globalAlpha = 1;
@@ -993,9 +1047,10 @@ function showInfoPanel(place) {
   // Country shown in header, right after modern name
   const panelCountry = document.getElementById("panel-country");
   if (panelCountry) {
-    const flagHtml = countryFlagHtml(place.country);
     if (place.country) {
-      panelCountry.innerHTML = (flagHtml ? flagHtml + " " : "") + escHtml(place.country);
+      const flagHtml = countryFlagHtml(place.country);
+      const names = place.country.split("|").map(c => countryName(c)).filter(Boolean).join(" / ");
+      panelCountry.innerHTML = (flagHtml ? flagHtml + " " : "") + escHtml(names);
       panelCountry.classList.remove("hidden");
     } else {
       panelCountry.innerHTML = "";
@@ -1054,6 +1109,7 @@ function showInfoPanel(place) {
 
   // ULM image preview (desktop only — hidden via CSS on mobile)
   const ulmSection = document.getElementById("panel-ulm-section");
+  const ulmLabel = document.getElementById("panel-ulm-label");
   if (ulmSection) {
     const ulmHref = tpOnlineHref(place);
     const ulmImg = document.getElementById("panel-ulm-img");
@@ -1062,9 +1118,11 @@ function showInfoPanel(place) {
       if (ulmImg) ulmImg.src = place.ulm_img_url;
       if (ulmLinkEl) ulmLinkEl.href = ulmHref || "#";
       ulmSection.classList.remove("hidden");
+      if (ulmLabel) ulmLabel.classList.remove("hidden");
     } else {
       if (ulmImg) ulmImg.src = "";
       ulmSection.classList.add("hidden");
+      if (ulmLabel) ulmLabel.classList.add("hidden");
     }
   }
 
@@ -1261,6 +1319,7 @@ function setupControls() {
     if (e.key === "Escape") {
       hideInfoPanel();
       document.getElementById("about-panel")?.classList.add("hidden");
+      document.getElementById("about-modal-backdrop")?.classList.add("hidden");
     }
   });
   document.addEventListener("click", (e) => {
@@ -1268,12 +1327,6 @@ function setupControls() {
     if (!panel.classList.contains("hidden")) {
       if (Date.now() - infoPanelOpenedAt < 150) return;
       if (!e.target.closest("#info-panel")) hideInfoPanel();
-    }
-    const aboutPanel = document.getElementById("about-panel");
-    if (!aboutPanel.classList.contains("hidden")) {
-      if (!e.target.closest("#about-panel") && !e.target.closest("#about-btn")) {
-        aboutPanel.classList.add("hidden");
-      }
     }
   });
 
@@ -1395,9 +1448,22 @@ function setupTypeFilters() {
   const aboutBtn = document.getElementById("about-btn");
   const aboutPanel = document.getElementById("about-panel");
   const closeAbout = document.getElementById("close-about");
+  const aboutBackdrop = document.getElementById("about-modal-backdrop");
+  function openAboutPanel() {
+    aboutPanel.classList.remove("hidden");
+    aboutBackdrop?.classList.remove("hidden");
+  }
+  function closeAboutPanel() {
+    aboutPanel.classList.add("hidden");
+    aboutBackdrop?.classList.add("hidden");
+  }
   if (aboutBtn && aboutPanel) {
-    aboutBtn.addEventListener("click", () => aboutPanel.classList.toggle("hidden"));
-    closeAbout?.addEventListener("click", () => aboutPanel.classList.add("hidden"));
+    aboutBtn.addEventListener("click", () => {
+      if (aboutPanel.classList.contains("hidden")) openAboutPanel();
+      else closeAboutPanel();
+    });
+    closeAbout?.addEventListener("click", closeAboutPanel);
+    aboutBackdrop?.addEventListener("click", closeAboutPanel);
   }
 }
 
@@ -1650,6 +1716,18 @@ const COUNTRY_TO_ISO2 = {
   IR:"IR",JOR:"JO",GE:"GE",ARM:"AM",AZ:"AZ",RUS:"RU",UA:"UA",TM:"TM",
   PAK:"PK",AFG:"AF",IND:"IN",ET:"EG",IRE:"IE",
 };
+
+const ISO2_COUNTRY_NAME = {
+  en: { DE:"Germany",AT:"Austria",IT:"Italy",FR:"France",ES:"Spain",PT:"Portugal",HU:"Hungary",BE:"Belgium",NL:"Netherlands",CH:"Switzerland",CY:"Cyprus",GB:"United Kingdom",GR:"Greece",TR:"Turkey",BG:"Bulgaria",RO:"Romania",HR:"Croatia",AL:"Albania",MK:"North Macedonia",ME:"Montenegro",BA:"Bosnia & Herzegovina",RS:"Serbia",SI:"Slovenia",XK:"Kosovo",VA:"Vatican",TN:"Tunisia",DZ:"Algeria",MA:"Morocco",LY:"Libya",IL:"Israel",LB:"Lebanon",SY:"Syria",IQ:"Iraq",IR:"Iran",JO:"Jordan",GE:"Georgia",AM:"Armenia",AZ:"Azerbaijan",RU:"Russia",UA:"Ukraine",TM:"Turkmenistan",PK:"Pakistan",AF:"Afghanistan",IN:"India",EG:"Egypt",IE:"Ireland" },
+  de: { DE:"Deutschland",AT:"Österreich",IT:"Italien",FR:"Frankreich",ES:"Spanien",PT:"Portugal",HU:"Ungarn",BE:"Belgien",NL:"Niederlande",CH:"Schweiz",CY:"Zypern",GB:"Großbritannien",GR:"Griechenland",TR:"Türkei",BG:"Bulgarien",RO:"Rumänien",HR:"Kroatien",AL:"Albanien",MK:"Nordmazedonien",ME:"Montenegro",BA:"Bosnien-Herzegowina",RS:"Serbien",SI:"Slowenien",XK:"Kosovo",VA:"Vatikan",TN:"Tunesien",DZ:"Algerien",MA:"Marokko",LY:"Libyen",IL:"Israel",LB:"Libanon",SY:"Syrien",IQ:"Irak",IR:"Iran",JO:"Jordanien",GE:"Georgien",AM:"Armenien",AZ:"Aserbaidschan",RU:"Russland",UA:"Ukraine",TM:"Turkmenistan",PK:"Pakistan",AF:"Afghanistan",IN:"Indien",EG:"Ägypten",IE:"Irland" },
+};
+
+function countryName(rawCode) {
+  const t = (rawCode || "").trim();
+  const iso = COUNTRY_TO_ISO2[t] || (t.length === 2 ? t.toUpperCase() : null);
+  if (!iso) return t;
+  return (ISO2_COUNTRY_NAME[getLang()] || ISO2_COUNTRY_NAME.en)[iso] || iso;
+}
 
 function countryFlags(raw) {
   if (!raw) return "";
@@ -2045,44 +2123,46 @@ async function init() {
   S.viewer.addHandler("animation", renderMarkers);
   S.viewer.addHandler("animation-finish", renderMarkers);
   S.viewer.addHandler("resize", () => { sizeCanvas(); renderMarkers(); });
+  function showAboutPanelOnStartup() {
+    const ap = document.getElementById("about-panel");
+    const bd = document.getElementById("about-modal-backdrop");
+    ap?.classList.remove("hidden");
+    bd?.classList.remove("hidden");
+  }
+
   S.viewer.addHandler("open", () => {
     sizeCanvas();
-    // Do NOT focusSegment/renderMarkers here — clientHeight may not be settled
-    // yet, which causes focusSegment to compute a wrong zoom and fonts appear
-    // too large. The ResizeObserver below fires once layout has settled and
-    // does the first correct focus + render.
+    // OSD calls goHome(true) right after firing "open" — we override that in the
+    // next animation frame once layout has also settled.
+    requestAnimationFrame(() => {
+      sizeCanvas();
+      if (!initialFocused) {
+        focusStartup(true);
+        initialFocused = true;
+        showAboutPanelOnStartup();
+      }
+      renderMarkers();
+    });
   });
 
-  // ResizeObserver fires after CSS layout settles, guaranteeing correct
-  // clientWidth/clientHeight when we compute the initial zoom.
-  let roSettled = false;
+  // ResizeObserver keeps the canvas sized correctly on window resize.
   const ro = new ResizeObserver(() => {
     const w = S.viewer.element.clientWidth;
     const h = S.viewer.element.clientHeight;
     if (!w || !h || !S.viewer.viewport) return;
     sizeCanvas();
-    if (!roSettled) {
-      roSettled = true;
-      if (!initialFocused) {
-        focusStartup(true);
-        initialFocused = true;
-      }
-      document.getElementById("about-panel")?.classList.remove("hidden");
-    }
     renderMarkers();
   });
   ro.observe(S.viewer.element);
 
-  // Fallback: if ResizeObserver doesn't fire within 300 ms (rare), force init.
+  // Fallback: if "open" never fires within 500 ms (very rare), force init.
   setTimeout(() => {
-    if (roSettled || !S.viewer.viewport) return;
-    roSettled = true;
-    const w = S.viewer.element.clientWidth;
-    const h = S.viewer.element.clientHeight;
-    if (!initialFocused) { focusStartup(true); initialFocused = true; }
-    document.getElementById("about-panel")?.classList.remove("hidden");
+    if (initialFocused || !S.viewer.viewport) return;
+    focusStartup(true);
+    initialFocused = true;
+    showAboutPanelOnStartup();
     renderMarkers();
-  }, 300);
+  }, 500);
 
   window.addEventListener("resize", () => { sizeCanvas(); renderMarkers(); });
 
@@ -2094,6 +2174,7 @@ async function init() {
   setupSearch();
   setupInteraction();
   initSettingsPanel();
+  applyI18n(); // apply language to About panel content and type filter labels
 
   console.log(`Tabula Peutingeriana loaded: ${S.places.length} seg4 places, ${S.millerCalib.length} Miller calibrations`);
 
