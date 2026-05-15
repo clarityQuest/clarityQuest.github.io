@@ -1130,16 +1130,12 @@ function showInfoPanel(place) {
     }
   }
 
-  // Wikipedia link — modern name preferred (language-aware).
-  // Fallback: Latin name with classical V→U normalisation on en.wikipedia.org,
-  // since "Lugdunensis" finds articles that "Lvgdvnensis" never would.
+  // Wikipedia / Google link — strategy varies by type and name quality (see buildWikiUrl)
   const wikiLink = document.getElementById("panel-wiki-link");
   if (wikiLink) {
-    const latin = place.latin_std || place.latin || "";
-    const searchTerm = place.modern || normalizeLatinV(latin) || latin;
-    if (searchTerm) {
-      const wikiLang = place.modern ? getText("wiki_lang") : "en";
-      wikiLink.href = `https://${wikiLang}.wikipedia.org/w/index.php?search=${encodeURIComponent(searchTerm)}`;
+    const hasAnyName = !!(place.modern || place.latin_std || place.latin);
+    if (hasAnyName) {
+      wikiLink.href = buildWikiUrl(place);
       wikiLink.textContent = getText("wiki_link");
       wikiLink.classList.remove("hidden");
     } else {
@@ -1737,6 +1733,52 @@ function normalizeLatinV(s) {
     if (!prev || /[\s\-_]/.test(prev)) return ch; // word-initial V = consonant, keep
     return ch === ch.toUpperCase() ? 'U' : 'u';   // non-initial V = vowel → U
   });
+}
+
+function cleanModernForWiki(modern) {
+  if (!modern) return '';
+  let s = modern.split(' / ')[0].trim();                                         // first alt only
+  s = s.replace(/\s*\([^)]*\)/g, '').trim();                                    // strip (parentheticals)
+  s = s.replace(/,\s+\S.*$/, '').trim();                                         // strip ", Country / extra"
+  s = s.replace(/\s+(?:near|bei|b\.|prope|am|an\s+der|an\s+dem)\s+\S.*/i, '').trim(); // strip location qualifiers
+  return s;
+}
+
+function buildWikiUrl(place) {
+  const modern  = place.modern || '';
+  const latin   = place.latin_std || place.latin || '';
+  const type    = place.type || '';
+  const wikiLang = getText('wiki_lang'); // "en" | "de"
+
+  const cleanMod = cleanModernForWiki(modern);
+  // Treat modern as useless if it's just a repeat of the Latin (e.g. "Africa / Africa proconsularis")
+  const norm = s => s.toLowerCase().replace(/[^a-z]/g, '');
+  const hasUsefulModern = cleanMod.length > 0 && norm(cleanMod) !== norm(latin.split('/')[0]);
+
+  if (hasUsefulModern) {
+    return `https://${wikiLang}.wikipedia.org/w/index.php?search=${encodeURIComponent(cleanMod)}`;
+  }
+
+  // No useful modern name — type-specific strategy
+  const cleanLatin = latin.split('/')[0].replace(/[\[\]~]/g, '').trim();
+  const normLatin  = normalizeLatinV(cleanLatin);
+
+  if (type === 'people') {
+    // Peoples often have completely different modern names (Sauromatae → Sarmatians);
+    // Google handles these much better than Wikipedia search alone.
+    const q = `${normLatin} ancient tribe wikipedia`;
+    return `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+  }
+
+  if (type === 'region' || type === 'roman_province') {
+    // "Africa Roman province wikipedia" finds Africa_(Roman_province) etc.
+    // Keep original Latin casing (no V→U) so Google sees familiar province names.
+    const q = `${cleanLatin} Roman province wikipedia`;
+    return `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+  }
+
+  // Default: normalized Latin on English Wikipedia
+  return `https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(normLatin || cleanLatin)}`;
 }
 
 function countryName(rawCode) {
