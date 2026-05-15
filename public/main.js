@@ -1093,7 +1093,8 @@ function showInfoPanel(place) {
   const panelMap = document.getElementById("panel-map");
   const lat = Number(place.lat), lng = Number(place.lng);
   if (panelMap) {
-    const hasCoords = Number.isFinite(lat) && Number.isFinite(lng) &&
+    const hasCoords = place.lat != null && place.lng != null &&
+                      Number.isFinite(lat) && Number.isFinite(lng) &&
                       lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180;
     if (hasCoords) {
       const dLon = 0.9, dLat = 0.55;
@@ -1126,12 +1127,13 @@ function showInfoPanel(place) {
     }
   }
 
-  // Wikipedia link (language-aware)
+  // Wikipedia link — modern name preferred; Latin name as fallback (works well for ancient regions)
   const wikiLink = document.getElementById("panel-wiki-link");
   if (wikiLink) {
-    const modern = place.modern || "";
-    if (modern) {
-      wikiLink.href = `https://${getText("wiki_lang")}.wikipedia.org/w/index.php?search=${encodeURIComponent(modern)}`;
+    const searchTerm = place.modern || place.latin_std || place.latin || "";
+    if (searchTerm) {
+      const wikiLang = place.modern ? getText("wiki_lang") : "en";
+      wikiLink.href = `https://${wikiLang}.wikipedia.org/w/index.php?search=${encodeURIComponent(searchTerm)}`;
       wikiLink.textContent = getText("wiki_link");
       wikiLink.classList.remove("hidden");
     } else {

@@ -310,6 +310,9 @@ body, html {
 .about-link-icon { font-size: 16px; flex-shrink: 0; }
 .about-footer { margin-top: 16px; padding-top: 12px; border-top: 1px solid var(--border-color); font-size: 11px; color: var(--text-muted); line-height: 1.5; }
 .about-footer a { color: var(--accent); text-decoration: none; }
+#about-settings-row { margin-top: 10px; display: flex; justify-content: flex-end; }
+.about-settings-btn { display: flex; align-items: center; gap: 5px; padding: 4px 10px; border-radius: 4px; border: 1px solid var(--border-color); background: transparent; color: var(--text-muted); font-size: 11px; cursor: pointer; transition: color 0.15s, border-color 0.15s; }
+.about-settings-btn:hover { color: var(--text-main); border-color: rgba(255,255,255,0.3); }
 
 /* Status & Footer Elements */
 #status, #attribution { position: absolute; bottom: 10px; z-index: 10; font-size: 12px; color: var(--text-muted); background: rgba(15, 17, 23, 0.8); padding: 4px 8px; border-radius: 4px; pointer-events: none; }
@@ -366,8 +369,7 @@ body, html {
 @media (pointer: coarse), (max-width: 600px) {
   /* Show hamburger, hide desktop filter row + segment strip */
   #mobile-menu-btn { display: flex !important; }
-  /* Settings button: shown in mobile menu, hidden from top bar */
-  #settings-btn { display: none !important; }
+  /* Settings button lives in About panel, not top bar */
   #segment-buttons { display: none; }
   /* Show only the two quick-access buttons; hide the full category row */
   #bottom-left-controls #type-filter-buttons { display: none; }
