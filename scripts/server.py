@@ -31,8 +31,58 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     def do_GET(self):
         if self.path.startswith('/api/ulm-inset'):
             self._ulm_inset_get()
+        elif self.path.startswith('/api/ulm-detail'):
+            self._ulm_detail_get()
         else:
             super().do_GET()
+
+    def _ulm_detail_get(self):
+        """Return Barrington modern name, Pleiades id, Großraum, and wiki URL for a ULM entry."""
+        parsed = urllib.parse.urlparse(self.path)
+        params = urllib.parse.parse_qs(parsed.query)
+        ulm_id = (params.get('id', [None])[0] or '').strip()
+        if not ulm_id or not ulm_id.isdigit():
+            self._json_error('Missing or invalid id')
+            return
+        try:
+            req = urllib.request.Request(
+                f"https://tp-online.ku.de/trefferanzeige.php?id={ulm_id}",
+                headers={"User-Agent": "Mozilla/5.0"},
+            )
+            with urllib.request.urlopen(req, timeout=20) as resp:
+                html = resp.read().decode("utf-8", errors="replace")
+
+            def cell(label):
+                m = re.search(re.escape(label) + r".*?</td>\s*<td[^>]*>(.*?)</td>",
+                              html, re.DOTALL | re.IGNORECASE)
+                if m:
+                    raw = re.sub(r"<[^>]+>", " ", m.group(1)).strip()
+                    return " ".join(raw.split())
+                return None
+
+            m_pleiades = re.search(r"pleiades\.stoa\.org/places/(\d+)", html)
+            m_wiki     = re.search(r"(https?://[a-z]+\.wikipedia\.org[^\s\"<]+)", html)
+            grossraum  = cell("Großraum:")
+            modern_raw = cell("Name (modern):")
+
+            # Extract Barrington modern name
+            barrington = None
+            if modern_raw and modern_raw not in ("&nbsp", "---", ""):
+                b = re.sub(r"\s*\(Barrington\)\s*$", "", modern_raw, re.IGNORECASE).strip()
+                b = re.sub(r"\s*\?$", "", b).strip()
+                if not re.search(r"\bsettlement\b|\bunknown\b|\bvalley\b|\briver\b",
+                                 b, re.IGNORECASE) and len(b) > 1:
+                    parts = re.split(r"\s+oder\s+", b, re.IGNORECASE)
+                    barrington = parts[0].strip()
+
+            self._json_ok({
+                "pleiades_id": m_pleiades.group(1) if m_pleiades else None,
+                "grossraum":   grossraum,
+                "barrington":  barrington,
+                "wiki_url":    m_wiki.group(1) if m_wiki else None,
+            })
+        except Exception as exc:
+            self._json_error(str(exc))
 
     def _ulm_inset_get(self):
         parsed = urllib.parse.urlparse(self.path)

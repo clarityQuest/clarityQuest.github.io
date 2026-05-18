@@ -76,7 +76,7 @@
     .controls {
       flex-shrink: 0;
       display: grid;
-      grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto;
+      grid-template-columns: 2fr 1fr 1fr 1fr 1fr auto auto;
       gap: 8px;
       padding: 8px 10px;
       border-bottom: 1px solid var(--line);
@@ -95,6 +95,20 @@
       white-space: nowrap;
     }
     .col-chooser-btn:hover { background: #f0e8d8; }
+
+    .reset-filters-btn {
+      padding: 7px 11px;
+      border: 1px solid #cbbda6;
+      border-radius: 7px;
+      background: #fffefa;
+      color: var(--muted);
+      font: inherit;
+      font-size: 0.88rem;
+      cursor: pointer;
+      white-space: nowrap;
+    }
+    .reset-filters-btn:hover { background: #f0e8d8; color: var(--ink); }
+    .reset-filters-btn.has-filters { background: #fff0e8; border-color: #c49070; color: #7a3a1a; }
 
     input[type="text"], input[type="search"], select {
       width: 100%;
@@ -427,6 +441,26 @@
     }
     .osm-map iframe { border: 0; width: 100%; height: 100%; display: block; }
 
+    /* Wiki link in table */
+    .wiki-link {
+      color: var(--marking); text-decoration: none;
+      border-bottom: 1px solid transparent; white-space: nowrap;
+    }
+    .wiki-link:hover { border-bottom-color: currentColor; }
+
+    /* Wiki hover preview */
+    .wiki-preview {
+      position: fixed; display: none;
+      width: min(360px, calc(100vw - 24px));
+      background: var(--paper); border: 1px solid var(--border); border-radius: 6px;
+      box-shadow: 0 4px 18px rgba(0,0,0,.18); z-index: 60; pointer-events: auto;
+      overflow: hidden;
+    }
+    .wiki-preview.open { display: block; }
+    .wiki-preview-body { padding: 9px 12px 12px; }
+    .wiki-preview-summary { font-size: 0.82rem; line-height: 1.5; color: var(--muted);
+      margin: 5px 0 0; max-height: 130px; overflow-y: auto; }
+
     /* ULM preview */
     .ulm-preview {
       position: fixed; display: none;
@@ -461,7 +495,7 @@
     tr.match-linked_by_id { background: #f3f7fc; }
 
     @media (max-width: 860px) {
-      .controls { grid-template-columns: 1fr; }
+      .controls { grid-template-columns: 1fr 1fr; }
     }
 
     /* Show-empty-only button */
@@ -619,6 +653,7 @@
         <option value="none">No geocoding</option>
       </select>
       <button id="col-chooser-btn" class="col-chooser-btn" title="Choose visible columns">Columns ▾</button>
+      <button id="reset-filters-btn" class="reset-filters-btn" title="Clear all active filters">Reset</button>
     </div>
 
     <div class="stats" id="stats"></div>
@@ -674,6 +709,16 @@
   <a id="osm-preview-link" class="osm-preview-link" href="#" target="_blank" rel="noopener">View on OpenStreetMap</a>
 </div>
 
+<div class="wiki-preview" id="wiki-preview" aria-hidden="true">
+  <div class="hover-head">
+    <h2 class="hover-title" id="wiki-preview-title">Wikipedia</h2>
+    <a id="wiki-preview-open" class="hover-open" href="#" target="_blank" rel="noopener">Open ↗</a>
+  </div>
+  <div class="wiki-preview-body">
+    <div class="wiki-preview-summary" id="wiki-preview-summary">Loading…</div>
+  </div>
+</div>
+
 <div class="ulm-preview" id="ulm-preview" aria-hidden="true">
   <div class="hover-head">
     <h2 class="hover-title" id="ulm-preview-title">ULM Database</h2>
@@ -713,9 +758,12 @@
   let hoverHideTimer = null;
   let osmHideTimer = null;
   let ulmHideTimer = null;
+  let wikiHideTimer = null;
+  let wikiLoadingUrl = null;
 
   const DEFAULT_TYPE_FILTER = null;
   const VISIBLE_COLUMNS_STORAGE_KEY = 'tp_database_viewer_visible_columns_v2';
+  const FILTER_STORAGE_KEY = 'tp_db_filters_v1';
   const COLUMNS_PER_ROW = 4;
 
   const DEFAULT_VISIBLE_COLUMNS = [
@@ -743,6 +791,8 @@
     'miller_rect_w':     'Miller rect w',
     'miller_rect_h':     'Miller rect h',
     'miller_rect_user_set': 'Miller calibrated',
+    'wiki_confidence':   'Wiki conf.',
+    'wiki_manual':       'Wiki manual',
   };
 
   // Descriptions shown as tooltips on column headers and in column chooser
@@ -787,6 +837,9 @@
     'geocoding_lng':      'Longitude returned by the geocoding pipeline.',
     'geocoding_provider': 'Geocoding service used (e.g. Nominatim).',
     'ulm_id':             'ULM database ID — links to tp-online.ku.de. Hover to preview the ULM record and verify correctness.',
+    'wiki_url':           'Wikipedia article URL assigned to this place.',
+    'wiki_confidence':    'Confidence of the Wikipedia match: 3=exact/verified, 2=auto-matched (cleaned), 1=uncertain. Empty = pre-existing or unknown.',
+    'wiki_manual':        'True when the Wikipedia URL was added or confirmed manually rather than by automated script.',
   };
 
   const refs = {
@@ -820,6 +873,10 @@
     ulmPreviewTitle:    document.getElementById('ulm-preview-title'),
     ulmPreviewOpen:     document.getElementById('ulm-preview-open'),
     ulmPreviewFrame:    document.getElementById('ulm-preview-frame'),
+    wikiPreview:        document.getElementById('wiki-preview'),
+    wikiPreviewTitle:   document.getElementById('wiki-preview-title'),
+    wikiPreviewSummary: document.getElementById('wiki-preview-summary'),
+    wikiPreviewOpen:    document.getElementById('wiki-preview-open'),
   };
 
   /* ── CSV helper ── */
@@ -971,6 +1028,44 @@
     }, 120);
   }
 
+  function clearWikiHideTimer() { if (wikiHideTimer) { clearTimeout(wikiHideTimer); wikiHideTimer=null; } }
+
+  function scheduleWikiHide() {
+    clearWikiHideTimer();
+    wikiHideTimer = window.setTimeout(() => {
+      refs.wikiPreview.classList.remove('open');
+      refs.wikiPreview.setAttribute('aria-hidden','true');
+    }, 120);
+  }
+
+  async function showWikiPreview(trigger, wikiUrl) {
+    clearWikiHideTimer();
+    const langM  = wikiUrl.match(/\/\/([a-z]+)\.wikipedia/);
+    const titleM = wikiUrl.match(/\/wiki\/(.+)$/);
+    const lang   = langM  ? langM[1]  : 'en';
+    const raw    = titleM ? titleM[1] : '';
+    const label  = raw ? decodeURIComponent(raw.replace(/_/g,' ')).replace(/\s*\(.*\)$/,'').trim() : 'Wikipedia';
+    refs.wikiPreviewTitle.textContent = label;
+    refs.wikiPreviewOpen.href = wikiUrl;
+    refs.wikiPreviewSummary.textContent = 'Loading…';
+    refs.wikiPreview.classList.add('open');
+    refs.wikiPreview.setAttribute('aria-hidden','false');
+    const pos = previewPosition(trigger.getBoundingClientRect(), refs.wikiPreview);
+    refs.wikiPreview.style.left = `${pos.left}px`;
+    refs.wikiPreview.style.top  = `${pos.top}px`;
+    if (wikiLoadingUrl === wikiUrl) return;
+    wikiLoadingUrl = wikiUrl;
+    try {
+      const resp = await fetch(`https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodeURIComponent(raw)}`);
+      if (resp.ok) {
+        const d = await resp.json();
+        if (wikiLoadingUrl === wikiUrl) refs.wikiPreviewSummary.textContent = d.extract || '—';
+      } else {
+        if (wikiLoadingUrl === wikiUrl) refs.wikiPreviewSummary.textContent = '—';
+      }
+    } catch { if (wikiLoadingUrl === wikiUrl) refs.wikiPreviewSummary.textContent = '—'; }
+  }
+
   function showUlmPreview(trigger, ulmId, placeName) {
     clearUlmHideTimer();
     const url = `https://tp-online.ku.de/trefferanzeige.php?id=${ulmId}`;
@@ -1041,6 +1136,66 @@
 
   function saveVisibleColumns() {
     localStorage.setItem(VISIBLE_COLUMNS_STORAGE_KEY, JSON.stringify(visibleColumns));
+  }
+
+  function saveFilterState() {
+    const state = {
+      q:                  refs.q.value,
+      source:             refs.source.value,
+      type:               refs.type.value,
+      match:              refs.match.value,
+      review:             refs.review.value,
+      columnFilters:      { ...columnFilters },
+      columnHideEmpty:    [...columnHideEmpty],
+      columnShowEmptyOnly:[...columnShowEmptyOnly],
+    };
+    try { localStorage.setItem(FILTER_STORAGE_KEY, JSON.stringify(state)); } catch {}
+  }
+
+  function isFilterActive() {
+    if (refs.q.value.trim()) return true;
+    if (refs.source.value !== 'all') return true;
+    if (refs.type.value   !== 'all') return true;
+    if (refs.match.value  !== 'all') return true;
+    if (refs.review.value !== 'all') return true;
+    if (Object.values(columnFilters).some(v => v.trim())) return true;
+    if (columnHideEmpty.size > 0)     return true;
+    if (columnShowEmptyOnly.size > 0) return true;
+    return false;
+  }
+
+  function updateResetBtn() {
+    const btn = document.getElementById('reset-filters-btn');
+    if (btn) btn.classList.toggle('has-filters', isFilterActive());
+  }
+
+  function restoreFilterState() {
+    try {
+      const raw = localStorage.getItem(FILTER_STORAGE_KEY);
+      if (!raw) return;
+      const s = JSON.parse(raw);
+      if (s.q      != null) refs.q.value      = s.q;
+      if (s.source != null) refs.source.value = s.source;
+      if (s.type   != null) refs.type.value   = s.type;
+      if (s.match  != null) refs.match.value  = s.match;
+      if (s.review != null) refs.review.value = s.review;
+      if (s.columnFilters)       columnFilters       = s.columnFilters;
+      if (s.columnHideEmpty)     columnHideEmpty     = new Set(s.columnHideEmpty);
+      if (s.columnShowEmptyOnly) columnShowEmptyOnly = new Set(s.columnShowEmptyOnly);
+    } catch {}
+  }
+
+  function resetFilters() {
+    refs.q.value      = '';
+    refs.source.value = 'all';
+    refs.type.value   = 'all';
+    refs.match.value  = 'all';
+    refs.review.value = 'all';
+    columnFilters       = {};
+    columnHideEmpty     = new Set();
+    columnShowEmptyOnly = new Set();
+    renderFilterRow();
+    applyFilters();
   }
 
   function populateTypeOptions(records) {
@@ -1175,6 +1330,23 @@
     if (columnKey === 'source') return `<span class="badge ${sourceBadgeClass}">${escapeHtml(r.source)}</span>`;
     if (columnKey === 'match_status') return `<span class="badge ${matchClass}">${escapeHtml(matchLabel(r.match_status))}</span>`;
     if (columnKey === 'type') return escapeHtml(titleCase(r.type||''));
+    if (columnKey === 'wiki_url') {
+      if (!r.wiki_url) return '';
+      const tm = r.wiki_url.match(/\/wiki\/(.+)$/);
+      const label = tm ? decodeURIComponent(tm[1].replace(/_/g,' ')).replace(/\s*\(.*\)$/,'').trim() : 'Wikipedia';
+      return `<a class="wiki-link" href="${escapeHtml(r.wiki_url)}" target="_blank" rel="noopener" data-wiki-url="${escapeHtml(r.wiki_url)}">${escapeHtml(label)}</a>`;
+    }
+    if (columnKey === 'wiki_confidence') {
+      const v = r.wiki_confidence;
+      if (v == null || v === '') return '<span style="color:var(--muted);font-size:0.75rem">?</span>';
+      const n = Number(v);
+      if (!Number.isFinite(n) || n < 1 || n > 3) return escapeHtml(String(v));
+      return '<span title="Wiki match confidence: ' + n + '/3" style="color:var(--warn);letter-spacing:1px">' + '★'.repeat(n) + '<span style="opacity:0.3">' + '★'.repeat(3-n) + '</span></span>';
+    }
+    if (columnKey === 'wiki_manual') {
+      if (r.wiki_manual === true || r.wiki_manual === 'true') return '<span style="color:var(--ok);font-size:0.8rem">✓ manual</span>';
+      return '';
+    }
     const value = r[columnKey];
     if (value == null) return '';
     if (Array.isArray(value)) return escapeHtml(value.join(' | '));
@@ -1270,6 +1442,8 @@
 
     buildStats(filtered);
     renderRows(filtered);
+    saveFilterState();
+    updateResetBtn();
   }
 
   /* ── Load data ── */
@@ -1287,7 +1461,8 @@
       initColumns(allRecords);
       populateTypeOptions(allRecords);
 
-      refs.type.value = 'all';
+      restoreFilterState();
+      renderFilterRow();
 
       const meta = data.meta||{}, ov = meta.overview||{};
       refs.meta.textContent = `${meta.description||''} | OV: ${ov.omnesviae_place_count??'?'} | Tabula: ${ov.tabula_place_count??'?'} | Total: ${ov.records_total??allRecords.length} | Matches: ${ov.records_modern_match??'?'}`;
@@ -1389,6 +1564,20 @@
   refs.osmPreview.addEventListener('mouseleave', scheduleOsmHide);
   refs.ulmPreview.addEventListener('mouseenter', clearUlmHideTimer);
   refs.ulmPreview.addEventListener('mouseleave', scheduleUlmHide);
+  refs.wikiPreview.addEventListener('mouseenter', clearWikiHideTimer);
+  refs.wikiPreview.addEventListener('mouseleave', scheduleWikiHide);
+
+  // wiki_url hover
+  refs.rows.addEventListener('mouseover', event => {
+    const t = event.target.closest('[data-wiki-url]');
+    if (!t) return;
+    showWikiPreview(t, t.dataset.wikiUrl);
+  });
+  refs.rows.addEventListener('mouseout', event => {
+    const t = event.target.closest('[data-wiki-url]');
+    if (!t) return;
+    if (!refs.wikiPreview.contains(event.relatedTarget)) scheduleWikiHide();
+  });
 
   // ULM ID hover
   refs.rows.addEventListener('mouseover', event => {
@@ -1419,6 +1608,8 @@
     if (refs.colChooserPopup.classList.contains('open')) closeColChooser();
     else openColChooser();
   });
+
+  document.getElementById('reset-filters-btn').addEventListener('click', resetFilters);
   refs.colChooserClose.addEventListener('click', closeColChooser);
   refs.colChooserBackdrop.addEventListener('click', closeColChooser);
   document.addEventListener('keydown', e => { if (e.key === 'Escape') closeColChooser(); });
@@ -1441,7 +1632,27 @@
     document.getElementById('edit-modal-status').textContent = '';
 
     const body = document.getElementById('edit-modal-body');
-    body.innerHTML = Object.entries(r).map(([k, v]) => {
+    const editFields = { ...r };
+    if (!('wiki_url' in editFields)) editFields.wiki_url = '';
+    if (!('wiki_confidence' in editFields)) editFields.wiki_confidence = null;
+    if (!('wiki_manual' in editFields)) editFields.wiki_manual = false;
+    body.innerHTML = Object.entries(editFields).map(([k, v]) => {
+      if (k === 'wiki_manual') {
+        const checked = (v === true || v === 'true') ? 'checked' : '';
+        return `<div class="edit-field-row">
+          <label class="edit-field-label" for="ef-${escapeHtml(k)}">${escapeHtml(k)}</label>
+          <input class="edit-field-input" id="ef-${escapeHtml(k)}" data-field="${escapeHtml(k)}" type="checkbox" ${checked} style="width:auto;justify-self:start" />
+        </div>`;
+      }
+      if (k === 'wiki_confidence') {
+        const cur = v == null ? '' : String(v);
+        const opts = [['','— unknown'],['1','1 — uncertain'],['2','2 — auto (cleaned)'],['3','3 — exact / verified']];
+        const optHtml = opts.map(([val, lbl]) => `<option value="${val}"${cur === val ? ' selected' : ''}>${escapeHtml(lbl)}</option>`).join('');
+        return `<div class="edit-field-row">
+          <label class="edit-field-label" for="ef-${escapeHtml(k)}">${escapeHtml(k)}</label>
+          <select class="edit-field-input" id="ef-${escapeHtml(k)}" data-field="${escapeHtml(k)}">${optHtml}</select>
+        </div>`;
+      }
       const raw = v == null ? '' : (typeof v === 'object' ? JSON.stringify(v) : String(v));
       return `<div class="edit-field-row">
         <label class="edit-field-label" for="ef-${escapeHtml(k)}">${escapeHtml(k)}</label>
@@ -1465,6 +1676,7 @@
     const updated = {};
     document.querySelectorAll('#edit-modal-body .edit-field-input').forEach(input => {
       const key = input.dataset.field;
+      if (input.type === 'checkbox') { updated[key] = input.checked; return; }
       let val = input.value;
       if (val === '') val = null;
       else if (val === 'true') val = true;

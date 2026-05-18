@@ -238,6 +238,8 @@ const S = {
 };
 
 let infoPanelOpenedAt = 0;
+const wikiCache = new Map(); // session cache for Wikipedia API results
+let wikiRequestId = 0;       // incremented on each panel open to abort stale fetches
 
 /* ============================================================
    i18n helpers
@@ -548,7 +550,8 @@ function loadMillerCalib(allRecords) {
         latin_std: r.latin_std || r.latin || "",
         modern:    r.modern_preferred || r.modern_tabula || r.modern_omnesviae || "",
         province:  r.province || r.region || "",
-        country:   r.country || "",
+        country:   r.country || guessCountryFromLatLng(r.lat, r.lng) || "",
+        wiki_url:  r.wiki_url || null,
         lat:       r.lat != null ? Number(r.lat) : null,
         lng:       r.lng != null ? Number(r.lng) : null,
         tabula_segment: r.tabula_segment,
@@ -975,19 +978,22 @@ function hitTestMillerOverlay(clientX, clientY) {
   const ey = clientY - elRect.top;
   const pad = 4;
 
-  // millerCalibHit is sorted cities-first (reverse draw order) so cities win over regions.
-  // Area types (region/province/people) are always hittable even when not in activeTypes,
-  // so background regions give hover info even in normal map mode.
+  // Two-pass hit-test: point types always win over area types.
+  // All markers are hittable regardless of which type filters are active.
   const AREA_TYPES = new Set(["region", "roman_province", "modern_state", "people"]);
-  for (const item of S.millerCalibHit) {
-    if (!AREA_TYPES.has(item.type) && !S.activeTypes.has(item.type)) continue;
+  const inBounds = (item) => {
     const p1 = imageToCanvas(item.rect_x1, item.rect_y1);
     const p2 = imageToCanvas(item.rect_x2, item.rect_y2);
-    const x0 = Math.min(p1.cx, p2.cx) - pad;
-    const x1 = Math.max(p1.cx, p2.cx) + pad;
-    const y0 = Math.min(p1.cy, p2.cy) - pad;
-    const y1 = Math.max(p1.cy, p2.cy) + pad;
-    if (ex >= x0 && ex <= x1 && ey >= y0 && ey <= y1) return item;
+    return ex >= Math.min(p1.cx, p2.cx) - pad && ex <= Math.max(p1.cx, p2.cx) + pad &&
+           ey >= Math.min(p1.cy, p2.cy) - pad && ey <= Math.max(p1.cy, p2.cy) + pad;
+  };
+  // Pass 1: point types (cities, road_stations, etc.) — always take priority
+  for (const item of S.millerCalibHit) {
+    if (!AREA_TYPES.has(item.type) && inBounds(item)) return item;
+  }
+  // Pass 2: area types (regions, people) — only when no point type was at this position
+  for (const item of S.millerCalibHit) {
+    if (AREA_TYPES.has(item.type) && inBounds(item)) return item;
   }
   return null;
 }
@@ -1130,14 +1136,26 @@ function showInfoPanel(place) {
     }
   }
 
-  // Wikipedia / Google link — strategy varies by type and name quality (see buildWikiUrl)
+  // Wikipedia link: set a fallback search URL immediately, then resolve to a direct article URL async
   const wikiLink = document.getElementById("panel-wiki-link");
+  const wikiSummary = document.getElementById("panel-wiki-summary");
+  if (wikiSummary) { wikiSummary.textContent = ""; wikiSummary.classList.add("hidden"); }
+  const reqId = ++wikiRequestId;
   if (wikiLink) {
     const hasAnyName = !!(place.modern || place.latin_std || place.latin);
     if (hasAnyName) {
-      wikiLink.href = buildWikiUrl(place);
       wikiLink.textContent = getText("wiki_link");
       wikiLink.classList.remove("hidden");
+      if (place.wiki_url) {
+        wikiLink.href = place.wiki_url;
+        resolveWikiSummaryFromUrl(reqId, wikiSummary, place.wiki_url);
+      } else {
+        const terms = buildWikiSearchTerms(place);
+        const lang  = getText('wiki_lang');
+        const fallback = terms[0] || (place.latin_std || place.latin || place.modern || '');
+        wikiLink.href = `https://${lang}.wikipedia.org/w/index.php?search=${encodeURIComponent(fallback)}`;
+        resolveWikiAndUpdate(reqId, wikiLink, wikiSummary, terms, lang);
+      }
     } else {
       wikiLink.classList.add("hidden");
     }
@@ -1735,50 +1753,244 @@ function normalizeLatinV(s) {
   });
 }
 
-function cleanModernForWiki(modern) {
-  if (!modern) return '';
-  let s = modern.split(' / ')[0].trim();                                         // first alt only
-  s = s.replace(/\s*\([^)]*\)/g, '').trim();                                    // strip (parentheticals)
-  s = s.replace(/,\s+\S.*$/, '').trim();                                         // strip ", Country / extra"
-  s = s.replace(/\s+(?:near|bei|b\.|prope|am|an\s+der|an\s+dem)\s+\S.*/i, '').trim(); // strip location qualifiers
+function cleanOnePart(s) {
+  s = s.trim();
+  const nearParen = s.match(/^\((?:near|bei|b\.|prope)\s+([^),]+)/i);
+  if (nearParen) return nearParen[1].trim();
+  s = s.replace(/\s*\([^)]*\)/g, '').trim();
+  s = s.replace(/,\s+\S.*$/, '').trim();
+  s = s.replace(/\s+(?:near|bei|b\.|prope|am|an\s+der|an\s+dem)\s+\S.*/i, '').trim();
+  if (s.startsWith('(') || s.endsWith(')')) return '';
   return s;
 }
 
-function buildWikiUrl(place) {
-  const modern  = place.modern || '';
-  const latin   = place.latin_std || place.latin || '';
-  const type    = place.type || '';
-  const wikiLang = getText('wiki_lang'); // "en" | "de"
+// Returns the cleaned first alternative (kept for callers that only need one).
+function cleanModernForWiki(modern) {
+  if (!modern) return '';
+  return cleanOnePart(modern.split(/\s*\/\s*/)[0]);
+}
 
-  const cleanMod = cleanModernForWiki(modern);
-  // Treat modern as useless if it's just a repeat of the Latin (e.g. "Africa / Africa proconsularis")
-  const norm = s => s.toLowerCase().replace(/[^a-z]/g, '');
-  const hasUsefulModern = cleanMod.length > 0 && norm(cleanMod) !== norm(latin.split('/')[0]);
+// Returns ALL cleaned alternatives from a modern name string ("Vienna/Wien/Vienne" → ["Vienna","Wien","Vienne"]).
+function modernAlternatives(modern) {
+  if (!modern) return [];
+  const seen = new Set();
+  return modern.split(/\s*\/\s*/)
+    .map(p => cleanOnePart(p))
+    .filter(p => p && !seen.has(p) && seen.add(p));
+}
 
-  if (hasUsefulModern) {
-    return `https://${wikiLang}.wikipedia.org/w/index.php?search=${encodeURIComponent(cleanMod)}`;
-  }
+// Returns an ordered list of Wikipedia search terms to try for a given place.
+// resolveWikiArticle() tries each in turn via the opensearch API.
+function buildWikiSearchTerms(place) {
+  const modern   = place.modern || '';
+  const latin    = place.latin_std || place.latin || '';
+  const type     = place.type || '';
+  const wikiLang = getText('wiki_lang');
 
-  // No useful modern name — type-specific strategy
   const cleanLatin = latin.split('/')[0].replace(/[\[\]~]/g, '').trim();
   const normLatin  = normalizeLatinV(cleanLatin);
-
-  if (type === 'people') {
-    // Peoples often have completely different modern names (Sauromatae → Sarmatians);
-    // Google handles these much better than Wikipedia search alone.
-    const q = `${normLatin} ancient tribe wikipedia`;
-    return `https://www.google.com/search?q=${encodeURIComponent(q)}`;
-  }
+  // All cleaned alternatives from the modern name ("Vienna/Wien/Vienne" → ["Vienna","Wien","Vienne"])
+  const modAlts    = modernAlternatives(modern);
+  const cleanMod   = modAlts[0] || '';
+  const norm = s => s.toLowerCase().replace(/[^a-z]/g, '');
+  const hasUsefulModern = cleanMod.length > 0 && norm(cleanMod) !== norm(cleanLatin);
+  // Additional alternatives beyond the first (e.g. "Wien", "Vienne")
+  const extraAlts  = modAlts.slice(1).filter(a => norm(a) !== norm(cleanLatin));
 
   if (type === 'region' || type === 'roman_province') {
-    // "Africa Roman province wikipedia" finds Africa_(Roman_province) etc.
-    // Keep original Latin casing (no V→U) so Google sees familiar province names.
-    const q = `${cleanLatin} Roman province wikipedia`;
-    return `https://www.google.com/search?q=${encodeURIComponent(q)}`;
+    if (wikiLang === 'en') {
+      return [
+        cleanLatin ? `Roman ${cleanLatin}` : null,
+        cleanLatin || null,
+        hasUsefulModern ? cleanMod : null,
+        ...extraAlts,
+        cleanLatin ? `${cleanLatin} Roman province` : null,
+      ].filter(Boolean);
+    }
+    return [
+      cleanLatin || null,
+      cleanLatin ? `${cleanLatin} Provinz` : null,
+      hasUsefulModern ? cleanMod : null,
+      ...extraAlts,
+    ].filter(Boolean);
   }
 
-  // Default: normalized Latin on English Wikipedia
-  return `https://en.wikipedia.org/w/index.php?search=${encodeURIComponent(normLatin || cleanLatin)}`;
+  if (type === 'people') {
+    return [
+      normLatin || null,
+      normLatin ? `${normLatin} ancient people` : null,
+      hasUsefulModern ? cleanMod : null,
+      ...extraAlts,
+    ].filter(Boolean);
+  }
+
+  if (type === 'temple') {
+    return [
+      normLatin || null,
+      hasUsefulModern ? cleanMod : null,
+      ...extraAlts,
+      (cleanLatin && cleanLatin !== normLatin) ? cleanLatin : null,
+    ].filter(Boolean);
+  }
+
+  // Regular places (city, port, road_station, …): all modern alternatives, then Latin
+  return [
+    hasUsefulModern ? cleanMod : null,
+    ...extraAlts,
+    normLatin || null,
+    (cleanLatin && cleanLatin !== normLatin) ? cleanLatin : null,
+  ].filter(Boolean);
+}
+
+// Returns true if the article title is plausibly relevant to the search term.
+// Rejects clearly wrong results: off-topic titles (no word overlap) and media/disambiguation articles.
+function wikiTitleRelevant(title, term) {
+  // Parenthetical qualifiers that indicate a non-place article
+  if (/\((?:Album|Single|EP|Film|Lied|Song|Band|Buch|Roman|série|Begriffsklärung|disambiguation|Domaine|Winery|Château|Weingut)\)/i.test(title)) return false;
+  const tWords = new Set((title.toLowerCase().match(/[a-zÀ-ɏ]{3,}/g) || []));
+  const qWords = (term.toLowerCase().match(/[a-zÀ-ɏ]{3,}/g) || []);
+  return qWords.some(w => tWords.has(w));
+}
+
+// Wikipedia opensearch API: tries each term in order, returns {title, url} of the first relevant hit.
+async function resolveWikiArticle(terms, lang) {
+  for (const term of terms) {
+    const key = `${lang}\x00${term}`;
+    if (wikiCache.has(key)) {
+      const v = wikiCache.get(key);
+      if (v) return v;
+      continue; // null = already tried, nothing found
+    }
+    try {
+      const url = `https://${lang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(term)}&limit=1&format=json&origin=*`;
+      const r = await fetch(url);
+      const d = await r.json();
+      if (Array.isArray(d[1]) && d[1].length) {
+        const title = d[1][0];
+        if (wikiTitleRelevant(title, term)) {
+          const result = { title, url: d[3][0] };
+          wikiCache.set(key, result);
+          return result;
+        }
+        // Title looks irrelevant — skip this term but don't cache as null
+        // so a re-search in a different session still tries it
+      } else {
+        wikiCache.set(key, null); // term produced no hits at all
+      }
+    } catch (_) { /* network error — skip this term */ }
+  }
+  if (lang === 'de') {
+    const enResult = await resolveWikiArticle(terms, 'en');
+    if (enResult) return enResult;
+  }
+  if (lang !== 'it') {
+    const itResult = await resolveWikiArticle(terms, 'it');
+    if (itResult) return itResult;
+  }
+  return null;
+}
+
+// Wikipedia REST summary API: returns the extract (first paragraph) for a resolved title.
+async function fetchWikiSummary(title, lang) {
+  const key = `sum\x00${lang}\x00${title}`;
+  if (wikiCache.has(key)) return wikiCache.get(key);
+  try {
+    const encodedTitle = encodeURIComponent(title.replace(/ /g, '_'));
+    const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodedTitle}`;
+    const r = await fetch(url);
+    if (!r.ok) { wikiCache.set(key, null); return null; }
+    const d = await r.json();
+    const extract = d.extract || null;
+    wikiCache.set(key, extract);
+    return extract;
+  } catch (_) {
+    return null;
+  }
+}
+
+// Fetches a Wikipedia summary directly from a known URL (for hard-linked wiki_url entries).
+async function resolveWikiSummaryFromUrl(reqId, summaryEl, url) {
+  if (!summaryEl) return;
+  const m = url.match(/https?:\/\/([a-z]+)\.wikipedia\.org\/wiki\/(.+)/);
+  if (!m) return;
+  const lang = m[1], title = decodeURIComponent(m[2].replace(/_/g, ' '));
+  const extract = await fetchWikiSummary(title, lang);
+  if (wikiRequestId !== reqId) return;
+  if (!extract) return;
+  let text = extract;
+  if (text.length > 300) {
+    const match = text.match(/^.{60,280}[.!?]/);
+    text = match ? match[0] : text.slice(0, 280).replace(/\s+\S*$/, '') + '…';
+  }
+  summaryEl.textContent = text;
+  summaryEl.classList.remove("hidden");
+}
+
+// Async: resolves Wikipedia article URL and fetches the summary, updating the panel live.
+async function resolveWikiAndUpdate(reqId, linkEl, summaryEl, terms, lang) {
+  const article = await resolveWikiArticle(terms, lang);
+  if (wikiRequestId !== reqId) return; // panel changed while fetching
+  if (!article) return;
+
+  linkEl.href = article.url;
+
+  if (!summaryEl) return;
+  const extract = await fetchWikiSummary(article.title, lang);
+  if (wikiRequestId !== reqId) return;
+  if (!extract) return;
+
+  // Show the first sentence(s), capped at ~280 chars
+  let text = extract;
+  if (text.length > 300) {
+    const m = text.match(/^.{60,280}[.!?]/);
+    text = m ? m[0] : text.slice(0, 280).replace(/\s+\S*$/, '') + '…';
+  }
+  summaryEl.textContent = text;
+  summaryEl.classList.remove("hidden");
+}
+
+// Rough bounding boxes (minLat, maxLat, minLng, maxLng) ordered smallest→largest so
+// the most specific country wins when multiple boxes match.
+const COUNTRY_BBOX = [
+  ["MT",35.78,36.08,14.18,14.58], ["CY",34.56,35.71,32.26,34.60],
+  ["LU",49.45,50.18,5.73,6.53],   ["XK",41.86,43.27,20.01,21.79],
+  ["ME",41.85,43.55,18.43,20.36], ["SI",45.42,46.88,13.38,16.61],
+  ["AL",39.64,42.66,19.27,21.07], ["MK",40.85,42.37,20.45,23.04],
+  ["BA",42.56,45.27,15.75,19.62], ["PT",36.96,42.15,-9.50,-6.19],
+  ["IE",51.44,55.38,-10.48,-5.99],["LB",33.05,34.69,35.10,36.63],
+  ["IL",29.50,33.34,34.27,35.90], ["CH",45.83,47.81,5.96,10.49],
+  ["AT",46.37,49.02,9.53,17.16],  ["HR",42.39,46.55,13.50,19.43],
+  ["RS",42.23,46.19,18.82,22.99], ["BG",41.24,44.22,22.36,28.61],
+  ["SK",47.73,49.61,16.84,22.56], ["HU",45.74,48.59,16.11,22.90],
+  ["AM",38.84,41.30,43.45,46.63], ["AZ",38.39,41.90,44.77,50.39],
+  ["GE",41.05,43.59,40.00,46.64], ["JO",29.19,33.38,35.00,39.30],
+  ["TN",30.24,37.55,7.52,11.60],  ["GR",34.80,41.75,19.37,29.65],
+  ["RO",43.62,48.27,22.15,30.05], ["NL",50.75,53.56,3.36,7.23],
+  ["BE",49.50,51.51,2.55,6.40],   ["CZ",48.55,51.06,12.09,18.86],
+  ["GB",49.87,60.86,-8.65,1.76],  ["DE",47.27,55.06,6.02,15.04],
+  ["PL",49.00,54.84,14.12,24.15], ["FR",42.33,51.09,-4.79,8.24],
+  ["IT",36.62,47.09,6.63,18.52],  ["ES",35.17,43.79,-9.30,3.33],
+  ["SY",32.31,37.32,35.73,42.38], ["IQ",29.07,37.39,38.79,48.57],
+  ["UA",44.39,52.38,22.14,40.09], ["EG",21.98,31.67,24.70,36.90],
+  ["LY",19.50,33.17,9.32,25.16],  ["MA",27.67,35.92,-13.17,-0.99],
+  ["DZ",18.97,37.09,-8.68,11.99], ["TR",35.82,42.10,26.04,44.79],
+  ["IR",25.06,39.78,44.02,63.32], ["TM",35.14,42.80,52.44,66.69],
+  ["AF",29.40,38.49,60.52,74.89], ["PK",23.69,37.10,60.87,77.84],
+  ["IN",8.09,35.68,68.11,97.41],
+];
+
+function guessCountryFromLatLng(lat, lng) {
+  if (lat == null || lng == null) return null;
+  const la = Number(lat), lo = Number(lng);
+  if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
+  let best = null, bestArea = Infinity;
+  for (const [iso, la1, la2, lo1, lo2] of COUNTRY_BBOX) {
+    if (la >= la1 && la <= la2 && lo >= lo1 && lo <= lo2) {
+      const area = (la2 - la1) * (lo2 - lo1);
+      if (area < bestArea) { bestArea = area; best = iso; }
+    }
+  }
+  return best;
 }
 
 function countryName(rawCode) {
@@ -2264,6 +2476,8 @@ async function reloadDb() {
       latin_std: r.latin_std || r.latin,
       modern: r.modern_preferred || r.modern_tabula || r.modern_omnesviae || "",
       province: r.province || r.region || "",
+      country: r.country || guessCountryFromLatLng(r.lat, r.lng) || "",
+      wiki_url: r.wiki_url || null,
       grid_col: r.grid_col ?? r.tabula_col,
       grid_row: r.grid_row ?? r.tabula_row,
       px: Number(r.px),
@@ -2276,6 +2490,7 @@ async function reloadDb() {
     latin_std: r.latin_std || r.latin || "",
     modern: r.modern_preferred || r.modern_tabula || r.modern_omnesviae || "",
     province: r.province || r.region || "",
+    country: r.country || guessCountryFromLatLng(r.lat, r.lng) || "",
     data_id: Number.isFinite(Number(r.data_id)) ? Number(r.data_id) : r.data_id,
   }));
   const draftMap = loadCalibrateDraftMap();

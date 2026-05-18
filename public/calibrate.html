@@ -211,6 +211,20 @@
       text-align: center; margin-top: 4px;
     }
 
+    /* Wikipedia hover popup */
+    #wiki-hover-popup {
+      position: fixed; display: none; z-index: 201; pointer-events: auto;
+      background: #0f1117; border: 1px solid rgba(255,255,255,0.28);
+      border-radius: 10px; box-shadow: 0 14px 48px rgba(0,0,0,0.75);
+      padding: 12px 16px; max-width: 300px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    #whp-title { font-weight: 700; font-size: 14px; color: #e4e4e7; margin-bottom: 5px; }
+    #whp-summary { font-size: 12px; color: #a1a1aa; line-height: 1.5; margin-bottom: 8px; }
+    #whp-btn { display: inline-block; color: var(--accent); font-size: 12px; text-decoration: none; }
+    #whp-btn:hover { text-decoration: underline; }
+    .derived-country { opacity: 0.65; font-style: italic; }
+
     /* Map reference popup — selected place Latin + ULM image, follows cursor */
     #map-ref-popup {
       position: fixed; display: none; z-index: 148; pointer-events: none;
@@ -438,6 +452,7 @@
         <div class="meta-row"><span class="meta-key">ULM Seg</span><span class="meta-val" id="meta-ulm-location"></span></div>
         <div class="meta-row"><span class="meta-key">Country</span><span class="meta-val" id="meta-country"></span></div>
         <div class="meta-row" id="meta-ulm-row"><span class="meta-key">Ulm DB</span><span class="meta-val"><button id="btn-ulm-search" style="background:none;border:none;color:var(--accent);cursor:pointer;font-size:13px;padding:0;text-decoration:underline;">Search ↗</button></span></div>
+        <div class="meta-row" id="meta-wiki-row" style="display:none"><span class="meta-key">Wikipedia</span><span class="meta-val"><a id="meta-wiki-link" href="#" target="_blank" rel="noopener">—</a></span></div>
       </div>
 
       <!-- Tabula cell preview + ULM inset -->
@@ -532,6 +547,13 @@
   <div id="ulm-img-popup-cap"></div>
 </div>
 
+<!-- Wikipedia hover popup -->
+<div id="wiki-hover-popup">
+  <div id="whp-title"></div>
+  <div id="whp-summary"></div>
+  <a id="whp-btn" href="#" target="_blank" rel="noopener">Open Wikipedia ↗</a>
+</div>
+
 <div id="edit-modal">
   <div id="edit-box">
     <h3 id="edit-title">Edit Entry</h3>
@@ -561,6 +583,7 @@
     <div class="edit-field"><label>Country (ISO)</label><input id="ef-country" type="text" maxlength="3"></div>
     <div class="edit-field"><label>Lat</label><input id="ef-lat" type="number" step="any"></div>
     <div class="edit-field"><label>Lng</label><input id="ef-lng" type="number" step="any"></div>
+    <div class="edit-field"><label>Wikipedia URL</label><input id="ef-wiki" type="url" placeholder="https://en.wikipedia.org/wiki/…" style="width:100%;box-sizing:border-box"></div>
     <div id="edit-btn-row">
       <button id="btn-edit-save">Save</button>
       <button id="btn-edit-cancel">Cancel</button>
@@ -622,6 +645,163 @@ const TYPE_LABELS = {
 };
 
 const DRAFT_STORAGE_KEY = "tp_calibrate_miller_v1";
+
+// ── Country bbox lookup ────────────────────────────────────────────────────
+const COUNTRY_BBOX = [
+  ["MT",35.78,36.08,14.18,14.58], ["CY",34.56,35.71,32.26,34.60],
+  ["LU",49.45,50.18,5.73,6.53],   ["XK",41.86,43.27,20.01,21.79],
+  ["ME",41.85,43.55,18.43,20.36], ["SI",45.42,46.88,13.38,16.61],
+  ["AL",39.64,42.66,19.27,21.07], ["MK",40.85,42.37,20.45,23.04],
+  ["BA",42.56,45.27,15.75,19.62], ["PT",36.96,42.15,-9.50,-6.19],
+  ["IE",51.44,55.38,-10.48,-5.99],["LB",33.05,34.69,35.10,36.63],
+  ["IL",29.50,33.34,34.27,35.90], ["CH",45.83,47.81,5.96,10.49],
+  ["AT",46.37,49.02,9.53,17.16],  ["HR",42.39,46.55,13.50,19.43],
+  ["RS",42.23,46.19,18.82,22.99], ["BG",41.24,44.22,22.36,28.61],
+  ["SK",47.73,49.61,16.84,22.56], ["HU",45.74,48.59,16.11,22.90],
+  ["AM",38.84,41.30,43.45,46.63], ["AZ",38.39,41.90,44.77,50.39],
+  ["GE",41.05,43.59,40.00,46.64], ["JO",29.19,33.38,35.00,39.30],
+  ["TN",30.24,37.55,7.52,11.60],  ["GR",34.80,41.75,19.37,29.65],
+  ["RO",43.62,48.27,22.15,30.05], ["NL",50.75,53.56,3.36,7.23],
+  ["BE",49.50,51.51,2.55,6.40],   ["CZ",48.55,51.06,12.09,18.86],
+  ["GB",49.87,60.86,-8.65,1.76],  ["DE",47.27,55.06,6.02,15.04],
+  ["PL",49.00,54.84,14.12,24.15], ["FR",42.33,51.09,-4.79,8.24],
+  ["IT",36.62,47.09,6.63,18.52],  ["ES",35.17,43.79,-9.30,3.33],
+  ["SY",32.31,37.32,35.73,42.38], ["IQ",29.07,37.39,38.79,48.57],
+  ["UA",44.39,52.38,22.14,40.09], ["EG",21.98,31.67,24.70,36.90],
+  ["LY",19.50,33.17,9.32,25.16],  ["MA",27.67,35.92,-13.17,-0.99],
+  ["DZ",18.97,37.09,-8.68,11.99], ["TR",35.82,42.10,26.04,44.79],
+  ["IR",25.06,39.78,44.02,63.32], ["TM",35.14,42.80,52.44,66.69],
+  ["AF",29.40,38.49,60.52,74.89], ["PK",23.69,37.10,60.87,77.84],
+  ["IN",8.09,35.68,68.11,97.41],
+];
+function guessCountryFromLatLng(lat, lng) {
+  if (lat == null || lng == null) return null;
+  const la = Number(lat), lo = Number(lng);
+  if (!Number.isFinite(la) || !Number.isFinite(lo)) return null;
+  let best = null, bestArea = Infinity;
+  for (const [iso, la1, la2, lo1, lo2] of COUNTRY_BBOX) {
+    if (la >= la1 && la <= la2 && lo >= lo1 && lo <= lo2) {
+      const area = (la2 - la1) * (lo2 - lo1);
+      if (area < bestArea) { bestArea = area; best = iso; }
+    }
+  }
+  return best;
+}
+
+// ── Wikipedia ──────────────────────────────────────────────────────────────
+const wikiCache = new Map();
+let wikiRequestId = 0;
+
+function wikiTitleRelevant(title, term) {
+  if (/\((?:Album|Single|EP|Film|Lied|Song|Band|Buch|Roman|série|Begriffsklärung|disambiguation|Domaine|Winery|Château|Weingut)\)/i.test(title)) return false;
+  const tWords = new Set((title.toLowerCase().match(/[a-zÀ-ɏ]{3,}/g) || []));
+  const qWords = (term.toLowerCase().match(/[a-zÀ-ɏ]{3,}/g) || []);
+  return qWords.some(w => tWords.has(w));
+}
+
+async function resolveWikiArticle(terms, lang) {
+  for (const term of terms) {
+    const key = `${lang}\x00${term}`;
+    if (wikiCache.has(key)) { const v = wikiCache.get(key); if (v) return v; continue; }
+    try {
+      const url = `https://${lang}.wikipedia.org/w/api.php?action=opensearch&search=${encodeURIComponent(term)}&limit=1&format=json&origin=*`;
+      const r = await fetch(url);
+      const d = await r.json();
+      if (Array.isArray(d[1]) && d[1].length) {
+        const title = d[1][0];
+        if (wikiTitleRelevant(title, term)) {
+          const result = { title, url: d[3][0] };
+          wikiCache.set(key, result);
+          return result;
+        }
+      } else {
+        wikiCache.set(key, null);
+      }
+    } catch (_) {}
+  }
+  if (lang === 'de') {
+    const enResult = await resolveWikiArticle(terms, 'en');
+    if (enResult) return enResult;
+  }
+  if (lang !== 'it') {
+    const itResult = await resolveWikiArticle(terms, 'it');
+    if (itResult) return itResult;
+  }
+  return null;
+}
+
+async function fetchWikiSummary(title, lang) {
+  const key = `sum\x00${lang}\x00${title}`;
+  if (wikiCache.has(key)) return wikiCache.get(key);
+  try {
+    const encodedTitle = encodeURIComponent(title.replace(/ /g, '_'));
+    const url = `https://${lang}.wikipedia.org/api/rest_v1/page/summary/${encodedTitle}`;
+    const r = await fetch(url);
+    if (!r.ok) { wikiCache.set(key, null); return null; }
+    const d = await r.json();
+    const extract = d.extract || null;
+    wikiCache.set(key, extract);
+    return extract;
+  } catch (_) { return null; }
+}
+
+// Resolve wiki for calibrate panel: DE first → EN fallback.
+// Optionally fetches ULM detail to prepend Barrington modern name as a search term.
+async function resolveWikiWithUlm(reqId, linkEl, baseTerms, ulmId) {
+  let terms = [...baseTerms];
+
+  // Fetch ULM detail for Barrington name
+  if (ulmId) {
+    try {
+      const res  = await fetch(`/api/ulm-detail?id=${ulmId}`);
+      const data = await res.json();
+      if (wikiRequestId !== reqId) return;
+      if (data.wiki_url) {
+        // ULM page has a direct Wikipedia link — use it immediately
+        linkEl.href = data.wiki_url;
+        const tm = data.wiki_url.match(/\/wiki\/(.+)$/);
+        linkEl.textContent = tm
+          ? decodeURIComponent(tm[1].replace(/_/g, ' ')).replace(/\s*\(.*\)$/, '').trim()
+          : 'Wikipedia';
+        return;
+      }
+      if (data.barrington) {
+        // Prepend Barrington modern name as the highest-priority search term
+        terms = [data.barrington, ...terms.filter(t => t !== data.barrington)];
+      }
+    } catch (_) {}
+  }
+
+  if (wikiRequestId !== reqId) return;
+  // Always try DE first, then EN (resolveWikiArticle adds EN fallback when lang='de')
+  const article = await resolveWikiArticle(terms, 'de');
+  if (wikiRequestId !== reqId) return;
+  if (!article) { linkEl.textContent = '—'; return; }
+  linkEl.href = article.url;
+  linkEl.textContent = article.title;
+}
+
+function buildWikiTermsCal(city) {
+  const modern = city.modern || '';
+  const latin  = city.latin_std || city.latin || '';
+  const type   = city.type || '';
+  const cleanLatin = latin.split('/')[0].replace(/[\[\]~]/g, '').trim();
+  const normLatin  = cleanLatin.replace(/(?<!\b)v/gi, m => m === 'V' ? 'U' : 'u');
+  const modParts   = modern.split(/\s*\/\s*/).map(p => {
+    p = p.trim();
+    if (/^\((?:near|bei|b\.|prope)\s+([^),]+)/i.test(p)) return p.match(/^\((?:near|bei|b\.|prope)\s+([^),]+)/i)[1].trim();
+    p = p.replace(/\s*\([^)]*\)/g, '').replace(/,\s+\S.*$/, '').trim();
+    if (p.startsWith('(') || p.endsWith(')')) return '';
+    return p;
+  }).filter(Boolean);
+  const cleanMod = modParts[0] || '';
+  const norm = s => s.toLowerCase().replace(/[^a-z]/g, '');
+  const hasUsefulModern = cleanMod.length > 0 && norm(cleanMod) !== norm(cleanLatin);
+  const extraAlts = modParts.slice(1).filter(a => norm(a) !== norm(cleanLatin));
+  if (type === 'people') return [normLatin, normLatin ? `${normLatin} ancient people` : null, hasUsefulModern ? cleanMod : null, ...extraAlts].filter(Boolean);
+  if (type === 'region' || type === 'roman_province') return [`Roman ${cleanLatin}`, cleanLatin, hasUsefulModern ? cleanMod : null, ...extraAlts].filter(Boolean);
+  return [hasUsefulModern ? cleanMod : null, ...extraAlts, normLatin].filter(Boolean);
+}
 
 // Types excluded from "All" — only shown via their dedicated toggle buttons
 const BACKGROUND_TYPES = new Set([]);   // no types hidden by default; water/region toggle buttons kept for opt-in hiding
@@ -897,6 +1077,56 @@ function loadUlmImageById(ulmId, targetDataId) {
   document.getElementById('ulm-cell-img').addEventListener('mouseleave', () => {
     hideTimer = setTimeout(() => { popup.style.display = 'none'; }, 150);
   });
+})();
+
+/* ── Wikipedia hover popup ── */
+(function () {
+  const popup   = document.getElementById('wiki-hover-popup');
+  const whpTitle   = document.getElementById('whp-title');
+  const whpSummary = document.getElementById('whp-summary');
+  const whpBtn     = document.getElementById('whp-btn');
+  let hideTimer = null;
+
+  function positionPopup(e) {
+    const W = popup.offsetWidth  || 320;
+    const H = popup.offsetHeight || 150;
+    const vw = window.innerWidth, vh = window.innerHeight;
+    let x = e.clientX + 16, y = e.clientY + 16;
+    if (x + W > vw - 8) x = e.clientX - W - 12;
+    if (y + H > vh - 8) y = e.clientY - H - 12;
+    popup.style.left = Math.max(4, x) + 'px';
+    popup.style.top  = Math.max(4, y) + 'px';
+  }
+
+  const linkEl = document.getElementById('meta-wiki-link');
+  linkEl.addEventListener('mouseenter', async function (e) {
+    clearTimeout(hideTimer);
+    const href = this.getAttribute('href');
+    if (!href || href === '#') return;
+    whpBtn.href = href;
+    const langM  = href.match(/\/\/([a-z]+)\.wikipedia/);
+    const titleM = href.match(/\/wiki\/(.+)$/);
+    const lang  = langM  ? langM[1]  : 'en';
+    const title = titleM ? decodeURIComponent(titleM[1].replace(/_/g, ' ')) : this.textContent;
+    whpTitle.textContent   = title;
+    whpSummary.textContent = '…';
+    popup.style.display = 'block';
+    positionPopup(e);
+    const extract = await fetchWikiSummary(title, lang);
+    if (!extract) { whpSummary.textContent = ''; return; }
+    let text = extract;
+    if (text.length > 300) {
+      const m = text.match(/^.{60,280}[.!?]/);
+      text = m ? m[0] : text.slice(0, 280).replace(/\s+\S*$/, '') + '…';
+    }
+    whpSummary.textContent = text;
+  });
+  linkEl.addEventListener('mousemove', positionPopup);
+  linkEl.addEventListener('mouseleave', () => {
+    hideTimer = setTimeout(() => { popup.style.display = 'none'; }, 200);
+  });
+  popup.addEventListener('mouseenter', () => { clearTimeout(hideTimer); });
+  popup.addEventListener('mouseleave', () => { popup.style.display = 'none'; });
 })();
 
 async function loadUlmImage(modernName, latinName, targetDataId) {
@@ -1613,7 +1843,33 @@ function updatePanel() {
   if (city.country) {
     metaCountryEl.innerHTML = countryFlagHtml(city.country) + escHtml(city.country);
   } else {
-    metaCountryEl.textContent = "—";
+    const derived = guessCountryFromLatLng(city.lat, city.lng);
+    if (derived) {
+      metaCountryEl.innerHTML = `<span class="derived-country">${countryFlagHtml(derived)}${escHtml(derived)}</span>`;
+    } else {
+      metaCountryEl.textContent = "—";
+    }
+  }
+
+  // Wikipedia link — hard-linked first, then async resolve
+  const wikiRow  = document.getElementById("meta-wiki-row");
+  const wikiLink = document.getElementById("meta-wiki-link");
+  const reqId = ++wikiRequestId;
+  wikiLink.textContent = "…";
+  wikiLink.removeAttribute("href");
+  wikiRow.style.display = "";
+  const wikiUrl = city.wiki_url || null;
+  if (wikiUrl) {
+    wikiLink.href = wikiUrl;
+    const tm = wikiUrl.match(/\/wiki\/(.+)$/);
+    wikiLink.textContent = tm ? decodeURIComponent(tm[1].replace(/_/g, ' ')).replace(/\s*\(.*\)$/, '').trim() : "Wikipedia";
+  } else {
+    const terms = buildWikiTermsCal(city);
+    if (terms.length) {
+      resolveWikiWithUlm(reqId, wikiLink, terms, city.ulm_id || null);
+    } else {
+      wikiLink.textContent = "—";
+    }
   }
 
   // ULM DB link — use direct ID from DB when available, else fall back to name search
@@ -1994,9 +2250,11 @@ function openEditModal() {
   document.getElementById("ef-segment").value = rec.tabula_segment ?? "";
   document.getElementById("ef-row").value = rec.tabula_row || "";
   document.getElementById("ef-col").value = rec.tabula_col ?? "";
-  document.getElementById("ef-country").value = rec.country || "";
+  const derivedCountry = !rec.country ? guessCountryFromLatLng(rec.lat, rec.lng) : null;
+  document.getElementById("ef-country").value = rec.country || derivedCountry || "";
   document.getElementById("ef-lat").value = rec.lat ?? "";
   document.getElementById("ef-lng").value = rec.lng ?? "";
+  document.getElementById("ef-wiki").value = rec.wiki_url || "";
   document.getElementById("edit-modal").classList.add("open");
 }
 
@@ -2029,6 +2287,9 @@ function saveEditDirectly() {
   if (country)     { rec.country = country; }
   if (lat !== "")  { rec.lat = Number(lat); }
   if (lng !== "")  { rec.lng = Number(lng); }
+  const wiki = document.getElementById("ef-wiki").value.trim();
+  if (wiki)        { rec.wiki_url = wiki; }
+  else             { delete rec.wiki_url; }
   if (seg && row && col) {
     rec.tabula_location = `Seg ${seg} ${row}${col}`;
   }
@@ -2093,6 +2354,20 @@ document.getElementById("btn-edit-cancel").addEventListener("click", closeEditMo
 document.getElementById("btn-edit-delete").addEventListener("click", deleteEntryFromDb);
 document.getElementById("edit-modal").addEventListener("click", (e) => {
   if (e.target === document.getElementById("edit-modal")) closeEditModal();
+});
+
+// Auto-derive country when lat/lng change in edit modal (only if country field is still empty)
+['ef-lat', 'ef-lng'].forEach(id => {
+  document.getElementById(id).addEventListener('input', () => {
+    const countryEl = document.getElementById('ef-country');
+    if (countryEl.value) return;
+    const lat = document.getElementById('ef-lat').value;
+    const lng = document.getElementById('ef-lng').value;
+    if (lat && lng) {
+      const derived = guessCountryFromLatLng(lat, lng);
+      if (derived) countryEl.value = derived;
+    }
+  });
 });
 
 document.getElementById("btn-skip").addEventListener("click", () => {

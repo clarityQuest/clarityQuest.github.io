@@ -193,6 +193,7 @@ body, html {
 #panel-names { margin-bottom: 8px; }
 #panel-latin { font-size: 20px; font-weight: 700; line-height: 1.25; margin-bottom: 3px; }
 #panel-modern { font-size: 20px; font-weight: 600; color: var(--text-muted); line-height: 1.25; }
+#panel-wiki-summary { font-size: 13px; color: var(--text-muted); line-height: 1.55; margin-top: 8px; }
 #panel-country { font-size: 14px; margin: 6px 0 0; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
 #panel-country img { height: 1em; vertical-align: middle; border-radius: 1px; }
 #panel-type { display: flex; align-items: center; gap: 8px; margin: 10px 0; font-weight: 600; font-size: 16px; }
@@ -409,6 +410,7 @@ body, html {
   /* Slightly smaller fonts for narrow panel */
   #info-panel #panel-latin  { font-size: 14px; margin-bottom: 3px; }
   #info-panel #panel-modern { font-size: 12px; margin-bottom: 8px; }
+  #info-panel #panel-wiki-summary { font-size: 12px; margin-top: 5px; }
   #info-panel #panel-type   { font-size: 16px; }
 
   /* Larger tap targets for controls */
