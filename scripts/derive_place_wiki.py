@@ -1,16 +1,17 @@
 #!/usr/bin/env python3
 """
-Find Wikipedia articles for records that have a modern name but no wiki_url.
+Find Wikipedia articles for records, searching Latin name first, modern name second.
 General-purpose script for city, island, lake, spa, temple, port, water, region, etc.
 
 Usage:
-  python scripts/derive_place_wiki.py --type spa              # dry-run, spas only
-  python scripts/derive_place_wiki.py --type lake             # dry-run, lakes only
-  python scripts/derive_place_wiki.py --type island           # dry-run, islands
-  python scripts/derive_place_wiki.py --type city             # dry-run, cities
+  python scripts/derive_place_wiki.py --type city             # dry-run, cities without wiki
   python scripts/derive_place_wiki.py --type spa --write      # apply all
   python scripts/derive_place_wiki.py --type spa --accept 1,3 --write
   python scripts/derive_place_wiki.py --min-conf 2            # only conf >= 2
+  python scripts/derive_place_wiki.py --type city --upgrade   # re-check cities that already
+                                                               # have wiki_url using Latin name;
+                                                               # replaces if a more specific
+                                                               # ancient-place article is found
 """
 
 import re, sys, json, time, urllib.request, urllib.parse
@@ -18,6 +19,7 @@ from pathlib import Path
 
 DB_PATH  = Path(__file__).parent.parent / "public/data/review_places_db.json"
 WRITE    = "--write" in sys.argv
+UPGRADE  = "--upgrade" in sys.argv   # re-check existing wiki entries via Latin name
 
 TYPE_FILTER = None
 if "--type" in sys.argv:
@@ -266,15 +268,38 @@ def main():
         return (r.get("modern_preferred") or r.get("modern_omnesviae")
                 or r.get("modern_tabula") or r.get("modern_state") or "")
 
-    if TYPE_FILTER:
-        targets = [r for r in records
-                   if r.get("type") == TYPE_FILTER and best_modern(r) and not r.get("wiki_url")]
-    else:
-        targets = [r for r in records
-                   if best_modern(r) and not r.get("wiki_url")]
+    def latin_clean(r):
+        """Return cleaned Latin name suitable for Wikipedia search, or ''."""
+        raw = (r.get("latin_std") or r.get("latin") or "")
+        s = re.sub(r'[·\[\]?<>(){}]', '', raw).strip()
+        s = re.sub(r'\s+', ' ', s)
+        # Skip illegible / placeholder names
+        if re.search(r'unnamed|illegible|no name|\-\s*\?|\?.*\?|^[-\s]+$', s, re.I):
+            return ''
+        return s[:50]
 
-    type_label = TYPE_FILTER or "all"
-    print(f"Targets ({type_label}): {len(targets)} with modern name, no wiki_url  (min-conf={MIN_CONF})\n")
+    def _base_filter(r):
+        return bool(best_modern(r) or latin_clean(r))
+
+    if UPGRADE:
+        # Re-check records that already have wiki_url — try Latin name for a better article
+        if TYPE_FILTER:
+            targets = [r for r in records
+                       if r.get("type") == TYPE_FILTER and r.get("wiki_url") and latin_clean(r)]
+        else:
+            targets = [r for r in records if r.get("wiki_url") and latin_clean(r)]
+        type_label = TYPE_FILTER or "all"
+        print(f"Targets ({type_label}, upgrade): {len(targets)} WITH wiki_url to re-check via Latin name\n")
+    else:
+        if TYPE_FILTER:
+            targets = [r for r in records
+                       if r.get("type") == TYPE_FILTER and not r.get("wiki_url")
+                       and _base_filter(r)]
+        else:
+            targets = [r for r in records
+                       if not r.get("wiki_url") and _base_filter(r)]
+        type_label = TYPE_FILTER or "all"
+        print(f"Targets ({type_label}): {len(targets)} without wiki_url  (min-conf={MIN_CONF})\n")
 
     results = []
     seq = 0
@@ -282,23 +307,53 @@ def main():
     for rec in targets:
         raw = best_modern(rec)
         name, base_conf = clean_modern(raw)
+        lat_name = latin_clean(rec)
         latin = (rec.get("latin_std") or rec.get("latin") or "")[:30]
         data_id = rec["data_id"]
         rec_type = rec.get("type", "")
 
-        if not name or base_conf < MIN_CONF:
-            print(f"  [{data_id:8d}] SKIP  {raw[:55]!r}")
-            continue
+        wiki_url, lat, lng, lang, article_title, match_type = None, None, None, None, None, None
+        search_label = ''
 
-        print(f"  [{data_id:8d}] {latin:30s} '{name[:35]}' … ", end="", flush=True)
+        if UPGRADE:
+            # Upgrade mode: only try Latin name; skip if result is same URL as current
+            if not lat_name or len(lat_name) < 4:
+                continue
+            print(f"  [{data_id:8d}] {latin:30s} latin='{lat_name[:30]}' … ", end="", flush=True)
+            wiki_url, lat, lng, lang, article_title, match_type = wiki_search(lat_name, rec_type)
+            if lat is None:
+                print("not found")
+                continue
+            if wiki_url and wiki_url == rec.get("wiki_url"):
+                print(f"same → {wiki_url[:55]}")
+                continue
+            search_label = 'latin/upgrade'
+        else:
+            # 1. Try Latin name first — Wikipedia often has the ancient-name article
+            if lat_name and len(lat_name) >= 4:
+                print(f"  [{data_id:8d}] {latin:30s} latin='{lat_name[:30]}' … ", end="", flush=True)
+                wiki_url, lat, lng, lang, article_title, match_type = wiki_search(lat_name, rec_type)
+                if lat is not None:
+                    search_label = 'latin'
 
-        wiki_url, lat, lng, lang, article_title, match_type = wiki_search(name, rec_type)
+            # 2. Fall back to modern name if Latin search failed
+            if lat is None and name and base_conf >= MIN_CONF:
+                if search_label == '':
+                    print(f"  [{data_id:8d}] {latin:30s} modern='{name[:30]}' … ", end="", flush=True)
+                else:
+                    print(f"not found (latin) → trying modern '{name[:30]}' … ", end="", flush=True)
+                wiki_url, lat, lng, lang, article_title, match_type = wiki_search(name, rec_type)
+                if lat is not None:
+                    search_label = 'modern'
 
-        if lat is None:
-            print("not found")
-            continue
+            if lat is None:
+                if search_label:
+                    print("not found")
+                else:
+                    print(f"  [{data_id:8d}] SKIP  {raw[:55]!r}")
+                continue
 
-        conf = base_conf
+        conf = base_conf if search_label == 'modern' else 2
         if match_type == "exact":
             conf = min(3, conf + 1) if conf < 3 else 3
 
@@ -308,17 +363,25 @@ def main():
 
         seq += 1
         country = guess_country_bbox(lat, lng)
-        results.append((seq, rec, name, conf, wiki_url, lat, lng, lang, article_title or name, country))
-        print(f"[{seq}] conf={conf}  {lat:.4f},{lng:.4f}  {country or '?':2}  ({lang}/{match_type})  → {article_title}")
+        old_url = rec.get("wiki_url", "")
+        results.append((seq, rec, name or lat_name, conf, wiki_url, lat, lng, lang, article_title or name, country, search_label, old_url))
+        if UPGRADE:
+            print(f"[{seq}] conf={conf}  {lat:.4f},{lng:.4f}  {country or '?':2}  → {article_title}")
+            print(f"       OLD: {old_url[:70]}")
+            print(f"       NEW: {wiki_url[:70]}")
+        else:
+            print(f"[{seq}] conf={conf}  {lat:.4f},{lng:.4f}  {country or '?':2}  ({lang}/{match_type}/{search_label})  → {article_title}")
 
     # ── Summary ───────────────────────────────────────────────────────────
     print(f"\n{'═'*90}")
     print(f"{'#':>4}  {'data_id':>8}  {'name':28}  {'c'}  {'lat':>9}  {'lng':>9}  {'ct'}  wiki_url")
     print(f"{'─'*90}")
-    for seq, rec, name, conf, wiki_url, lat, lng, lang, atitle, country in results:
+    for seq, rec, name, conf, wiki_url, lat, lng, lang, atitle, country, slabel, old_url in results:
         mark = "✓" if (ACCEPT_IDS and seq in ACCEPT_IDS) else " "
         print(f"{mark}{seq:>4}  {rec['data_id']:>8}  {name:28}  {conf}  {lat:>9.4f}  {lng:>9.4f}"
-              f"  {country or '??':2}  {(wiki_url or '—')[:55]}")
+              f"  {country or '??':2}  [{slabel}]  {(wiki_url or '—')[:50]}")
+        if UPGRADE and old_url:
+            print(f"       was: {old_url[:70]}")
 
     if not results:
         print("No candidates found.")
@@ -330,11 +393,13 @@ def main():
 
     apply_all = WRITE and not ACCEPT_IDS
     saved = 0
-    for seq, rec, name, conf, wiki_url, lat, lng, lang, atitle, country in results:
+    for seq, rec, name, conf, wiki_url, lat, lng, lang, atitle, country, slabel, old_url in results:
         if not (apply_all or seq in ACCEPT_IDS):
             continue
-        if wiki_url and not rec.get("wiki_url"):
+        if wiki_url and (UPGRADE or not rec.get("wiki_url")):
             rec["wiki_url"] = wiki_url
+            rec["wiki_confidence"] = conf
+            rec["wiki_manual"] = False
         if rec.get("lat") is None and lat is not None:
             rec["lat"] = round(lat, 6)
             rec["lng"] = round(lng, 6)
